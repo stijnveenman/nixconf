@@ -3,7 +3,7 @@
   inputs,
   ...
 }: {
-  flake.homeConfigurations.stiixxy =
+  flake.homeConfigurations."stiixxy@omarchy" =
     inputs.home-manager.lib.homeManagerConfiguration {
       pkgs = import inputs.nixpkgs {system = "x86_64-linux";};
       modules = [
@@ -22,11 +22,6 @@
 # All the default Omarchy aliases and functions
 # (don't mess with these directly, just overwrite them here!)
 source ~/.local/share/omarchy/default/bash/rc
-
-# Add your own exports, aliases, and functions here.
-#
-# Make an alias for invoking commands you use constantly
-# alias p='python'
 
 eval \"$(direnv hook bash)\"
 
