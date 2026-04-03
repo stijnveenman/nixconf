@@ -17,6 +17,7 @@
           inputs.self.homeModules.nh
           {
             nixpkgs.config.allowUnfree = true;
+            programs.bash.enable = true;
 
             home = {
               username = name;
