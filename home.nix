@@ -3,6 +3,8 @@
   pkgs,
   ...
 }: {
+  imports = [./nh.nix];
+
   home.username = "stiixxy";
   home.homeDirectory = "/home/stiixxy";
 
@@ -12,11 +14,6 @@
 
   programs.home-manager.enable = true;
   programs.direnv.enable = true;
-
-  programs.nh = {
-    enable = true;
-    homeFlake = "/home/${config.home.username}/nixconf";
-  };
 
   # Omarchy Bashrc
   programs.bash = {
