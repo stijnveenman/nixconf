@@ -1,10 +1,19 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  config,
+  ...
+}: {
   nixpkgs.config.allowUnfree = true;
 
   home.username = "sv";
   home.homeDirectory = "/Users/sv";
 
   home.stateVersion = "24.05";
+
+  programs.nh = {
+    enable = true;
+    homeFlake = "/Users/${config.home.username}/Documents/nixconf";
+  };
 
   home.sessionVariables = {
     RUSH_PARALLELISM = "60%";
