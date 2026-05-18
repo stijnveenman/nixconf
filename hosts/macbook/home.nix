@@ -15,6 +15,16 @@
 
   home.packages = [
     pkgs._1password-cli
+
+    # Utils
+    pkgs.jless
+    pkgs.ripgrep
+    pkgs.jq
+    pkgs.fzf
+
+    # formatting
+    pkgs.nixd
+    pkgs.alejandra
   ];
 
   programs.zsh = {
@@ -28,4 +38,6 @@
       lg = "lazygit";
     };
   };
+
+  programs.home-manager.enable = true;
 }
