@@ -4,6 +4,6 @@
   ...
 }:
 home-manager.lib.homeManagerConfiguration {
-  pkgs = nixpkgs.legacyPackages."x86_64-linux";
+  pkgs = nixpkgs.legacyPackages."aarch64-darwin";
   modules = [./home.nix];
 }

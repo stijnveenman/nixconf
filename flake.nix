@@ -6,7 +6,8 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs:  {
+  outputs = inputs: {
     homeConfigurations."stiixxy" = import ./hosts/stiixxy inputs;
+    homeConfigurations."sv" = import ./hosts/macbook inputs;
   };
 }
