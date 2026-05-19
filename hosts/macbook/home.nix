@@ -12,7 +12,7 @@
 
   programs.nh = {
     enable = true;
-    homeFlake = "/Users/${config.home.username}/Documents/nixconf";
+    # homeFlake = "/Users/${config.home.username}/Documents/nixconf";
   };
 
   home.sessionVariables = {
