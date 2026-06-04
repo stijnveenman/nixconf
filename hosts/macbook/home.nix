@@ -81,8 +81,11 @@
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
-    sideloadInitLua =true;
+    sideloadInitLua = true;
   };
+  home.file.".config/nvim-nixconf".source =
+    config.lib.file.mkOutOfStoreSymlink
+    "/Users/${config.home.username}/Documents/nixconf/nvim";
 
   programs.direnv = {
     enable = true;
