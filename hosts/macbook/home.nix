@@ -18,6 +18,7 @@
   home.sessionVariables = {
     RUSH_PARALLELISM = "60%";
     PC_HIDE_DISABLED_PROC = "1";
+    NVIM_APPNAME = "nvim-nixconf";
   };
 
   home.packages = [
