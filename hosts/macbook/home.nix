@@ -77,6 +77,10 @@
     extensions = [pkgs.gh-poi];
   };
 
+  programs.opencode = {
+    enable = true;
+  };
+
   programs.neovim = {
     enable = true;
     defaultEditor = true;
