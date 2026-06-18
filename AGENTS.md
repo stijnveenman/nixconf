@@ -19,16 +19,19 @@ never switch on a config that has not built successfully.**
 2. **Validate (build):** run `nh home build`. This evaluates and builds the
    home-manager configuration without activating it. A non-zero exit code, a Nix
    evaluation error, or a build failure means validation **failed**.
-3. **Apply (switch):** **the agent must never run `nh home switch`.** Applying
-   the configuration is a manual step the user performs themselves by running
-   the `/apply` slash command. After a successful build, stop and tell the user
-   the config is built and ready, then let them run `/apply` when they choose.
-   Do not run `nh home switch` even if the user asks you to apply, activate, or
-   switch — instead, remind them to run `/apply` manually.
+3. **Apply (switch):** **the agent must only run `nh home switch` while it is
+   executing the `/apply` slash command.** In every other context the agent must
+   never run `nh home switch`. So when the user asks you to apply, activate, or
+   switch outside of `/apply`, do **not** run `nh home switch` — instead, stop
+   after a successful build, tell the user the config is built and ready, and
+   remind them to run `/apply` when they choose.
+
+   When you _are_ running `/apply`, you may run `nh home switch`, but only after
+   `nh home build` has succeeded (see the gating below).
 
 If the build fails:
 
-- Stop. Do **not** run `nh home switch`.
+- Stop. Do **not** run `nh home switch`, even during `/apply`.
 - Report the Nix evaluation/build error to the user and fix the offending `.nix`
   before retrying the build.
 
@@ -36,7 +39,7 @@ There are slash commands for these steps:
 
 - `/validate` runs the build step.
 - `/apply` runs the build step and then switches only if the build passed. This
-  is **user-invoked only**; the agent does not run it.
+  is the **only** path through which the agent may run `nh home switch`.
 
 ## Formatting
 
