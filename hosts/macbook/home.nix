@@ -80,6 +80,9 @@
 
   programs.opencode = {
     enable = true;
+    settings = {
+      autoupdate = false;
+    };
   };
 
   programs.neovim = {
@@ -88,6 +91,8 @@
     viAlias = true;
     vimAlias = true;
     sideloadInitLua = true;
+    withRuby = false;
+    withPython3 = false;
   };
   home.file.".config/nvim-nixconf".source =
     config.lib.file.mkOutOfStoreSymlink
