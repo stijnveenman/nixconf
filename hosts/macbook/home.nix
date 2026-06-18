@@ -67,6 +67,7 @@
       ac = "cd ~/Documents/airport-control/";
 
       lg = "lazygit";
+      o = "opencode";
     };
   };
 
