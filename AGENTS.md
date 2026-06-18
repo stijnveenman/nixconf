@@ -19,8 +19,12 @@ never switch on a config that has not built successfully.**
 2. **Validate (build):** run `nh home build`. This evaluates and builds the
    home-manager configuration without activating it. A non-zero exit code, a Nix
    evaluation error, or a build failure means validation **failed**.
-3. **Apply (switch):** run `nh home switch` **only after `nh home build`
-   succeeds**. This builds and activates the configuration.
+3. **Apply (switch):** **the agent must never run `nh home switch`.** Applying
+   the configuration is a manual step the user performs themselves by running
+   the `/apply` slash command. After a successful build, stop and tell the user
+   the config is built and ready, then let them run `/apply` when they choose.
+   Do not run `nh home switch` even if the user asks you to apply, activate, or
+   switch — instead, remind them to run `/apply` manually.
 
 If the build fails:
 
@@ -31,7 +35,8 @@ If the build fails:
 There are slash commands for these steps:
 
 - `/validate` runs the build step.
-- `/apply` runs the build step and then switches only if the build passed.
+- `/apply` runs the build step and then switches only if the build passed. This
+  is **user-invoked only**; the agent does not run it.
 
 ## Formatting
 
