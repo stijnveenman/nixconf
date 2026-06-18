@@ -101,8 +101,8 @@
 
   programs.git = {
     enable = true;
-    userName = "Stijn Veenman";
-    userEmail = "stijn.veenman@schiphol.nl";
+    settings.user.name = "Stijn Veenman";
+    settings.user.email = "stijn.veenman@schiphol.nl";
     signing = {
       signByDefault = true;
       # autodetect based on commit
