@@ -10,8 +10,25 @@
 
   home.packages = [pkgs.nixd pkgs.alejandra pkgs.pear-desktop];
 
+  home.sessionVariables = {
+    NVIM_APPNAME = "nvim-nixconf";
+  };
+
+  home.file.".config/nvim-nixconf".source =
+    config.lib.file.mkOutOfStoreSymlink
+    "/home/${config.home.username}/nixconf/nvim";
+
   programs.home-manager.enable = true;
   programs.direnv.enable = true;
+
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
+    withRuby = false;
+    withPython3 = false;
+  };
 
   programs.opencode = {
     enable = true;
