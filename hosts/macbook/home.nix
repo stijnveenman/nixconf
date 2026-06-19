@@ -18,7 +18,6 @@
   home.sessionVariables = {
     RUSH_PARALLELISM = "60%";
     PC_HIDE_DISABLED_PROC = "1";
-    NVIM_APPNAME = "nvim-nixconf";
   };
 
   home.packages = [
@@ -84,19 +83,6 @@
       autoupdate = false;
     };
   };
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-    sideloadInitLua = true;
-    withRuby = false;
-    withPython3 = false;
-  };
-  home.file.".config/nvim-nixconf".source =
-    config.lib.file.mkOutOfStoreSymlink
-    "/Users/${config.home.username}/Documents/nixconf/nvim";
 
   programs.direnv = {
     enable = true;
