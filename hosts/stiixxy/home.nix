@@ -13,6 +13,13 @@
   programs.home-manager.enable = true;
   programs.direnv.enable = true;
 
+  programs.opencode = {
+    enable = true;
+    settings = {
+      autoupdate = false;
+    };
+  };
+
   programs.nh = {
     enable = true;
     homeFlake = "/home/${config.home.username}/nixconf";
@@ -21,6 +28,9 @@
   # Omarchy Bashrc
   programs.bash = {
     enable = true;
+    shellAliases = {
+      c = "opencode";
+    };
     bashrcExtra = "
 # If not running interactively, don't do anything (leave this at the top of this file)
 [[ $- != *i* ]] && return
