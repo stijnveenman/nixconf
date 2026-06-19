@@ -29,17 +29,35 @@ never switch on a config that has not built successfully.**
    When you _are_ running `/apply`, you may run `nh home switch`, but only after
    `nh home build` has succeeded (see the gating below).
 
+   **One-shot rule:** each `/apply` invocation authorises exactly one switch
+   attempt. If `nh home switch` fails (activation error, rollback, or any
+   non-zero exit), the authorisation is consumed and exhausted — even if the user
+   subsequently asks you to "fix it and apply again" or uses equivalent wording.
+   After any activation failure, you must stop, report the error, make any
+   requested fixes, and then wait for the user to issue a new explicit `/apply`
+   before running `nh home switch` again. Never re-run `nh home switch`
+   automatically after a failure.
+
 If the build fails:
 
 - Stop. Do **not** run `nh home switch`, even during `/apply`.
 - Report the Nix evaluation/build error to the user and fix the offending `.nix`
   before retrying the build.
 
+If the switch (activation) fails:
+
+- Stop immediately. Do **not** retry `nh home switch`.
+- Report the activation error to the user.
+- Make any requested fixes, then wait for a new explicit `/apply`.
+- Never automatically re-run `nh home switch` after an activation failure,
+  regardless of how the user phrases the follow-up request.
+
 There are slash commands for these steps:
 
 - `/validate` runs the build step.
 - `/apply` runs the build step and then switches only if the build passed. This
   is the **only** path through which the agent may run `nh home switch`.
+  Each `/apply` grants a single switch attempt only.
 
 ## Formatting
 
