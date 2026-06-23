@@ -14,7 +14,7 @@ vim.keymap.set({ "n", "t" }, "<C-g>", function()
 end, { desc = "Lazygit (root dir)" })
 
 -- Persistent opencode overlay terminal (toggle show/hide, session stays alive)
-vim.keymap.set({ "n", "t" }, "<C-o>", function()
+vim.keymap.set({ "n", "t" }, "<C-\\>", function()
   Snacks.terminal({ "opencode" }, {
     id = "opencode",
     toggle = true,
