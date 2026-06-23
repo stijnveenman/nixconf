@@ -18,6 +18,14 @@
     settings = {
       autoupdate = false;
     };
+    tui = {
+      theme = "gruvbox";
+      attention = {
+        enabled = true;
+        notifications = true;
+        sound = false;
+      };
+    };
   };
 
   programs.nh = {
