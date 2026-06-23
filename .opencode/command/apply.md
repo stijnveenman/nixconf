@@ -1,31 +1,33 @@
 ---
-description: Build then activate the Nix config (nh home build, then nh home switch)
+description: Activate the already-built Nix config (nh home switch)
 agent: build
 ---
 
-Build and then activate the home-manager configuration in this repo, gating the
-activation on a successful build.
+Activate the home-manager configuration in this repo by running:
 
-1. First format and validate by building:
+```
+nh home switch
+```
 
-   ```
-   alejandra .
-   nh home build
-   ```
-
-2. **Only if the build succeeds**, activate the configuration:
-
-   ```
-   nh home switch
-   ```
+Do **not** format or build first. `/apply` assumes the configuration has
+already been built successfully (for example via `/validate`) before you run it.
+A successful build is the precondition for switching, and that build has already
+happened by the time `/apply` runs.
 
 `nh` resolves the flake path and host automatically (`programs.nh.homeFlake` is
 set), so do not pass a flake path or host name.
 
-If the build in step 1 **fails** (non-zero exit, Nix evaluation error, or build
-error):
+Trust the build: if `nh home switch` reports success, treat the result as
+correct. Do **not** inspect, read, or dive into `/nix/store` output to
+double-check the generated files — assume those outputs are correct.
 
-- Stop. Do **not** run `nh home switch`.
-- Report the relevant error output to the user and, if the cause is obvious in
-  the changed `.nix` files, propose or apply a fix and re-run `nh home build`
-  before switching.
+**One-shot rule:** this `/apply` invocation authorises exactly one switch
+attempt. If `nh home switch` fails (activation error, rollback, or any non-zero
+exit):
+
+- Stop immediately. Do **not** retry `nh home switch`.
+- Report the activation error to the user and, if the cause is obvious in the
+  changed `.nix` files, propose or apply a fix.
+- Then wait for the user to issue a new explicit `/apply`. Never re-run
+  `nh home switch` automatically after a failure, regardless of how the user
+  phrases the follow-up request.

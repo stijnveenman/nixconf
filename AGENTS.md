@@ -18,7 +18,10 @@ never switch on a config that has not built successfully.**
 1. **Format:** run `alejandra .` to format the Nix files in the repo.
 2. **Validate (build):** run `nh home build`. This evaluates and builds the
    home-manager configuration without activating it. A non-zero exit code, a Nix
-   evaluation error, or a build failure means validation **failed**.
+   evaluation error, or a build failure means validation **failed**. If the build
+   **succeeds**, trust it: treat the result as correct and do **not** inspect,
+   read, or dive into `/nix/store` output to double-check the generated files —
+   assume those outputs are correct.
 3. **Apply (switch):** **the agent must only run `nh home switch` while it is
    executing the `/apply` slash command.** In every other context the agent must
    never run `nh home switch`. So when the user asks you to apply, activate, or
@@ -26,8 +29,11 @@ never switch on a config that has not built successfully.**
    after a successful build, tell the user the config is built and ready, and
    remind them to run `/apply` when they choose.
 
-   When you _are_ running `/apply`, you may run `nh home switch`, but only after
-   `nh home build` has succeeded (see the gating below).
+   `/apply` itself does **not** format or build. It only runs `nh home switch`.
+   The build is the precondition for switching, and it is expected to have been
+   run successfully (for example via `/validate`) **before** the user runs
+   `/apply`. So within `/apply` you do not run `alejandra .` or `nh home build`
+   again — you go straight to `nh home switch`.
 
    **One-shot rule:** each `/apply` invocation authorises exactly one switch
    attempt. If `nh home switch` fails (activation error, rollback, or any
@@ -55,9 +61,10 @@ If the switch (activation) fails:
 There are slash commands for these steps:
 
 - `/validate` runs the build step.
-- `/apply` runs the build step and then switches only if the build passed. This
-  is the **only** path through which the agent may run `nh home switch`.
-  Each `/apply` grants a single switch attempt only.
+- `/apply` runs only `nh home switch`. It does **not** format or build first —
+  it assumes the build has already succeeded (e.g. via `/validate`). This is the
+  **only** path through which the agent may run `nh home switch`. Each `/apply`
+  grants a single switch attempt only.
 
 ## Formatting
 
