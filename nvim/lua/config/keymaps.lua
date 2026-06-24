@@ -8,19 +8,32 @@ vim.keymap.set({ "n", "t" }, "<C-g>", function()
     id = "lazygit",
     toggle = true,
     cwd = Util.root(),
-    esc_esc = false,
-    ctrl_hjkl = false,
   })
 end, { desc = "Lazygit (root dir)" })
 
--- Persistent opencode overlay terminal (toggle show/hide, session stays alive)
-vim.keymap.set({ "n", "t" }, "<C-\\>", function()
-  Snacks.terminal({ "opencode" }, {
-    id = "opencode",
+local opencode_term = nil
+
+vim.keymap.set({ "n" }, "<Leader>tt", function()
+  opencode_term = Snacks.terminal({ "opencode" }, {
     toggle = true,
-    esc_esc = false,
-    ctrl_hjkl = false,
+    cwd = Util.root(),
   })
+end, { desc = "OpenCode (root dir)" })
+
+vim.keymap.set({ "n" }, "<Leader>tf", function()
+  local file = vim.api.nvim_buf_get_name(0)
+  opencode_term = Snacks.terminal({ "opencode" }, {
+    toggle = true,
+    cwd = vim.fs.dirname(file),
+  })
+end, { desc = "OpenCode (current file)" })
+
+vim.keymap.set({ "n", "t" }, "<C-t>", function()
+  if opencode_term == nil then
+    opencode_term = Snacks.terminal({ "opencode" }, { toggle = true, cwd = Util.root() })
+  else
+    opencode_term:toggle()
+  end
 end, { desc = "OpenCode (toggle)" })
 
 -- move highlighted text around
