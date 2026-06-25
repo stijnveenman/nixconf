@@ -10,6 +10,32 @@ user. You do **not** need to pass a flake path or a host name.
 - Host `stiixxy` (Linux) lives at `~/nixconf`.
 - The same `nh home` commands below work on both hosts.
 
+## NixOS MCP (verify before you edit)
+
+This project has the [`mcp-nixos`](https://github.com/utensils/mcp-nixos) server
+configured (see `opencode.json`) under the name `nixos`. **Whenever you make any
+change to a `.nix` file, use this MCP to verify package and option names instead
+of relying on memory.** Confidently hallucinated package names, attribute paths,
+and option names are exactly the failure mode this MCP exists to prevent.
+
+Before adding or editing a `.nix` file, use the `nixos` MCP to confirm:
+
+- **Packages** exist before referencing them (e.g. in `home.packages` or
+  `environment.systemPackages`) — check the correct attribute path.
+- **Option names** are spelled and namespaced correctly, against the right
+  source for what you are editing:
+  - `home-manager` for home-manager options (this repo is primarily
+    home-manager).
+  - `darwin` for nix-darwin options (host `sv`, `aarch64-darwin`).
+  - `nixos` for NixOS packages/options.
+  - `nixvim` for Neovim configuration options, where relevant.
+- **Function signatures** (via the `noogle` source) when using less common
+  `lib` helpers.
+
+Verifying with the MCP does **not** replace the build — it reduces the chance
+the build fails on a bad name. Always still follow the validate/apply workflow
+below.
+
 ## Validate / apply workflow (important)
 
 When you change any `.nix` file, follow this order. **Never skip the build, and
