@@ -9,5 +9,7 @@
   outputs = inputs: {
     homeConfigurations."stiixxy" = import ./hosts/stiixxy inputs;
     homeConfigurations."sv" = import ./hosts/macbook inputs;
+
+    nixosConfigurations."nnn" = import ./hosts/nnn inputs;
   };
 }
