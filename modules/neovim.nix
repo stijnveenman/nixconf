@@ -24,4 +24,15 @@ in {
     withPython3 = false;
     sideloadInitLua = lib.mkIf isDarwin true;
   };
+
+  home.packages = with pkgs; [
+    fd
+    lazygit
+    fzf
+    gcc
+    unzip
+    wget
+    cargo
+    go
+  ];
 }

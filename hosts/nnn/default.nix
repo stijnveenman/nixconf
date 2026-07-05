@@ -18,6 +18,7 @@ nixpkgs.lib.nixosSystem {
 	    imports = [
     ../../modules/neovim.nix
 	    ];
+	    programs.bash.enable = true;
   programs.git = {
   enable = true;
   

@@ -84,11 +84,15 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
     #  thunderbird
+      
+
     ];
   };
 
   # Install firefox.
   programs.firefox.enable = true;
+  programs.nix-ld.enable = true;
+fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
