@@ -20,7 +20,7 @@
         "type": "github"
       }
     },
-    "niri-flake": {
+    "niri": {
       "inputs": {
         "niri-stable": "niri-stable",
         "niri-unstable": "niri-unstable",
@@ -127,7 +127,7 @@
     "root": {
       "inputs": {
         "home-manager": "home-manager",
-        "niri-flake": "niri-flake",
+        "niri": "niri",
         "nixpkgs": "nixpkgs_2"
       }
     },

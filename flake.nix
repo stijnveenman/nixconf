@@ -5,7 +5,7 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    niri-flake.url = "github:sodiboo/niri-flake";
+    niri.url = "github:sodiboo/niri-flake";
   };
 
   outputs = inputs: {
