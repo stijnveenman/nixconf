@@ -11,5 +11,6 @@
     homeConfigurations."sv" = import ./hosts/macbook inputs;
 
     nixosConfigurations."nnn" = import ./hosts/nnn inputs;
+    nixosConfigurations."utm" = import ./hosts/utm inputs;
   };
 }

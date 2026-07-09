@@ -44,5 +44,6 @@ in {
     go
     alejandra
     ripgrep
+    nodejs_22
   ];
 }
