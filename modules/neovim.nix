@@ -25,9 +25,17 @@ in {
     sideloadInitLua = lib.mkIf isDarwin true;
   };
 
+  programs.lazygit = {
+    enable = true;
+    settings = {
+      quitOnTopLevelReturn = true;
+      git.overrideGpg = false;
+      git.autoFetch = false;
+    };
+  };
+
   home.packages = with pkgs; [
     fd
-    lazygit
     fzf
     gcc
     unzip
