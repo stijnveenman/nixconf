@@ -35,5 +35,6 @@ in {
     cargo
     go
     alejandra
+    ripgrep
   ];
 }
