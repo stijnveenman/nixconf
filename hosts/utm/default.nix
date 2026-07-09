@@ -6,6 +6,7 @@
 nixpkgs.lib.nixosSystem {
   system = "aarch64-linux";
   modules = [
+    ./../../modules/cachix.nix
     ./configuration.nix
     home-manager.nixosModules.home-manager
     {

@@ -1,6 +1,7 @@
 {pkgs, ...}: {
   nixpkgs.config.allowUnfree = true;
   system.stateVersion = "26.05";
+  nix.settings.experimental-features = ["nix-command" "flakes"];
 
   imports = [
     ./hardware-configuration.nix
@@ -33,6 +34,10 @@
     layout = "us";
     variant = "";
   };
+  services.xserver.libinput = {
+    enable = true;
+    mouse.naturalScrolling = true;
+  };
 
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
@@ -48,7 +53,7 @@
     description = "stiixxy";
     extraGroups = ["networkmanager" "wheel"];
     packages = with pkgs; [
-    	chromium
+      chromium
       _1password-gui
       _1password-cli
     ];
