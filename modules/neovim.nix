@@ -34,5 +34,6 @@ in {
     wget
     cargo
     go
+    alejandra
   ];
 }
