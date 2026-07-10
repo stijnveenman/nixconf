@@ -1,17 +1,19 @@
 {
   home-manager,
+  niri,
   nixpkgs,
   ...
-} @ inputs:
+}:
 nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
   modules = [
     ./configuration.nix
+    niri.nixosModules.niri
     home-manager.nixosModules.home-manager
     {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
-      home-manager.users.stiixxy = import ./home.nix inputs;
     }
+    ./home.nix
   ];
 }

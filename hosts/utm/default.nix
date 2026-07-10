@@ -3,7 +3,7 @@
   niri,
   nixpkgs,
   ...
-} @ inputs:
+}:
 nixpkgs.lib.nixosSystem {
   system = "aarch64-linux";
   modules = [
