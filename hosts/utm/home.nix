@@ -1,4 +1,8 @@
-{...}: {
+{
+  lib,
+  pkgs,
+  ...
+}: {
   home-manager.users.stiixxy = {
     home.stateVersion = "26.05";
 
@@ -11,7 +15,17 @@
 
     programs.bash.enable = true;
 
-    programs.niri.settings = {};
+    programs.niri.settings = {
+      input.keyboard.xkb.layout = "us,ua";
+
+      layout.gaps = 5;
+
+      binds = {
+        "Mod+Return".spawn-sh = lib.getExe pkgs.kitty;
+        "Mod+Q".close-window = null;
+        "Mod+S".spawn-sh = "${lib.getExe pkgs.noctalia} ipc call launcher toggle";
+      };
+    };
 
     programs.git = {
       enable = true;
