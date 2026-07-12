@@ -21,17 +21,49 @@
         {argv = ["${lib.getExe pkgs._1password-gui} --silent"];}
       ];
 
+      layout = {
+        gaps = 6;
+
+        default-column-width = {proportion = 1.;};
+
+        preset-column-widths = [
+          {proportion = 0.5;}
+          {proportion = 2. / 3.;}
+        ];
+
+        focus-ring = {
+          width = 1;
+        };
+      };
+
+      switch-events = {
+        lid-close.action.spawn = ["${lib.getExe pkgs.noctalia-shell}" "ipc call lockScreen lock"];
+      };
+
+      window-rules = [
+        {
+          clip-to-geometry = true;
+          geometry-corner-radius.bottom-left = 10.;
+          geometry-corner-radius.bottom-right = 10.;
+          geometry-corner-radius.top-left = 10.;
+          geometry-corner-radius.top-right = 10.;
+        }
+      ];
+
       binds = {
         "Mod+W".action.close-window = {};
         "Mod+Return".action.spawn-sh = lib.getExe pkgs.ghostty;
         "Mod+Shift+Slash".action.spawn-sh = "${lib.getExe pkgs._1password-gui} --toggle";
+        "Mod+Shift+B".action.spawn = "${lib.getExe pkgs.google-chrome}";
 
         "Mod+Space".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call launcher toggle";
         "Mod+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call sessionMenu toggle";
         "Mod+Shift+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call lockScreen lock";
 
-        "Mod+N".action.focus-workspace-down = {};
-        "Mod+P".action.focus-workspace-up = {};
+        "Mod+R".action.switch-preset-column-width = {};
+        "Mod+F".action.maximize-column = {};
+        "Mod+Equal".action.set-column-width = "+10%";
+        "Mod+Minus".action.set-column-width = "-10%";
 
         "Mod+1".action.focus-workspace = 1;
         "Mod+2".action.focus-workspace = 2;
@@ -55,11 +87,17 @@
         "Mod+Shift+9".action.move-window-to-workspace = 9;
         "Mod+Shift+0".action.move-window-to-workspace = 0;
 
+        # Mod+Ctrl+Shift+Left  hotkey-overlay-title="Move column to left monitor" { move-column-to-monitor-left; }
         "Mod+H".action.focus-column-left = {};
         "Mod+Shift+H".action.move-column-left = {};
 
         "Mod+L".action.focus-column-right = {};
         "Mod+Shift+L".action.move-column-right = {};
+
+        "Mod+N".action.focus-workspace-down = {};
+        "Mod+Shift+N".action.move-column-to-workspace-down = {};
+        "Mod+P".action.focus-workspace-up = {};
+        "Mod+Shift+P".action.move-column-to-workspace-up = {};
       };
     };
 
