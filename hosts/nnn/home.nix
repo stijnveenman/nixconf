@@ -96,8 +96,10 @@
 
         "Mod+N".action.focus-workspace-down = {};
         "Mod+Shift+N".action.move-column-to-workspace-down = {};
+        "Mod+Ctrl+Shift+N".action.move-workspace-down = {};
         "Mod+P".action.focus-workspace-up = {};
         "Mod+Shift+P".action.move-column-to-workspace-up = {};
+        "Mod+Ctrl+Shift+P".action.move-workspace-up = {};
       };
     };
 
