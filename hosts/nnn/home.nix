@@ -55,8 +55,11 @@
         "Mod+Shift+9".action.move-window-to-workspace = 9;
         "Mod+Shift+0".action.move-window-to-workspace = 0;
 
-        "Mod+h".action.focus-column-left = {};
-        "Mod+l".action.focus-column-right = {};
+        "Mod+H".action.focus-column-left = {};
+        "Mod+Shift+H".action.move-column-left = {};
+
+        "Mod+L".action.focus-column-right = {};
+        "Mod+Shift+L".action.move-column-right = {};
       };
     };
 
