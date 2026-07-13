@@ -41,6 +41,8 @@
       };
 
       input.mouse.natural-scroll = false;
+      input.mouse.accel-profile = "flat";
+      input.mouse.accel-speed = 1;
       input.touchpad.natural-scroll = false;
 
       outputs."DP-2" = {
@@ -117,11 +119,11 @@
         "Mod+Shift+L".action.move-column-right = {};
 
         "Mod+N".action.focus-workspace-down = {};
-        "Mod+Shift+N".action.move-column-to-workspace-down = {};
-        "Mod+Ctrl+Shift+N".action.move-workspace-down = {};
+        "Mod+Ctrl+Shift+N".action.move-column-to-workspace-down = {};
+        "Mod+Shift+N".action.move-workspace-down = {};
         "Mod+P".action.focus-workspace-up = {};
-        "Mod+Shift+P".action.move-column-to-workspace-up = {};
-        "Mod+Ctrl+Shift+P".action.move-workspace-up = {};
+        "Mod+Ctrl+Shift+P".action.move-column-to-workspace-up = {};
+        "Mod+Shift+P".action.move-workspace-up = {};
       };
     };
 
