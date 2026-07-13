@@ -16,6 +16,10 @@
     programs.bash.enable = true;
 
     programs.niri.settings = {
+      hotkey-overlay = {
+        skip-at-startup = true;
+      };
+
       spawn-at-startup = [
         {argv = ["${lib.getExe pkgs.noctalia-shell}"];}
         {argv = ["${lib.getExe pkgs._1password-gui} --silent"];}
@@ -36,8 +40,25 @@
         };
       };
 
+      input.mouse.natural-scroll = false;
+      input.touchpad.natural-scroll = false;
+
+      outputs."DP-2" = {
+        position = {
+          x = 2560;
+          y = 0;
+        };
+      };
+
+      outputs."HDMI-A-1" = {
+        position = {
+          x = 0;
+          y = 0;
+        };
+      };
+
       switch-events = {
-        lid-close.action.spawn = ["${lib.getExe pkgs.noctalia-shell}" "ipc call lockScreen lock"];
+        lid-close.action.spawn = ["${lib.getExe pkgs.noctalia-shell}" "ipc" "call" "lockScreen" "lock"];
       };
 
       window-rules = [
@@ -55,6 +76,7 @@
         "Mod+Return".action.spawn-sh = lib.getExe pkgs.ghostty;
         "Mod+Shift+Slash".action.spawn-sh = "${lib.getExe pkgs._1password-gui} --toggle";
         "Mod+Shift+B".action.spawn = "${lib.getExe pkgs.google-chrome}";
+        "Mod+Shift+T".action.spawn-sh = "${lib.getExe pkgs.todoist-electron}";
 
         "Mod+Space".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call launcher toggle";
         "Mod+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call sessionMenu toggle";
@@ -113,9 +135,12 @@
 
     home.packages = with pkgs; [
       noctalia-shell
+      todoist-electron
     ];
 
     home.file.".config/noctalia/settings.json".source = ./noctalia.json;
+
+    programs.discord.enable = true;
 
     programs.git = {
       enable = true;

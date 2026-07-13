@@ -34,6 +34,10 @@
     enable = true;
   };
 
+  environment.systemPackages = with pkgs; [
+    xwayland-satellite
+  ];
+
   services.xserver.xkb = {
     layout = "us";
     variant = "";
