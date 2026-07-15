@@ -111,19 +111,25 @@
         "Mod+Shift+9".action.move-window-to-workspace = 9;
         "Mod+Shift+0".action.move-window-to-workspace = 0;
 
-        # Mod+Ctrl+Shift+Left  hotkey-overlay-title="Move column to left monitor" { move-column-to-monitor-left; }
         "Mod+H".action.focus-column-left = {};
         "Mod+Shift+H".action.move-column-left = {};
 
         "Mod+L".action.focus-column-right = {};
         "Mod+Shift+L".action.move-column-right = {};
 
-        "Mod+N".action.focus-workspace-down = {};
-        "Mod+Ctrl+Shift+N".action.move-column-to-workspace-down = {};
-        "Mod+Shift+N".action.move-workspace-down = {};
-        "Mod+P".action.focus-workspace-up = {};
-        "Mod+Ctrl+Shift+P".action.move-column-to-workspace-up = {};
-        "Mod+Shift+P".action.move-workspace-up = {};
+        "Mod+Ctrl+H".action.focus-monitor-left = {};
+        "Mod+Ctrl+Shift+H".action.move-column-to-monitor-left = {};
+
+        "Mod+Ctrl+L".action.move-column-to-monitor-right = {};
+        "Mod+Ctrl+Shift+L".action.focus-monitor-right = {};
+
+        "Mod+J".action.focus-workspace-down = {};
+        "Mod+Shift+J".action.move-column-to-workspace-down = {};
+        "Mod+Ctrl+Shift+J".action.move-workspace-down = {};
+
+        "Mod+K".action.focus-workspace-up = {};
+        "Mod+Shift+K".action.move-column-to-workspace-up = {};
+        "Mod+Ctrl+Shift+K".action.move-workspace-up = {};
       };
     };
 
