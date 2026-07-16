@@ -23,7 +23,7 @@
 
       spawn-at-startup = [
         {argv = ["${lib.getExe pkgs.noctalia-shell}"];}
-        {argv = ["${lib.getExe pkgs._1password-gui} --silent"];}
+        {argv = ["${lib.getExe pkgs._1password-gui}" "--silent"];}
       ];
 
       layout = {
