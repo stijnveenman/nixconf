@@ -164,7 +164,7 @@
   },
   "general": {
     "avatarImage": "/home/stiixxy/.face",
-    "dimmerOpacity": 0.2,
+    "dimmerOpacity": 0,
     "showScreenCorners": false,
     "forceBlackScreenCorners": false,
     "scaleRatio": 0.9,
