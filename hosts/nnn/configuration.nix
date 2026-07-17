@@ -36,6 +36,7 @@
 
   environment.systemPackages = with pkgs; [
     xwayland-satellite
+    gnomeExtensions.auto-power-profile
   ];
 
   services.xserver.xkb = {
@@ -51,6 +52,9 @@
     alsa.support32Bit = true;
     pulse.enable = true;
   };
+
+  services.power-profiles-daemon.enable = true;
+  services.upower.enable = true;
 
   users.users."stiixxy" = {
     isNormalUser = true;

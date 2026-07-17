@@ -24,6 +24,7 @@
       spawn-at-startup = [
         {argv = ["${lib.getExe pkgs.noctalia-shell}"];}
         {argv = ["${lib.getExe pkgs._1password-gui}" "--silent"];}
+        {argv = ["${lib.getExe pkgs.discord}"];}
       ];
 
       layout = {
@@ -72,7 +73,24 @@
           geometry-corner-radius.top-left = 10.;
           geometry-corner-radius.top-right = 10.;
         }
+        {
+          matches = [
+            {
+              app-id = "discord";
+              at-startup = true;
+            }
+          ];
+          open-on-workspace = "";
+        }
       ];
+
+      workspaces."1" = {};
+      workspaces."2" = {};
+      workspaces."3" = {};
+      workspaces."4" = {};
+      workspaces."5" = {};
+      workspaces."6" = {};
+      workspaces."" = {};
 
       binds = {
         "Mod+W".action.close-window = {};
@@ -99,7 +117,7 @@
         "Mod+7".action.focus-workspace = 7;
         "Mod+8".action.focus-workspace = 8;
         "Mod+9".action.focus-workspace = 9;
-        "Mod+0".action.focus-workspace = 0;
+        "Mod+0".action.focus-workspace = "";
 
         "Mod+Shift+1".action.move-window-to-workspace = 1;
         "Mod+Shift+2".action.move-window-to-workspace = 2;
