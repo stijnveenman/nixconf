@@ -24,6 +24,7 @@
       spawn-at-startup = [
         {argv = ["${lib.getExe pkgs.noctalia-shell}"];}
         {argv = ["${lib.getExe pkgs._1password-gui}" "--silent"];}
+        {argv = ["${lib.getExe pkgs.pear-desktop}"];}
         {argv = ["${lib.getExe pkgs.discord}"];}
       ];
 
@@ -79,8 +80,14 @@
               app-id = "discord";
               at-startup = true;
             }
+            {
+              app-id = "com.github.th_ch.youtube_music";
+              at-startup = true;
+            }
           ];
+          default-column-width = {proportion = 0.75;};
           open-on-workspace = "";
+          open-focused = false;
         }
       ];
 
@@ -90,13 +97,16 @@
       workspaces."4" = {};
       workspaces."5" = {};
       workspaces."6" = {};
-      workspaces."" = {};
+      workspaces."" = {
+        open-on-output = "";
+      };
 
       binds = {
         "Mod+W".action.close-window = {};
         "Mod+Return".action.spawn-sh = lib.getExe pkgs.ghostty;
         "Mod+Shift+Slash".action.spawn-sh = "${lib.getExe pkgs._1password-gui} --toggle";
         "Mod+Shift+B".action.spawn = "${lib.getExe pkgs.google-chrome}";
+        "Mod+Ctrl+Shift+B".action.spawn-sh = "${lib.getExe pkgs.google-chrome} --restore-last-session";
         "Mod+Shift+T".action.spawn-sh = "${lib.getExe pkgs.todoist-electron}";
 
         "Mod+Space".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call launcher toggle";
@@ -163,6 +173,7 @@
     home.packages = with pkgs; [
       noctalia-shell
       todoist-electron
+      pear-desktop
     ];
 
     home.file.".config/noctalia/settings.json".source = ./noctalia.json;
