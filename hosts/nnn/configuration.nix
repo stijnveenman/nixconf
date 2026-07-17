@@ -60,6 +60,7 @@
       google-chrome
       _1password-gui
       _1password-cli
+      kdePackages.dolphin
     ];
   };
 

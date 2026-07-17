@@ -148,6 +148,11 @@
     ];
 
     home.file.".config/noctalia/settings.json".source = ./noctalia.json;
+    home.file.".cache/noctalia/wallpapers.json" = {
+      text = builtins.toJSON {
+        defaultWallpaper = pkgs.nixos-artwork.wallpapers.simple-dark-gray.gnomeFilePath;
+      };
+    };
 
     programs.discord.enable = true;
 
