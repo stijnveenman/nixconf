@@ -162,6 +162,7 @@
       };
     };
 
+    programs.direnv.enable = true;
     programs.ghostty = {
       enable = true;
       enableBashIntegration = true;
