@@ -15,6 +15,18 @@
 
     programs.bash.enable = true;
 
+    xdg.portal = {
+      enable = true;
+      extraPortals = [pkgs.xdg-desktop-portal-gtk];
+      config = {
+        common = {
+          default = [
+            "gtk"
+          ];
+        };
+      };
+    };
+
     programs.niri.settings = {
       prefer-no-csd = true;
       hotkey-overlay = {
@@ -81,24 +93,28 @@
               at-startup = true;
             }
             {
-              app-id = "com.github.th_ch.youtube_music";
+              app-id = "lom.github.th-ch.youtube_music";
               at-startup = true;
             }
           ];
-          default-column-width = {proportion = 0.75;};
+          default-column-width = {proportion = 0.50;};
           open-on-workspace = "";
           open-focused = false;
         }
       ];
 
-      workspaces."1" = {};
-      workspaces."2" = {};
-      workspaces."3" = {};
-      workspaces."4" = {};
-      workspaces."5" = {};
-      workspaces."6" = {};
-      workspaces."" = {
-        open-on-output = "";
+      workspaces."1" = {open-on-output = "DP-1";};
+      workspaces."2" = {open-on-output = "DP-1";};
+      workspaces."3" = {open-on-output = "DP-1";};
+      workspaces."4" = {open-on-output = "DP-1";};
+      workspaces."5" = {open-on-output = "DP-1";};
+      workspaces."6" = {open-on-output = "DP-1";};
+      workspaces."7" = {open-on-output = "HDMI-A-1";};
+      workspaces."8" = {open-on-output = "HDMI-A-1";};
+      workspaces."9" = {open-on-output = "HDMI-A-1";};
+      workspaces.discord = {
+        name = "";
+        open-on-output = "HDMI-A-1";
       };
 
       binds = {
@@ -118,27 +134,27 @@
         "Mod+Equal".action.set-column-width = "+10%";
         "Mod+Minus".action.set-column-width = "-10%";
 
-        "Mod+1".action.focus-workspace = 1;
-        "Mod+2".action.focus-workspace = 2;
-        "Mod+3".action.focus-workspace = 3;
-        "Mod+4".action.focus-workspace = 4;
-        "Mod+5".action.focus-workspace = 5;
-        "Mod+6".action.focus-workspace = 6;
-        "Mod+7".action.focus-workspace = 7;
-        "Mod+8".action.focus-workspace = 8;
-        "Mod+9".action.focus-workspace = 9;
+        "Mod+1".action.focus-workspace = "1";
+        "Mod+2".action.focus-workspace = "2";
+        "Mod+3".action.focus-workspace = "3";
+        "Mod+4".action.focus-workspace = "4";
+        "Mod+5".action.focus-workspace = "5";
+        "Mod+6".action.focus-workspace = "6";
+        "Mod+7".action.focus-workspace = "7";
+        "Mod+8".action.focus-workspace = "8";
+        "Mod+9".action.focus-workspace = "9";
         "Mod+0".action.focus-workspace = "";
 
-        "Mod+Shift+1".action.move-window-to-workspace = 1;
-        "Mod+Shift+2".action.move-window-to-workspace = 2;
-        "Mod+Shift+3".action.move-window-to-workspace = 3;
-        "Mod+Shift+4".action.move-window-to-workspace = 4;
-        "Mod+Shift+5".action.move-window-to-workspace = 5;
-        "Mod+Shift+6".action.move-window-to-workspace = 6;
-        "Mod+Shift+7".action.move-window-to-workspace = 7;
-        "Mod+Shift+8".action.move-window-to-workspace = 8;
-        "Mod+Shift+9".action.move-window-to-workspace = 9;
-        "Mod+Shift+0".action.move-window-to-workspace = 0;
+        "Mod+Shift+1".action.move-window-to-workspace = "1";
+        "Mod+Shift+2".action.move-window-to-workspace = "2";
+        "Mod+Shift+3".action.move-window-to-workspace = "3";
+        "Mod+Shift+4".action.move-window-to-workspace = "4";
+        "Mod+Shift+5".action.move-window-to-workspace = "5";
+        "Mod+Shift+6".action.move-window-to-workspace = "6";
+        "Mod+Shift+7".action.move-window-to-workspace = "7";
+        "Mod+Shift+8".action.move-window-to-workspace = "8";
+        "Mod+Shift+9".action.move-window-to-workspace = "9";
+        "Mod+Shift+0".action.move-window-to-workspace = "";
 
         "Mod+H".action.focus-column-left = {};
         "Mod+Shift+H".action.move-column-left = {};
@@ -146,11 +162,13 @@
         "Mod+L".action.focus-column-right = {};
         "Mod+Shift+L".action.move-column-right = {};
 
+        "Mod+Tab".action.focus-monitor-next = {};
+
         "Mod+Ctrl+H".action.focus-monitor-left = {};
         "Mod+Ctrl+Shift+H".action.move-column-to-monitor-left = {};
 
-        "Mod+Ctrl+L".action.move-column-to-monitor-right = {};
-        "Mod+Ctrl+Shift+L".action.focus-monitor-right = {};
+        "Mod+Ctrl+L".action.focus-monitor-right = {};
+        "Mod+Ctrl+Shift+L".action.move-column-to-monitor-right = {};
 
         "Mod+J".action.focus-workspace-down = {};
         "Mod+Shift+J".action.move-column-to-workspace-down = {};

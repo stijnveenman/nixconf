@@ -53,7 +53,7 @@
     pulse.enable = true;
   };
 
-  services.power-profiles-daemon.enable = true;
+  services.power-profiles-daemon.enable = false;
   services.upower.enable = true;
 
   users.users."stiixxy" = {
