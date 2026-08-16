@@ -193,6 +193,7 @@
       noctalia-shell
       todoist-electron
       pear-desktop
+      opencode
     ];
 
     home.file.".config/noctalia/settings.json".source = ./noctalia.json;
