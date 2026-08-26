@@ -23,7 +23,6 @@ return {
 
       -- Recommended/example keymaps
       -- stylua: ignore start
-      vim.keymap.set({ "n", "x" }, "<C-a>",   function() require("opencode").ask("@this: ") end,                    { desc = "Ask OpenCode…" })
       vim.keymap.set({ "n", "x", "t" }, "<C-x>", function() require("snacks.terminal").toggle(opencode_cmd, snacks_terminal_opts) end, { desc = "Focus OpenCode" })
       vim.keymap.set({ "n", "x" }, "go",      function() return require("opencode").operator("@this ") end,         { desc = "Append range to OpenCode", expr = true })
       vim.keymap.set({ "n" },      "goo",     function() return require("opencode").operator("@this ") .. "_" end,  { desc = "Append line to OpenCode", expr = true })
@@ -38,8 +37,8 @@ return {
           ---@type opencode.server.Event
           local event = args.data.event
 
-          if event.type == "session.status" then
-            vim.notify("OpenCode status updated: " .. event.properties.status.type)
+          if event.type == "session.status" and event.properties.status.type == "idle" then
+            vim.notify("OpenCode prompt finished")
           end
         end,
       })
