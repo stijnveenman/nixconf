@@ -11,6 +11,8 @@
   treehouseBin = lib.getExe treehouse;
   opencodeBin = lib.getExe config.programs.opencode.package;
   lazygitBin = lib.getExe config.programs.lazygit.package;
+  herdrBin = lib.getExe config.programs.herdr.package;
+  jqBin = lib.getExe pkgs.jq;
 in {
   nixpkgs.config.allowUnfree = true;
 
@@ -82,6 +84,7 @@ in {
 
       lg = "lazygit";
       o = "opencode";
+      x = "opencode";
 
       h = "herdr";
       th = "treehouse";
@@ -121,13 +124,29 @@ in {
           height = "80%";
         }
         {
-          # Lease a warm treehouse worktree, open opencode in it, and return
-          # the worktree to the pool when opencode exits. Absolute paths because
-          # herdr keybind commands run via /bin/sh -c without the nix PATH.
+          # Lease a warm treehouse worktree, open opencode in it *in a new tab*,
+          # and return the worktree to the pool (and close the tab) when opencode
+          # exits.
+          #
+          # type = "shell" runs detached so it doesn't hijack the current pane;
+          # the new tab is driven through herdr's socket API. herdr command
+          # keybinds run via /bin/sh -c without the nix profile on PATH, so every
+          # binary is referenced by absolute path.
+          #
+          # --lease prints only the worktree path to stdout (banners go to
+          # stderr), so `d` is a clean path. `tab create --focus` opens a fresh
+          # focused tab whose shell starts in the worktree; opencode is then run
+          # inside that tab's pane, and the return/close chain fires on exit.
           key = "prefix+a";
-          type = "pane";
-          command = ''d=$(${treehouseBin} get --lease) && cd "$d" && ${opencodeBin}; ${treehouseBin} return --force "$d"'';
-          description = "worktree + opencode";
+          type = "shell";
+          command = ''
+            d=$(${treehouseBin} get --lease) || exit 1
+            out=$(${herdrBin} tab create --cwd "$d" --focus --label worktree) || { ${treehouseBin} return --force "$d"; exit 1; }
+            pane=$(printf '%s' "$out" | ${jqBin} -r '.result.root_pane.pane_id')
+            tab=$(printf '%s' "$out" | ${jqBin} -r '.result.tab.tab_id')
+            ${herdrBin} pane run "$pane" "${opencodeBin}; ${treehouseBin} return --force '$d'; ${herdrBin} tab close '$tab'"
+          '';
+          description = "worktree + opencode (new tab)";
         }
       ];
 
@@ -151,8 +170,10 @@ in {
     settings = {
       theme = "Gruvbox Dark";
 
-      font-family = "JetBrainsMono Nerd Font";
-      font-size = 13;
+      font-family = "JetBrainsMono Nerd Font Mono";
+      font-size = 12;
+      # Disable programming ligatures (e.g. != stays as two glyphs).
+      font-feature = ["-calt" "-liga" "-dlig"];
 
       # Treat the macOS Option key as Alt/Meta so terminal keybinds work.
       macos-option-as-alt = true;
