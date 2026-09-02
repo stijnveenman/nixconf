@@ -176,6 +176,42 @@ in {
           command = "${nextAgentScript}";
           description = "next agent needing attention";
         }
+
+        # Seamless ctrl+hjkl navigation between neovim splits and herdr panes,
+        # via smart-splits.nvim's bundled herdr plugin (tmux-navigator style).
+        # These forward the key to the focused pane when it runs vim/neovim (so
+        # vim moves its own splits, crossing pane boundaries at edges), and move
+        # herdr focus directly otherwise. Shell defaults like ctrl+l / ctrl+h
+        # still work at window edges via the plugin's passthrough.
+        #
+        # Requires a ONE-TIME imperative link to smart-splits' checkout, which
+        # lazy.nvim clones at runtime (path is not known to nix):
+        #   herdr plugin link ~/.local/share/nvim-nixconf/lazy/smart-splits.nvim
+        #   herdr server reload-config
+        {
+          key = "ctrl+h";
+          type = "plugin_action";
+          command = "smart-splits.nvim.left";
+          description = "navigate left (vim/herdr)";
+        }
+        {
+          key = "ctrl+j";
+          type = "plugin_action";
+          command = "smart-splits.nvim.down";
+          description = "navigate down (vim/herdr)";
+        }
+        {
+          key = "ctrl+k";
+          type = "plugin_action";
+          command = "smart-splits.nvim.up";
+          description = "navigate up (vim/herdr)";
+        }
+        {
+          key = "ctrl+l";
+          type = "plugin_action";
+          command = "smart-splits.nvim.right";
+          description = "navigate right (vim/herdr)";
+        }
       ];
 
       ui = {
