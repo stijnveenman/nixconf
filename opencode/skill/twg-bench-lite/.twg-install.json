@@ -1,0 +1,11 @@
+{
+  "skillName": "twg",
+  "target": "OpenCode",
+  "installPath": "/Users/sv/.config/opencode/skills/twg-bench-lite",
+  "binaryPath": "/Users/sv/.local/bin/twg",
+  "installedAt": "2026-09-01T14:26:29.514Z",
+  "installedVersion": "1.2.7",
+  "buildProfile": "external",
+  "buildCommit": "8598ad408044",
+  "builtAt": "2026-08-28T18:37:55.198Z"
+}
