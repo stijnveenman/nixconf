@@ -13,6 +13,55 @@
   lazygitBin = lib.getExe config.programs.lazygit.package;
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
+
+  # Jump to the next agent needing attention, ranked by status priority
+  # (blocked, then done, then idle). Reimplements martin-ro/herdr-next-agent as
+  # a native keybind (no Python/plugin install). If the focused pane is in the
+  # ranked set, jumps to the next one so repeated presses cycle through all;
+  # toasts when nothing needs attention. herdr/jq by absolute path (keybind env
+  # lacks the nix profile on PATH).
+  nextAgentScript = pkgs.writeShellScript "herdr-next-agent" ''
+    agents=$(${herdrBin} agent list) || exit 1
+
+    target=$(printf '%s' "$agents" | ${jqBin} -r '
+      ["blocked","done","idle"] as $prio
+      | .result.agents
+      | map(.rank = (.agent_status as $s | $prio | index($s)))
+      | map(select(.rank != null))
+      | sort_by(.rank)
+      | . as $ranked
+      | ($ranked | map(.focused) | index(true)) as $cur
+      | if ($ranked | length) == 0 then ""
+        elif $cur == null then $ranked[0].pane_id
+        else $ranked[(($cur + 1) % ($ranked | length))].pane_id
+        end
+    ')
+
+    if [ -z "$target" ]; then
+      ${herdrBin} notification show "No agent needs attention" --position top-right >/dev/null 2>&1
+      exit 0
+    fi
+
+    ${herdrBin} agent focus "$target" >/dev/null 2>&1
+  '';
+
+  # Startup command for the "worktree + opencode" tab, launched as the tab's
+  # SHELL. `treehouse get` acquires a worktree, opens a subshell in it, and
+  # auto-returns it when that subshell exits; we point the subshell at opencode
+  # via SHELL, so opencode is the session. On exit, close the tab (via
+  # HERDR_TAB_ID provided by herdr). Runs in a login shell + direnv, so project
+  # devshell tools (e.g. git-crypt) are on PATH.
+  #
+  # git-crypt repos should set `filter.git-crypt.required = false` locally so a
+  # worktree checkout leaves files encrypted instead of aborting.
+  worktreeAgentScript = pkgs.writeShellScript "herdr-worktree-agent" ''
+    err=$(mktemp)
+    if ! SHELL=${opencodeBin} ${treehouseBin} get 2>"$err"; then
+      ${herdrBin} notification show "Worktree acquire failed" --body "$(cat "$err")" --position top-right --sound request
+    fi
+    rm -f "$err"
+    ${herdrBin} tab close "$HERDR_TAB_ID"
+  '';
 in {
   nixpkgs.config.allowUnfree = true;
 
@@ -124,29 +173,25 @@ in {
           height = "80%";
         }
         {
-          # Lease a warm treehouse worktree, open opencode in it *in a new tab*,
-          # and return the worktree to the pool (and close the tab) when opencode
-          # exits.
-          #
-          # type = "shell" runs detached so it doesn't hijack the current pane;
-          # the new tab is driven through herdr's socket API. herdr command
-          # keybinds run via /bin/sh -c without the nix profile on PATH, so every
-          # binary is referenced by absolute path.
-          #
-          # --lease prints only the worktree path to stdout (banners go to
-          # stderr), so `d` is a clean path. `tab create --focus` opens a fresh
-          # focused tab whose shell starts in the worktree; opencode is then run
-          # inside that tab's pane, and the return/close chain fires on exit.
+          # Open opencode in a fresh treehouse worktree, in a new tab rooted in
+          # the triggering pane's repo (HERDR_ACTIVE_PANE_CWD). The tab launches
+          # worktreeAgentScript as its shell (via --env SHELL).
           key = "prefix+a";
           type = "shell";
           command = ''
-            d=$(${treehouseBin} get --lease) || exit 1
-            out=$(${herdrBin} tab create --cwd "$d" --focus --label worktree) || { ${treehouseBin} return --force "$d"; exit 1; }
-            pane=$(printf '%s' "$out" | ${jqBin} -r '.result.root_pane.pane_id')
-            tab=$(printf '%s' "$out" | ${jqBin} -r '.result.tab.tab_id')
-            ${herdrBin} pane run "$pane" "${opencodeBin}; ${treehouseBin} return --force '$d'; ${herdrBin} tab close '$tab'"
+            src="''${HERDR_ACTIVE_PANE_CWD:-$HOME}"
+            ${herdrBin} tab create --cwd "$src" --focus --env SHELL=${worktreeAgentScript} || \
+              ${herdrBin} notification show "New worktree tab failed" --position top-right --sound request >/dev/null 2>&1
           '';
           description = "worktree + opencode (new tab)";
+        }
+        {
+          # Jump to the next agent needing attention (blocked > done > idle).
+          # See nextAgentScript above.
+          key = "prefix+o";
+          type = "shell";
+          command = "${nextAgentScript}";
+          description = "next agent needing attention";
         }
       ];
 
