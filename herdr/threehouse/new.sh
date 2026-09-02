@@ -106,6 +106,36 @@ if [ -z "$path" ] || [ "$path" = "null" ] || [ ! -d "$path" ]; then
   die "treehouse returned an invalid worktree path."
 fi
 
+# --- Create a branch from the display name ----------------------------------
+# treehouse worktrees start in detached HEAD by design. Branch at the start so
+# committed work is always reachable by a name (never lost when the pool slot is
+# reset on return) and PRs are a plain push. Derive a valid git branch name from
+# the (possibly space-containing) display name.
+branch="$(
+  printf '%s' "$name" \
+    | tr '[:upper:]' '[:lower:]' \
+    | tr -c 'a-z0-9._/-' '-' \
+    | sed -E 's/-+/-/g; s#/+#/#g; s/^[-._/]+//; s/[-._/]+$//'
+)"
+[ -n "$branch" ] || branch="workspace"
+
+return_lease() {
+  "$TREEHOUSE" return --force --if-lease-id "$lease_id" --if-lease-holder herdr "$path" >/dev/null 2>&1 || true
+}
+
+if git -C "$path" show-ref --verify --quiet "refs/heads/$branch"; then
+  # Branch already exists (e.g. reusing a name): switch onto it.
+  git -C "$path" switch "$branch" >/dev/null 2>&1 || {
+    return_lease
+    die "Could not switch to existing branch '$branch'; the lease was returned."
+  }
+else
+  git -C "$path" switch -c "$branch" >/dev/null 2>&1 || {
+    return_lease
+    die "Could not create branch '$branch'; the lease was returned."
+  }
+fi
+
 # --- Open as a herdr workspace ----------------------------------------------
 # herdr rejects adopting an external linked-worktree via `worktree open`, so we
 # create a plain workspace rooted at the leased checkout. It is a first-class
@@ -113,13 +143,13 @@ fi
 create_json="$(
   "$HERDR" workspace create --cwd "$path" --label "$name" --focus
 )" || {
-  "$TREEHOUSE" return --force --if-lease-id "$lease_id" --if-lease-holder herdr "$path" >/dev/null 2>&1 || true
+  return_lease
   die "herdr failed to create the workspace; the lease was returned."
 }
 
 ws_id="$(printf '%s' "$create_json" | "$JQ" -r '.result.workspace.workspace_id')"
 if [ -z "$ws_id" ] || [ "$ws_id" = "null" ]; then
-  "$TREEHOUSE" return --force --if-lease-id "$lease_id" --if-lease-holder herdr "$path" >/dev/null 2>&1 || true
+  return_lease
   die "Could not read the new workspace id; the lease was returned."
 fi
 
@@ -129,16 +159,17 @@ fi
   --arg path "$path" \
   --arg lease_id "$lease_id" \
   --arg name "$name" \
+  --arg branch "$branch" \
   --arg repo "$repo_name" \
   --arg base "$resolved_base" \
-  '{workspace_id:$ws, path:$path, lease_id:$lease_id, name:$name, repo:$repo, base:$base}' \
+  '{workspace_id:$ws, path:$path, lease_id:$lease_id, name:$name, branch:$branch, repo:$repo, base:$base}' \
   >"$(lease_file "$ws_id")"
 
-# Decorate the sidebar row with repo + base so pooled workspaces are legible.
+# Decorate the sidebar row with repo + branch so pooled workspaces are legible.
 "$HERDR" workspace report-metadata "$ws_id" \
   --source threehouse \
   --token repo="$repo_name" \
-  ${resolved_base:+--token base="$resolved_base"} \
+  --token branch="$branch" \
   >/dev/null 2>&1 || true
 
-log "Opened '$name' in a pooled worktree ($repo_name)."
+log "Opened '$name' on branch '$branch' ($repo_name)."

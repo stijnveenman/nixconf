@@ -35,7 +35,8 @@
         --replace-quiet '@HERDR@' '${herdrBin}' \
         --replace-quiet '@TREEHOUSE@' '${lib.getExe treehouse}' \
         --replace-quiet '@JQ@' '${jqBin}' \
-        --replace-quiet '@GUM@' '${gumBin}'
+        --replace-quiet '@GUM@' '${gumBin}' \
+        --replace-quiet '@TOOLPATH@' '${lib.makeBinPath [config.programs.git.package pkgs.coreutils pkgs.gnugrep pkgs.gnused]}'
       chmod +x "$out/$f"
     done
   '';
@@ -158,7 +159,7 @@ in {
   # Per-repo treehouse.toml files (committed per project) still override this.
   home.file.".config/treehouse/config.toml".text = ''
     # Maximum number of worktrees kept in each per-repo pool.
-    max_trees = 8
+    max_trees = 12
 
     # root is left unset -> defaults to ~/.treehouse
     # base_branch is left unset -> inferred per-repo (origin/HEAD, etc.)

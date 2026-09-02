@@ -8,6 +8,14 @@ TREEHOUSE="@TREEHOUSE@"
 JQ="@JQ@"
 GUM="@GUM@"
 
+# herdr runs plugin commands in the Ghostty/launchd environment, which does NOT
+# include the nix profile on PATH. treehouse shells out to `git`, and our own
+# scripts use coreutils (tr, sed, basename, grep, ...). Prepend a Nix-provided
+# tool PATH so all of those resolve regardless of the inherited environment.
+_toolpath='@TOOLPATH@'
+_ph='@''TOOLPATH@'
+[ "$_toolpath" != "$_ph" ] && export PATH="$_toolpath:${PATH:-}"
+
 # When run before Nix substitution (standalone dev), the values are still the
 # literal placeholders; fall back to PATH. Use a split literal so substitution
 # never rewrites the comparison target.
