@@ -45,44 +45,53 @@
     ${herdrBin} agent focus "$target" >/dev/null 2>&1
   '';
 
-  # Startup command for the "worktree + opencode" tab, launched as the tab's
-  # SHELL. `treehouse get` acquires a worktree, opens a subshell in it, and
-  # auto-returns it when that subshell exits; we point the subshell at opencode
-  # via SHELL, so opencode is the session. On exit, close the tab (via
-  # HERDR_TAB_ID provided by herdr). Runs in a login shell + direnv, so project
-  # devshell tools (e.g. git-crypt) are on PATH.
+  # Spawn a new herdr tab running opencode in a fresh treehouse worktree.
+  #
+  # $SHELL is left untouched (real interactive shell), so git and other tools
+  # opencode shells out to work normally. We lease the worktree non-interactively
+  # (`treehouse get --lease`, no subshell), create a tab rooted in it, then run
+  # opencode in that pane via `herdr pane run` (opencode is auto-detected as an
+  # agent). A trailing command returns the lease and closes the tab when opencode
+  # exits.
+  #
+  # Environment:
+  #   WT_SRC      repo dir to lease a worktree from (defaults to $PWD).
+  #   WT_BRANCH   optional; when set, `git switch -c` it in the worktree first.
+  #   WT_PROMPT   optional; when set, passed to opencode as --prompt.
+  #   WT_LABEL    optional tab label; unset uses herdr's default numbered name.
   #
   # git-crypt repos should set `filter.git-crypt.required = false` locally so a
   # worktree checkout leaves files encrypted instead of aborting.
-  worktreeAgentScript = pkgs.writeShellScript "herdr-worktree-agent" ''
+  worktreeSpawnScript = pkgs.writeShellScript "herdr-worktree-spawn" ''
+    src="''${WT_SRC:-$PWD}"
+
     err=$(mktemp)
-    if ! SHELL=${opencodeBin} ${treehouseBin} get 2>"$err"; then
-      ${herdrBin} notification show "Worktree acquire failed" --body "$(cat "$err")" --position top-right --sound request
+    d=$(cd "$src" && ${treehouseBin} get --lease 2>"$err")
+    if [ -z "$d" ]; then
+      ${herdrBin} notification show "Worktree lease failed" --body "$(cat "$err")" --position top-right --sound request
+      rm -f "$err"
+      exit 1
     fi
     rm -f "$err"
-    ${herdrBin} tab close "$HERDR_TAB_ID"
-  '';
 
-  # Inner session for /handoff, run as the SHELL of `treehouse get` so cwd is the
-  # worktree (detached HEAD). Creates HANDOFF_BRANCH, then launches opencode with
-  # HANDOFF_PROMPT as its initial prompt. When opencode exits, treehouse returns
-  # the worktree.
-  handoffInnerScript = pkgs.writeShellScript "herdr-handoff-inner" ''
-    git switch -c "$HANDOFF_BRANCH" 2>/dev/null || git switch "$HANDOFF_BRANCH"
-    exec ${opencodeBin} --prompt "$HANDOFF_PROMPT"
-  '';
+    set -- --cwd "$d" --no-focus
+    [ -n "''${WT_LABEL:-}" ] && set -- "$@" --label "$WT_LABEL"
+    out=$(${herdrBin} tab create "$@" 2>&1) || {
+      ${herdrBin} notification show "New worktree tab failed" --body "$out" --position top-right --sound request
+      ${treehouseBin} return --force "$d"
+      exit 1
+    }
+    pane=$(printf '%s' "$out" | ${jqBin} -r '.result.root_pane.pane_id')
+    tab=$(printf '%s' "$out" | ${jqBin} -r '.result.tab.tab_id')
 
-  # Startup command for a /handoff tab, launched as the tab's SHELL. Acquires a
-  # treehouse worktree and runs handoffInnerScript inside it (branch + opencode).
-  # Reads HANDOFF_BRANCH and HANDOFF_PROMPT from the environment (set by the
-  # /handoff command via `herdr tab create --env`). Closes the tab on exit.
-  handoffAgentScript = pkgs.writeShellScript "herdr-handoff-agent" ''
-    err=$(mktemp)
-    if ! SHELL=${handoffInnerScript} ${treehouseBin} get 2>"$err"; then
-      ${herdrBin} notification show "Handoff worktree failed" --body "$(cat "$err")" --position top-right --sound request
-    fi
-    rm -f "$err"
-    ${herdrBin} tab close "$HERDR_TAB_ID"
+    # Build the in-pane command: optional branch, opencode (optional prompt),
+    # then return the lease and close the tab on exit.
+    oc=${opencodeBin}
+    [ -n "''${WT_PROMPT:-}" ] && oc="${opencodeBin} --prompt \"$WT_PROMPT\""
+    pre=""
+    [ -n "''${WT_BRANCH:-}" ] && pre="git switch -c '$WT_BRANCH' 2>/dev/null || git switch '$WT_BRANCH'; "
+
+    ${herdrBin} pane run "$pane" "''${pre}$oc; ${treehouseBin} return --force '$d'; ${herdrBin} tab close '$tab'"
   '';
 in {
   nixpkgs.config.allowUnfree = true;
@@ -199,15 +208,11 @@ in {
         }
         {
           # Open opencode in a fresh treehouse worktree, in a new tab rooted in
-          # the triggering pane's repo (HERDR_ACTIVE_PANE_CWD). The tab launches
-          # worktreeAgentScript as its shell (via --env SHELL).
+          # the triggering pane's repo (HERDR_ACTIVE_PANE_CWD). See
+          # worktreeSpawnScript.
           key = "prefix+a";
           type = "shell";
-          command = ''
-            src="''${HERDR_ACTIVE_PANE_CWD:-$HOME}"
-            ${herdrBin} tab create --cwd "$src" --focus --env SHELL=${worktreeAgentScript} || \
-              ${herdrBin} notification show "New worktree tab failed" --position top-right --sound request >/dev/null 2>&1
-          '';
+          command = ''WT_SRC="''${HERDR_ACTIVE_PANE_CWD:-$HOME}" ${worktreeSpawnScript}'';
           description = "worktree + opencode (new tab)";
         }
         {
@@ -286,90 +291,6 @@ in {
     enableZshIntegration = true;
     nix-direnv.enable = true;
   };
-
-  # Global /handoff opencode command. Generated by home-manager so it can bake in
-  # the nix store path of handoffAgentScript. Takes a Jira ticket key or a free
-  # prompt, spawns a new herdr tab with a fresh treehouse worktree + branch, and
-  # starts opencode there working on the task.
-  xdg.configFile."opencode/command/handoff.md".text = ''
-    ---
-    description: Hand off a Jira ticket or prompt to a new worktree opencode tab
-    agent: build
-    ---
-
-    You are bootstrapping a **handoff**: take the task below, gather any context,
-    then launch a brand-new opencode session in a fresh isolated worktree that
-    starts implementing it. You are the *dispatcher*, not the implementer — do not
-    start writing code in this session.
-
-    ## Input
-
-    The task is everything the user passed to the command:
-
-    ```
-    $ARGUMENTS
-    ```
-
-    ## Step 1 — classify the input
-
-    Decide whether the input is a **Jira ticket** or a **free-form prompt**.
-
-    - Treat it as a Jira ticket if it is (or contains) a Jira key of the form
-      `ABC-123` (uppercase project key, hyphen, number), or a Jira URL containing
-      such a key. Extract the bare key (e.g. `WILBUR-16855`).
-    - Otherwise treat the whole input as a free-form prompt describing the task.
-
-    ## Step 2 — gather context
-
-    **If it is a Jira ticket:** load the `twg` skill and use Teamwork Graph to
-    fetch the ticket, e.g. `twg jira workitem get <KEY> -o json`. Read the summary,
-    description, acceptance criteria, and any linked context. Summarise this into a
-    clear implementation brief. If the fetch fails, stop and report the error —
-    do not spawn a tab.
-
-    **If it is a free-form prompt:** use the prompt text directly as the brief.
-
-    ## Step 3 — derive names
-
-    - **branch** and **tab name**:
-      - Jira ticket → both are the bare ticket key (e.g. `WILBUR-16855`).
-      - Free-form → **tab name** is a terse summary of the task, at most a few
-        words (e.g. `fix login redirect`); **branch** is a short kebab-case slug
-        of that summary (e.g. `fix-login-redirect`).
-
-    - **prompt**: the initial prompt the new opencode session should start with.
-      - Jira ticket → the implementation brief you built in Step 2, prefixed with
-        the ticket key and summary.
-      - Free-form → the original prompt text.
-
-    ## Step 4 — spawn the worktree tab
-
-    Run this single command from the current repository (its cwd is the repo you
-    are handing off from). Substitute the values you derived; keep the env var
-    names exactly as shown. Pass the prompt as a single argument (mind quoting /
-    newlines):
-
-    ```sh
-    ${herdrBin} tab create \
-      --cwd "$(pwd)" \
-      --no-focus \
-      --label "<TAB_NAME>" \
-      --env HANDOFF_BRANCH="<BRANCH>" \
-      --env HANDOFF_PROMPT="<PROMPT>" \
-      --env SHELL=${handoffAgentScript}
-    ```
-
-    This opens a new background tab (it does not steal focus) that acquires a
-    treehouse worktree, creates the branch, and launches opencode with your
-    prompt. The worktree returns to the pool and the tab closes when that opencode
-    session exits.
-
-    ## Step 5 — report
-
-    Tell the user what you dispatched: the tab name, branch, whether it came from a
-    Jira ticket (with the key) or a prompt, and a one-line summary of the brief.
-    Do not do any of the implementation work yourself.
-  '';
 
   programs.git = {
     enable = true;
