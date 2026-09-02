@@ -1,6 +1,7 @@
 {
   pkgs,
   config,
+  treehouse,
   ...
 }: {
   nixpkgs.config.allowUnfree = true;
@@ -32,6 +33,10 @@
     # formatting
     pkgs.nixd
     pkgs.alejandra
+
+    # agent runtime + worktree pool
+    pkgs.herdr
+    treehouse
   ];
 
   programs.zsh = {
@@ -71,6 +76,17 @@
   };
 
   programs.home-manager.enable = true;
+
+  programs.ghostty = {
+    enable = true;
+    # nixpkgs ghostty is Linux-only; on aarch64-darwin install the app via
+    # `brew install --cask ghostty`. Home-manager manages config only here.
+    package = null;
+    enableZshIntegration = true;
+    settings = {
+      theme = "Gruvbox Dark";
+    };
+  };
 
   programs.gh = {
     enable = true;

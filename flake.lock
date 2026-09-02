@@ -128,7 +128,28 @@
       "inputs": {
         "home-manager": "home-manager",
         "niri": "niri",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "treehouse": "treehouse"
+      }
+    },
+    "treehouse": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787960091,
+        "narHash": "sha256-6PNKQCzF6slqaPGLgavG6yAN81b+URgulWlEX8snc0s=",
+        "owner": "kunchenguid",
+        "repo": "treehouse",
+        "rev": "c98e9de0a8ad85d9551ccce85ecd96c8b9a8dff5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "repo": "treehouse",
+        "type": "github"
       }
     },
     "xwayland-satellite-stable": {

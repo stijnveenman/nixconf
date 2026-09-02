@@ -6,6 +6,9 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     niri.url = "github:sodiboo/niri-flake";
+
+    treehouse.url = "github:kunchenguid/treehouse";
+    treehouse.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs: {
