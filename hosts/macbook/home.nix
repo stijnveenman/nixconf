@@ -8,8 +8,6 @@
   # Absolute binary paths. herdr (and its panes/command keybinds) inherits the
   # GUI/launchd environment via Ghostty, which does not include the nix profile
   # on PATH, so keybind commands must reference binaries by absolute path.
-  treehouseBin = lib.getExe treehouse;
-  opencodeBin = lib.getExe config.programs.opencode.package;
   lazygitBin = lib.getExe config.programs.lazygit.package;
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
@@ -43,55 +41,6 @@
     fi
 
     ${herdrBin} agent focus "$target" >/dev/null 2>&1
-  '';
-
-  # Spawn a new herdr tab running opencode in a fresh treehouse worktree.
-  #
-  # $SHELL is left untouched (real interactive shell), so git and other tools
-  # opencode shells out to work normally. We lease the worktree non-interactively
-  # (`treehouse get --lease`, no subshell), create a tab rooted in it, then run
-  # opencode in that pane via `herdr pane run` (opencode is auto-detected as an
-  # agent). A trailing command returns the lease and closes the tab when opencode
-  # exits.
-  #
-  # Environment:
-  #   WT_SRC      repo dir to lease a worktree from (defaults to $PWD).
-  #   WT_BRANCH   optional; when set, `git switch -c` it in the worktree first.
-  #   WT_PROMPT   optional; when set, passed to opencode as --prompt.
-  #   WT_LABEL    optional tab label; unset uses herdr's default numbered name.
-  #
-  # git-crypt repos should set `filter.git-crypt.required = false` locally so a
-  # worktree checkout leaves files encrypted instead of aborting.
-  worktreeSpawnScript = pkgs.writeShellScript "herdr-worktree-spawn" ''
-    src="''${WT_SRC:-$PWD}"
-
-    err=$(mktemp)
-    d=$(cd "$src" && ${treehouseBin} get --lease 2>"$err")
-    if [ -z "$d" ]; then
-      ${herdrBin} notification show "Worktree lease failed" --body "$(cat "$err")" --position top-right --sound request
-      rm -f "$err"
-      exit 1
-    fi
-    rm -f "$err"
-
-    set -- --cwd "$d" --no-focus
-    [ -n "''${WT_LABEL:-}" ] && set -- "$@" --label "$WT_LABEL"
-    out=$(${herdrBin} tab create "$@" 2>&1) || {
-      ${herdrBin} notification show "New worktree tab failed" --body "$out" --position top-right --sound request
-      ${treehouseBin} return --force "$d"
-      exit 1
-    }
-    pane=$(printf '%s' "$out" | ${jqBin} -r '.result.root_pane.pane_id')
-    tab=$(printf '%s' "$out" | ${jqBin} -r '.result.tab.tab_id')
-
-    # Build the in-pane command: optional branch, opencode (optional prompt),
-    # then return the lease and close the tab on exit.
-    oc=${opencodeBin}
-    [ -n "''${WT_PROMPT:-}" ] && oc="${opencodeBin} --prompt \"$WT_PROMPT\""
-    pre=""
-    [ -n "''${WT_BRANCH:-}" ] && pre="git switch -c '$WT_BRANCH' 2>/dev/null || git switch '$WT_BRANCH'; "
-
-    ${herdrBin} pane run "$pane" "''${pre}$oc; ${treehouseBin} return --force '$d'; ${herdrBin} tab close '$tab'"
   '';
 in {
   nixpkgs.config.allowUnfree = true;
@@ -205,15 +154,6 @@ in {
           description = "lazygit";
           width = "80%";
           height = "80%";
-        }
-        {
-          # Open opencode in a fresh treehouse worktree, in a new tab rooted in
-          # the triggering pane's repo (HERDR_ACTIVE_PANE_CWD). See
-          # worktreeSpawnScript.
-          key = "prefix+a";
-          type = "shell";
-          command = ''WT_SRC="''${HERDR_ACTIVE_PANE_CWD:-$HOME}" ${worktreeSpawnScript}'';
-          description = "worktree + opencode (new tab)";
         }
         {
           # Jump to the next agent needing attention (blocked > done > idle).
