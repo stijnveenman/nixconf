@@ -13,6 +13,19 @@
   jqBin = lib.getExe pkgs.jq;
   gumBin = lib.getExe pkgs.gum;
 
+  # Launch lazygit through an interactive zsh so its git/commit-hook
+  # subprocesses inherit the same PATH as a normal terminal (nix profile,
+  # direnv, ...). herdr popups run in the Ghostty/launchd environment, which
+  # does not put the nix profile on PATH, so a repo pre-commit hook such as
+  # `direnv exec . rush prettier` otherwise fails to find direnv (direnv then
+  # supplies rush/node from the repo's .envrc). An interactive (-i) shell is
+  # required, not a login (-l) one: home-manager gates its session vars on
+  # `[[ ! -o login ]]` in ~/.zshenv, so a login shell skips them. `exec`
+  # replaces the shell so lazygit stays the popup foreground.
+  lazygitLoginScript = pkgs.writeShellScript "herdr-lazygit" ''
+    exec ${lib.getExe config.programs.zsh.package} -i -c 'exec ${lazygitBin}'
+  '';
+
   # The treehouse.pool herdr plugin. A popup (gum) prompts for a name/base,
   # leases a worktree from the treehouse pool, opens it as a herdr workspace,
   # and returns the lease when the workspace closes. Built into the store with
@@ -205,9 +218,14 @@ in {
 
       keys.command = [
         {
+          # lazygit via an interactive zsh so its git/commit-hook subprocesses
+          # inherit the full interactive PATH (nix profile, direnv, ...).
+          # Launching the bare binary from herdr's Ghostty/launchd env lacks the
+          # nix profile on PATH, so hooks like `direnv exec . rush prettier` fail
+          # to find direnv. See lazygitLoginScript for why -i (not -l).
           key = "ctrl+g";
           type = "popup";
-          command = lazygitBin;
+          command = "${lazygitLoginScript}";
           description = "lazygit";
           width = "80%";
           height = "80%";
