@@ -1,0 +1,28 @@
+id = "threehouse.pool"
+name = "Treehouse Pool"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Open pooled treehouse worktrees as herdr workspaces"
+platforms = ["macos"]
+
+# Popup: prompt for a name/base and open a pooled worktree as a workspace.
+[[panes]]
+id = "new"
+title = "New pooled workspace"
+placement = "popup"
+width = "50%"
+height = 14
+command = ["@BASH@", "@ROOT@/new.sh"]
+
+# Return the leased worktree to the pool when its workspace goes away. A pooled
+# workspace has one root pane, so it is destroyed when that pane's shell exits.
+# herdr does NOT emit workspace.closed for that teardown path, so we hook
+# pane.exited and return the lease when the exited pane was the workspace's last
+# one (the workspace is then gone / being torn down).
+[[events]]
+on = "pane.exited"
+command = ["@BASH@", "@ROOT@/return.sh"]
+
+# Safety net: reconcile leases against live workspaces on server start/handoff.
+[[startup]]
+command = ["@BASH@", "@ROOT@/reconcile.sh"]

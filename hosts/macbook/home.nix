@@ -11,6 +11,34 @@
   lazygitBin = lib.getExe config.programs.lazygit.package;
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
+  gumBin = lib.getExe pkgs.gum;
+
+  # The treehouse.pool herdr plugin. A popup (gum) prompts for a name/base,
+  # leases a worktree from the treehouse pool, opens it as a herdr workspace,
+  # and returns the lease when the workspace closes. Built into the store with
+  # absolute binary paths substituted, so no reliance on PATH in herdr's
+  # launchd/Ghostty environment. See herdr/threehouse/ for the sources.
+  treehousePluginSrc = ../../herdr/threehouse;
+  treehousePlugin = pkgs.runCommand "herdr-plugin-threehouse" {} ''
+    mkdir -p "$out"
+    cp ${treehousePluginSrc}/lib.sh "$out/lib.sh"
+    cp ${treehousePluginSrc}/new.sh "$out/new.sh"
+    cp ${treehousePluginSrc}/return.sh "$out/return.sh"
+    cp ${treehousePluginSrc}/reconcile.sh "$out/reconcile.sh"
+
+    substitute ${treehousePluginSrc}/herdr-plugin.toml.in "$out/herdr-plugin.toml" \
+      --replace-fail '@BASH@' '${lib.getExe pkgs.bash}' \
+      --replace-fail '@ROOT@' "$out"
+
+    for f in lib.sh new.sh return.sh reconcile.sh; do
+      substituteInPlace "$out/$f" \
+        --replace-quiet '@HERDR@' '${herdrBin}' \
+        --replace-quiet '@TREEHOUSE@' '${lib.getExe treehouse}' \
+        --replace-quiet '@JQ@' '${jqBin}' \
+        --replace-quiet '@GUM@' '${gumBin}'
+      chmod +x "$out/$f"
+    done
+  '';
 
   # Jump to the next agent needing attention, ranked by status priority
   # (blocked, then done, then idle). Reimplements martin-ro/herdr-next-agent as
@@ -78,6 +106,7 @@ in {
 
     # agent runtime + worktree pool
     treehouse
+    pkgs.gum # pretty popup prompts for the treehouse.pool herdr plugin
 
     # fonts
     pkgs.nerd-fonts.jetbrains-mono
@@ -136,6 +165,20 @@ in {
     # vcs is left unset -> git (default)
   '';
 
+  # Materialize the treehouse.pool herdr plugin (built in the store with
+  # absolute bin paths) into a stable path, then link + enable it with herdr on
+  # activation. herdr plugin registration is imperative and path-based, so this
+  # activation step keeps it in sync idempotently on every switch.
+  home.file.".config/herdr/plugins/threehouse".source = treehousePlugin;
+
+  home.activation.herdrTreehousePlugin = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    PLUGIN_DIR="${config.home.homeDirectory}/.config/herdr/plugins/threehouse"
+    # link is idempotent-ish: unlink first (ignore errors) then relink + enable.
+    run ${herdrBin} plugin unlink threehouse.pool >/dev/null 2>&1 || true
+    run ${herdrBin} plugin link "$PLUGIN_DIR" >/dev/null 2>&1 || true
+    run ${herdrBin} plugin enable threehouse.pool >/dev/null 2>&1 || true
+  '';
+
   programs.herdr = {
     enable = true;
     settings = {
@@ -167,6 +210,16 @@ in {
           description = "lazygit";
           width = "80%";
           height = "80%";
+        }
+        {
+          # Open a new pooled worktree as a workspace (treehouse.pool plugin).
+          # Popup prompts for name + base, leases from the treehouse pool, and
+          # opens it as a herdr workspace. A popup pane is opened via
+          # `plugin pane open` (not a plugin_action), so this is a shell keybind.
+          key = "prefix+shift+g";
+          type = "shell";
+          command = "${herdrBin} plugin pane open --plugin threehouse.pool --entrypoint new";
+          description = "new pooled workspace";
         }
         {
           # Jump to the next agent needing attention (blocked > done > idle).
