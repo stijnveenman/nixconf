@@ -146,9 +146,22 @@ in {
 
       keys.prefix = "ctrl+space";
 
+      # Session navigator on leader-space (default is prefix+g). herdr does not
+      # support double-prefix chords, so this is the closest "tap leader then
+      # space" navigator.
+      keys.goto = "prefix+space";
+
+      # Move between workspaces (worktrees are workspaces too):
+      #   leader [ / ]        -> previous / next workspace
+      #   leader shift+1..9   -> jump directly to workspace 1-9
+      # All three actions are unset by default, so nothing is overwritten.
+      keys.previous_workspace = "prefix+[";
+      keys.next_workspace = "prefix+]";
+      keys.switch_workspace = "prefix+shift+1..9";
+
       keys.command = [
         {
-          key = "prefix+g";
+          key = "ctrl+g";
           type = "popup";
           command = lazygitBin;
           description = "lazygit";
