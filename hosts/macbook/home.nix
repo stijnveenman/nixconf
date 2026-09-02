@@ -1,9 +1,17 @@
 {
   pkgs,
+  lib,
   config,
   treehouse,
   ...
-}: {
+}: let
+  # Absolute binary paths. herdr (and its panes/command keybinds) inherits the
+  # GUI/launchd environment via Ghostty, which does not include the nix profile
+  # on PATH, so keybind commands must reference binaries by absolute path.
+  treehouseBin = lib.getExe treehouse;
+  opencodeBin = lib.getExe config.programs.opencode.package;
+  lazygitBin = lib.getExe config.programs.lazygit.package;
+in {
   nixpkgs.config.allowUnfree = true;
 
   home.username = "sv";
@@ -35,8 +43,10 @@
     pkgs.alejandra
 
     # agent runtime + worktree pool
-    pkgs.herdr
     treehouse
+
+    # fonts
+    pkgs.nerd-fonts.jetbrains-mono
   ];
 
   programs.zsh = {
@@ -72,10 +82,65 @@
 
       lg = "lazygit";
       o = "opencode";
+
+      h = "herdr";
+      th = "treehouse";
     };
   };
 
   programs.home-manager.enable = true;
+
+  # treehouse user-level config (~/.config/treehouse/config.toml).
+  # Per-repo treehouse.toml files (committed per project) still override this.
+  home.file.".config/treehouse/config.toml".text = ''
+    # Maximum number of worktrees kept in each per-repo pool.
+    max_trees = 8
+
+    # root is left unset -> defaults to ~/.treehouse
+    # base_branch is left unset -> inferred per-repo (origin/HEAD, etc.)
+    # vcs is left unset -> git (default)
+  '';
+
+  programs.herdr = {
+    enable = true;
+    settings = {
+      # Skip the first-run onboarding wizard (config is managed here).
+      onboarding = false;
+
+      theme.name = "gruvbox";
+
+      keys.prefix = "ctrl+space";
+
+      keys.command = [
+        {
+          key = "prefix+g";
+          type = "popup";
+          command = lazygitBin;
+          description = "lazygit";
+          width = "80%";
+          height = "80%";
+        }
+        {
+          # Lease a warm treehouse worktree, open opencode in it, and return
+          # the worktree to the pool when opencode exits. Absolute paths because
+          # herdr keybind commands run via /bin/sh -c without the nix PATH.
+          key = "prefix+a";
+          type = "pane";
+          command = ''d=$(${treehouseBin} get --lease) && cd "$d" && ${opencodeBin}; ${treehouseBin} return --force "$d"'';
+          description = "worktree + opencode";
+        }
+      ];
+
+      ui = {
+        # Distinguish agent state by shape as well as colour.
+        status_indicators = "symbols";
+        toast.delivery = "herdr";
+
+        # Don't prompt for a tab name on creation; use the default.
+        prompt_new_tab_name = false;
+      };
+    };
+  };
 
   programs.ghostty = {
     enable = true;
@@ -85,6 +150,23 @@
     enableZshIntegration = true;
     settings = {
       theme = "Gruvbox Dark";
+
+      font-family = "JetBrainsMono Nerd Font";
+      font-size = 13;
+
+      # Treat the macOS Option key as Alt/Meta so terminal keybinds work.
+      macos-option-as-alt = true;
+
+      # Launch herdr in the first Ghostty surface on startup. New tabs/windows
+      # remain plain shells; quitting herdr closes that first surface.
+      # Use the absolute herdr binary with `direct:` so Ghostty runs it without
+      # shell wrapping (which mangles the argv) and without relying on the GUI
+      # launchd PATH.
+      initial-command = "direct:${lib.getExe config.programs.herdr.package}";
+
+      # Fully quit Ghostty when the last window closes so reopening starts a
+      # fresh process, which re-runs initial-command (herdr) above.
+      quit-after-last-window-closed = true;
     };
   };
 
