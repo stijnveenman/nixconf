@@ -8,7 +8,10 @@
 
     imports = [
       ../../modules/neovim.nix
+      ../../modules/git.nix
     ];
+
+    my.git.userEmail = "veenman.stijn@gmail.com";
 
     home.username = "stiixxy";
     home.homeDirectory = "/home/stiixxy";
@@ -204,19 +207,6 @@
     };
 
     programs.discord.enable = true;
-
-    programs.git = {
-      enable = true;
-
-      settings = {
-        user = {
-          name = "Stijn Veenman";
-          email = "veenman.stijn@gmail.com";
-        };
-        init.defaultBranch = "main";
-        pull.rebase = true;
-      };
-    };
 
     programs.ssh = {
       enable = true;

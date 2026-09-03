@@ -85,6 +85,12 @@
     ${herdrBin} agent focus "$target" >/dev/null 2>&1
   '';
 in {
+  imports = [
+    ../../modules/git.nix
+  ];
+
+  my.git.userEmail = "stijn.veenman@schiphol.nl";
+
   nixpkgs.config.allowUnfree = true;
 
   home.username = "sv";
@@ -360,17 +366,6 @@ in {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
-  };
-
-  programs.git = {
-    enable = true;
-    settings.user.name = "Stijn Veenman";
-    settings.user.email = "stijn.veenman@schiphol.nl";
-    signing = {
-      signByDefault = true;
-      # autodetect based on commit
-      key = null;
-    };
   };
 
   programs.atuin = {
