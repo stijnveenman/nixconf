@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  isDarwin = pkgs.stdenv.isDarwin;
+  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
   repoPath =
     if isDarwin
     then "/Users/${config.home.username}/Documents/nixconf"
