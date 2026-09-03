@@ -89,6 +89,7 @@ in {
     ../../modules/git.nix
     ../../modules/cli-tools.nix
     ../../modules/ghostty.nix
+    ../../modules/opencode.nix
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
@@ -319,30 +320,6 @@ in {
       quit-after-last-window-closed = true;
     };
   };
-
-  programs.opencode = {
-    enable = true;
-    settings = {
-      autoupdate = false;
-    };
-    tui = {
-      theme = "gruvbox";
-      attention = {
-        enabled = true;
-        notifications = true;
-        sound = false;
-      };
-    };
-  };
-
-  # opencode global skills live in the repo (edited live, like nvim). Out-of-store
-  # symlink so changes apply without a rebuild.
-  home.file.".config/opencode/skill".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.programs.nh.homeFlake}/opencode/skill";
-
-  # opencode global slash commands, likewise repo-managed and live-edited.
-  home.file.".config/opencode/command".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.programs.nh.homeFlake}/opencode/command";
 
   programs.lazygit = {
     enable = true;

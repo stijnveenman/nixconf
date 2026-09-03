@@ -11,6 +11,7 @@
       ../../modules/git.nix
       ../../modules/cli-tools.nix
       ../../modules/ghostty.nix
+      ../../modules/opencode.nix
     ];
 
     my.git.userEmail = "veenman.stijn@gmail.com";
@@ -189,7 +190,6 @@
       noctalia-shell
       todoist-electron
       pear-desktop
-      opencode
     ];
 
     home.file.".config/noctalia/settings.json".source = ./noctalia.json;
