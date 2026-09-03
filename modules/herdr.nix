@@ -157,6 +157,15 @@ in {
 
       theme.name = "gruvbox";
 
+      # Bump the contrast of the selected sidebar row. Gruvbox's default
+      # selection background sits close to the sidebar background and is hard
+      # to pick out; use a lighter gruvbox gray so the highlighted row reads
+      # clearly against the dark sidebar.
+      theme.custom = {
+        active_row_bg = "#665c54";
+        selection_bg = "#665c54";
+      };
+
       keys.prefix = "ctrl+space";
 
       # Session navigator on leader-space (default is prefix+g). herdr does not
