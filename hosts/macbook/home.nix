@@ -88,6 +88,7 @@ in {
   imports = [
     ../../modules/git.nix
     ../../modules/cli-tools.nix
+    ../../modules/ghostty.nix
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
@@ -299,19 +300,10 @@ in {
   };
 
   programs.ghostty = {
-    enable = true;
-    # nixpkgs ghostty is Linux-only; on aarch64-darwin install the app via
-    # `brew install --cask ghostty`. Home-manager manages config only here.
-    package = null;
-    enableZshIntegration = true;
+    # Host-specific ghostty settings (shared theme/font/package live in
+    # ../../modules/ghostty.nix). These are macbook-only: macOS Option-as-Alt,
+    # and launching herdr in the first Ghostty surface.
     settings = {
-      theme = "Gruvbox Dark";
-
-      font-family = "JetBrainsMono Nerd Font Mono";
-      font-size = 12;
-      # Disable programming ligatures (e.g. != stays as two glyphs).
-      font-feature = ["-calt" "-liga" "-dlig"];
-
       # Treat the macOS Option key as Alt/Meta so terminal keybinds work.
       macos-option-as-alt = true;
 

@@ -10,6 +10,7 @@
       ../../modules/neovim.nix
       ../../modules/git.nix
       ../../modules/cli-tools.nix
+      ../../modules/ghostty.nix
     ];
 
     my.git.userEmail = "veenman.stijn@gmail.com";
@@ -181,14 +182,6 @@
         "Mod+K".action.focus-workspace-up = {};
         "Mod+Shift+K".action.move-column-to-workspace-up = {};
         "Mod+Ctrl+Shift+K".action.move-workspace-up = {};
-      };
-    };
-
-    programs.ghostty = {
-      enable = true;
-      enableBashIntegration = true;
-      settings = {
-        theme = "Gruvbox Dark";
       };
     };
 
