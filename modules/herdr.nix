@@ -31,7 +31,32 @@
   # required, not a login (-l) one: home-manager gates its session vars on
   # `[[ ! -o login ]]` in the shell rc, so a login shell skips them. `exec`
   # replaces the shell so lazygit stays the popup foreground.
+  #
+  # herdr popup processes do NOT start in the focused pane's cwd — they start in
+  # a fixed base (e.g. the workspace/server root), so from a worktree pane
+  # lazygit would otherwise open the project root rather than the worktree (and
+  # git-crypt/git would then operate on the wrong tree). Resolve the focused
+  # pane's foreground cwd from HERDR_PLUGIN_CONTEXT_JSON (falling back to
+  # `herdr pane current`) and cd into it before launching lazygit, mirroring the
+  # treehouse plugin's repo-resolution logic.
   lazygitLoginScript = pkgs.writeShellScript "herdr-lazygit" ''
+    set -u
+    target=""
+    if [ -n "''${HERDR_PLUGIN_CONTEXT_JSON:-}" ]; then
+      target="$(
+        printf '%s' "$HERDR_PLUGIN_CONTEXT_JSON" \
+          | ${jqBin} -r '(.pane.foreground_cwd // .pane.cwd // .workspace.cwd // empty)' 2>/dev/null || true
+      )"
+    fi
+    if [ -z "$target" ]; then
+      target="$(
+        ${herdrBin} pane current 2>/dev/null \
+          | ${jqBin} -r '.result.pane.foreground_cwd // .result.pane.cwd // empty' 2>/dev/null || true
+      )"
+    fi
+    if [ -n "$target" ] && [ -d "$target" ]; then
+      cd "$target" || true
+    fi
     exec ${lib.getExe interactiveShell} -i -c 'exec ${lazygitBin}'
   '';
 
@@ -160,16 +185,6 @@ in {
           description = "lazygit";
           width = "80%";
           height = "80%";
-        }
-        {
-          # Open a new pooled worktree as a workspace (treehouse.pool plugin).
-          # Popup prompts for name + base, leases from the treehouse pool, and
-          # opens it as a herdr workspace. A popup pane is opened via
-          # `plugin pane open` (not a plugin_action), so this is a shell keybind.
-          key = "prefix+shift+g";
-          type = "shell";
-          command = "${herdrBin} plugin pane open --plugin threehouse.pool --entrypoint new";
-          description = "new pooled workspace";
         }
         {
           # Jump to the next agent needing attention (blocked > done > idle).
