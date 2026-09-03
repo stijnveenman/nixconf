@@ -2,6 +2,7 @@
   home-manager,
   niri,
   nixpkgs,
+  treehouse,
   ...
 }:
 nixpkgs.lib.nixosSystem {
@@ -13,6 +14,9 @@ nixpkgs.lib.nixosSystem {
     {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
+      home-manager.extraSpecialArgs = {
+        treehouse = treehouse.packages."x86_64-linux".default;
+      };
     }
     ./home.nix
   ];
