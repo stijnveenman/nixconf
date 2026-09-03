@@ -181,6 +181,10 @@ in {
       keys.next_workspace = "prefix+]";
       keys.switch_workspace = "prefix+shift+1..9";
 
+      # Open an existing Git worktree from the selected workspace. Native
+      # builtin action (unset by default), bound to leader ctrl+shift+g.
+      keys.open_worktree = "prefix+ctrl+shift+g";
+
       keys.command = [
         {
           # lazygit via an interactive shell so its git/commit-hook subprocesses
@@ -189,11 +193,9 @@ in {
           # PATH, so hooks like `direnv exec . rush prettier` fail to find
           # direnv. See lazygitLoginScript for why -i (not -l).
           key = "ctrl+g";
-          type = "popup";
+          type = "pane";
           command = "${lazygitLoginScript}";
           description = "lazygit";
-          width = "80%";
-          height = "80%";
         }
         {
           # Jump to the next agent needing attention (blocked > done > idle).
