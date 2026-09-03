@@ -87,6 +87,7 @@
 in {
   imports = [
     ../../modules/git.nix
+    ../../modules/cli-tools.nix
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
@@ -113,12 +114,6 @@ in {
 
   home.packages = [
     pkgs._1password-cli
-
-    # Utils
-    pkgs.jless
-    pkgs.ripgrep
-    pkgs.jq
-    pkgs.fzf
 
     # formatting
     pkgs.nixd
@@ -333,11 +328,6 @@ in {
     };
   };
 
-  programs.gh = {
-    enable = true;
-    extensions = [pkgs.gh-poi];
-  };
-
   programs.opencode = {
     enable = true;
     settings = {
@@ -361,20 +351,6 @@ in {
   # opencode global slash commands, likewise repo-managed and live-edited.
   home.file.".config/opencode/command".source =
     config.lib.file.mkOutOfStoreSymlink "${config.programs.nh.homeFlake}/opencode/command";
-
-  programs.direnv = {
-    enable = true;
-    enableZshIntegration = true;
-    nix-direnv.enable = true;
-  };
-
-  programs.atuin = {
-    enable = true;
-    flags = ["--disable-up-arrow"];
-    settings = {
-      inline_height = 15;
-    };
-  };
 
   programs.lazygit = {
     enable = true;

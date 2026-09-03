@@ -9,6 +9,7 @@
     imports = [
       ../../modules/neovim.nix
       ../../modules/git.nix
+      ../../modules/cli-tools.nix
     ];
 
     my.git.userEmail = "veenman.stijn@gmail.com";
@@ -183,7 +184,6 @@
       };
     };
 
-    programs.direnv.enable = true;
     programs.ghostty = {
       enable = true;
       enableBashIntegration = true;
