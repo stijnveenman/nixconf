@@ -194,7 +194,7 @@ in {
           # direnv. See lazygitLoginScript for why -i (not -l).
           key = "ctrl+g";
           type = "pane";
-          command = "${lazygitLoginScript}";
+          command = "zsh -c -i ${lib.getExe pkgs.lazygit}";
           description = "lazygit";
         }
         {
