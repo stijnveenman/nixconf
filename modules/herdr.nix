@@ -6,60 +6,16 @@
   treehouse,
   ...
 }: let
-  # Absolute binary paths. herdr keybind/command/pane processes do not
-  # necessarily inherit the nix profile on PATH (e.g. launched from Ghostty's
-  # macOS launchd env, or any Nix session where PATH is not assumed), so keybind
-  # commands must reference binaries by absolute store path.
+  # Herdr processes may not inherit the Nix profile on PATH.
   lazygitBin = lib.getExe config.programs.lazygit.package;
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
   gumBin = lib.getExe pkgs.gum;
 
-  # Interactive shell used to wrap lazygit (see lazygitLoginScript). herdr runs
-  # zsh on the macbook and bash on nnn; pick whichever this host enables so the
-  # wrapper inherits that shell's interactive PATH.
   interactiveShell =
     if config.programs.zsh.enable
     then config.programs.zsh.package
     else config.programs.bash.package;
-
-  # Launch lazygit through an interactive shell so its git/commit-hook
-  # subprocesses inherit the same PATH as a normal terminal (nix profile,
-  # direnv, ...). herdr popups may run in an environment that does not put the
-  # nix profile on PATH, so a repo pre-commit hook such as
-  # `direnv exec . rush prettier` otherwise fails to find direnv (direnv then
-  # supplies rush/node from the repo's .envrc). An interactive (-i) shell is
-  # required, not a login (-l) one: home-manager gates its session vars on
-  # `[[ ! -o login ]]` in the shell rc, so a login shell skips them. `exec`
-  # replaces the shell so lazygit stays the popup foreground.
-  #
-  # herdr popup processes do NOT start in the focused pane's cwd — they start in
-  # a fixed base (e.g. the workspace/server root), so from a worktree pane
-  # lazygit would otherwise open the project root rather than the worktree (and
-  # git-crypt/git would then operate on the wrong tree). Resolve the focused
-  # pane's foreground cwd from HERDR_PLUGIN_CONTEXT_JSON (falling back to
-  # `herdr pane current`) and cd into it before launching lazygit, mirroring the
-  # treehouse plugin's repo-resolution logic.
-  lazygitLoginScript = pkgs.writeShellScript "herdr-lazygit" ''
-    set -u
-    target=""
-    if [ -n "''${HERDR_PLUGIN_CONTEXT_JSON:-}" ]; then
-      target="$(
-        printf '%s' "$HERDR_PLUGIN_CONTEXT_JSON" \
-          | ${jqBin} -r '(.pane.foreground_cwd // .pane.cwd // .workspace.cwd // empty)' 2>/dev/null || true
-      )"
-    fi
-    if [ -z "$target" ]; then
-      target="$(
-        ${herdrBin} pane current 2>/dev/null \
-          | ${jqBin} -r '.result.pane.foreground_cwd // .result.pane.cwd // empty' 2>/dev/null || true
-      )"
-    fi
-    if [ -n "$target" ] && [ -d "$target" ]; then
-      cd "$target" || true
-    fi
-    exec ${lib.getExe interactiveShell} -i -c 'exec ${lazygitBin}'
-  '';
 
   # The treehouse.pool herdr plugin. A popup (gum) prompts for a name/base,
   # leases a worktree from the treehouse pool, opens it as a herdr workspace,
@@ -189,14 +145,10 @@ in {
 
       keys.command = [
         {
-          # lazygit via an interactive shell so its git/commit-hook subprocesses
-          # inherit the full interactive PATH (nix profile, direnv, ...).
-          # Launching the bare binary from herdr's env lacks the nix profile on
-          # PATH, so hooks like `direnv exec . rush prettier` fail to find
-          # direnv. See lazygitLoginScript for why -i (not -l).
+          # Use an interactive shell so hooks inherit the normal terminal PATH.
           key = "ctrl+g";
           type = "pane";
-          command = "zsh -c -i ${lib.getExe pkgs.lazygit}";
+          command = "${lib.getExe interactiveShell} -i -c 'exec ${lazygitBin}'";
           description = "lazygit";
         }
         {
