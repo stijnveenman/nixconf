@@ -8,7 +8,7 @@ user. You do **not** need to pass a flake path or a host name.
 
 - Host `sv` (macOS, `aarch64-darwin`) lives at `~/Documents/nixconf`.
 - Host `stiixxy` (Linux) lives at `~/nixconf`.
-- The same `nh home` commands below work on both hosts.
+- Use `nh home` for the Home Manager hosts and `nh os` for the NixOS host.
 
 ## NixOS MCP (verify before you edit)
 
@@ -42,55 +42,39 @@ When you change any `.nix` file, follow this order. **Never skip the build, and
 never switch on a config that has not built successfully.**
 
 1. **Format:** run `alejandra .` to format the Nix files in the repo.
-2. **Validate (build):** run `nh home build`. This evaluates and builds the
-   home-manager configuration without activating it. A non-zero exit code, a Nix
-   evaluation error, or a build failure means validation **failed**. If the build
-   **succeeds**, trust it: treat the result as correct and do **not** inspect,
-   read, or dive into `/nix/store` output to double-check the generated files —
-   assume those outputs are correct.
-3. **Apply (switch):** **the agent must only run `nh home switch` while it is
-   executing the `/apply` slash command.** In every other context the agent must
-   never run `nh home switch`. So when the user asks you to apply, activate, or
-   switch outside of `/apply`, do **not** run `nh home switch` — instead, stop
-   after a successful build, tell the user the config is built and ready, and
-   remind them to run `/apply` when they choose.
+2. **Validate (build):** run `nh home build` for a Home Manager configuration or
+   `nh os build` for a NixOS configuration. This evaluates and builds without
+   activating. A non-zero exit code, Nix evaluation error, or build failure
+   means validation **failed**. If the build **succeeds**, trust it: treat the
+   result as correct and do **not** inspect, read, or dive into `/nix/store`
+   output to double-check the generated files.
+3. **Apply (switch):** after a successful build, activate the configuration by
+   running `nh home switch` for Home Manager or `nh os switch` for NixOS, unless
+   the user requested validation only. These are the only permitted switch
+   commands. Do not add force flags or use lower-level activation commands.
 
-   `/apply` itself does **not** format or build. It only runs `nh home switch`.
-   The build is the precondition for switching, and it is expected to have been
-   run successfully (for example via `/validate`) **before** the user runs
-   `/apply`. So within `/apply` you do not run `alejandra .` or `nh home build`
-   again — you go straight to `nh home switch`.
-
-   **One-shot rule:** each `/apply` invocation authorises exactly one switch
-   attempt. If `nh home switch` fails (activation error, rollback, or any
-   non-zero exit), the authorisation is consumed and exhausted — even if the user
-   subsequently asks you to "fix it and apply again" or uses equivalent wording.
-   After any activation failure, you must stop, report the error, make any
-   requested fixes, and then wait for the user to issue a new explicit `/apply`
-   before running `nh home switch` again. Never re-run `nh home switch`
-   automatically after a failure.
+   The `/apply` command assumes the configuration has already built successfully
+   and runs only the appropriate switch command. It does not format or build.
 
 If the build fails:
 
-- Stop. Do **not** run `nh home switch`, even during `/apply`.
+- Stop. Do **not** run a switch command.
 - Report the Nix evaluation/build error to the user and fix the offending `.nix`
   before retrying the build.
 
 If the switch (activation) fails:
 
-- Stop immediately. Do **not** retry `nh home switch`.
-- Report the activation error to the user.
-- Make any requested fixes, then wait for a new explicit `/apply`.
-- Never automatically re-run `nh home switch` after an activation failure,
-  regardless of how the user phrases the follow-up request.
+- Stop immediately and report the activation error.
+- Do **not** retry the switch.
+- Do **not** run other commands, modify or remove files, or add force flags to
+  resolve the failure, including conflicts with existing configuration files.
+- Leave remediation to the user unless they later make a separate request.
 
 There are slash commands for these steps:
 
-- `/validate` runs the build step.
-- `/apply` runs only `nh home switch`. It does **not** format or build first —
-  it assumes the build has already succeeded (e.g. via `/validate`). This is the
-  **only** path through which the agent may run `nh home switch`. Each `/apply`
-  grants a single switch attempt only.
+- `/validate` formats and runs the appropriate build command without switching.
+- `/apply` runs only the appropriate `nh home switch` or `nh os switch` command.
+  It assumes the build has already succeeded.
 
 ## Formatting
 

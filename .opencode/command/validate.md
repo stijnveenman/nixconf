@@ -1,10 +1,10 @@
 ---
-description: Validate the Nix home-manager config (nh home build)
+description: Format and build the appropriate Nix configuration
 agent: build
 ---
 
-Validate the home-manager configuration in this repo by **formatting** the Nix
-files and then **building** the configuration without activating it.
+Validate the configuration in this repo by **formatting** the Nix files and
+then **building** the configuration without activating it.
 
 1. Format all Nix files:
 
@@ -12,18 +12,17 @@ files and then **building** the configuration without activating it.
    alejandra .
    ```
 
-2. Build the configuration:
+2. Build the configuration with the command appropriate for the current host:
 
-   ```
-   nh home build
-   ```
+   - Home Manager host: `nh home build`
+   - NixOS host: `nh os build`
 
-`nh` resolves the flake path and host automatically (`programs.nh.homeFlake` is
-set), so do not pass a flake path or host name.
+`nh` resolves the flake path and host automatically, so do not pass a flake
+path or host name.
 
-- If the build **succeeds**, report success and stop. Do **not** run
-  `nh home switch`.
+- If the build **succeeds**, report success and stop. `/validate` does not
+  activate the configuration.
 - If the build **fails** (non-zero exit, Nix evaluation error, or build error),
   report the relevant error output to the user and, if the cause is obvious in
-  the changed `.nix` files, propose or apply a fix and re-run `nh home build`.
+  the changed `.nix` files, propose or apply a fix and re-run the build.
   Do **not** activate a configuration that has not built successfully.
