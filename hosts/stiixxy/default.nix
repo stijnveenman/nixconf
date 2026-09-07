@@ -8,5 +8,6 @@ home-manager.lib.homeManagerConfiguration {
   modules = [
     ./home.nix
     ../../modules/neovim.nix
+    ../../modules/opencode.nix
   ];
 }

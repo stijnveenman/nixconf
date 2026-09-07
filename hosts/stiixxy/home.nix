@@ -13,21 +13,6 @@
   programs.home-manager.enable = true;
   programs.direnv.enable = true;
 
-  programs.opencode = {
-    enable = true;
-    settings = {
-      autoupdate = false;
-    };
-    tui = {
-      theme = "gruvbox";
-      attention = {
-        enabled = true;
-        notifications = true;
-        sound = false;
-      };
-    };
-  };
-
   programs.nh = {
     enable = true;
     homeFlake = "/home/${config.home.username}/nixconf";

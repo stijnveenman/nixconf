@@ -13,6 +13,10 @@ in {
     enable = true;
     settings = {
       autoupdate = false;
+      permission = {
+        bash."git *" = "allow";
+        external_directory."~/.treehouse/**" = "allow";
+      };
     };
     tui = {
       theme = "gruvbox";
