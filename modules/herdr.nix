@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  herdr,
   treehouse,
   ...
 }: let
@@ -151,6 +152,7 @@ in {
 
   programs.herdr = {
     enable = true;
+    package = herdr;
     settings = {
       # Skip the first-run onboarding wizard (config is managed here).
       onboarding = false;

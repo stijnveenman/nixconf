@@ -5,6 +5,11 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    herdr = {
+      url = "github:stijnveenman/herdr";
+      flake = false;
+    };
+
     niri.url = "github:sodiboo/niri-flake";
 
     treehouse.url = "github:kunchenguid/treehouse";
