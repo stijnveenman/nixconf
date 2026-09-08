@@ -2,7 +2,6 @@
   pkgs,
   lib,
   config,
-  herdr,
   treehouse,
   ...
 }: let
@@ -63,7 +62,7 @@ in {
 
   programs.herdr = {
     enable = true;
-    package = herdr;
+    package = pkgs.herdr;
     settings = {
       onboarding = false;
 

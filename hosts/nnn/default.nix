@@ -1,5 +1,4 @@
 {
-  herdr,
   home-manager,
   niri,
   nixpkgs,
@@ -19,7 +18,6 @@ in
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
         home-manager.extraSpecialArgs = {
-          herdr = pkgs.callPackage "${herdr}/nix/package.nix" {};
           treehouse = treehouse.packages."x86_64-linux".default;
         };
       }

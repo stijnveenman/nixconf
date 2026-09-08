@@ -1,5 +1,4 @@
 {
-  herdr,
   home-manager,
   nixpkgs,
   treehouse,
@@ -10,7 +9,6 @@ in
   home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
     extraSpecialArgs = {
-      herdr = pkgs.callPackage "${herdr}/nix/package.nix" {};
       treehouse = treehouse.packages."aarch64-darwin".default;
     };
     modules = [
