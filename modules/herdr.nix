@@ -6,7 +6,6 @@
   ...
 }: let
   # Herdr processes may not inherit the Nix profile on PATH.
-  lazygitBin = lib.getExe config.programs.lazygit.package;
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
   gumBin = lib.getExe pkgs.gum;
@@ -120,8 +119,11 @@ in {
         {
           # Use an interactive shell so hooks inherit the normal terminal PATH.
           key = "ctrl+g";
-          type = "pane";
-          command = "${lib.getExe interactiveShell} -i -c 'exec ${lazygitBin}'";
+          type = "shell";
+          command = pkgs.writeShellScript "lazygit pane" ''
+            PANE=$(herdr pane split $HERDR_PANE_ID --direction right --ratio 0.5 --focus | jq '.result.pane.pane_id' -r)
+            herdr pane run $PANE '${lib.getExe pkgs.lazygit} && exit'
+          '';
           description = "lazygit";
         }
         {
