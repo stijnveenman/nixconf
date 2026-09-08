@@ -48,6 +48,13 @@ never switch on a config that has not built successfully.**
    means validation **failed**. If the build **succeeds**, trust it: treat the
    result as correct and do **not** inspect, read, or dive into `/nix/store`
    output to double-check the generated files.
+
+   In a disposable firstmate worktree, plain `nh home build` resolves `nh` to
+   the primary checkout via the `NH_HOME_FLAKE` env var / `programs.nh.homeFlake`
+   (e.g. `~/Documents/nixconf`), silently building the **wrong** tree. When
+   validating worktree changes, pass the worktree path explicitly:
+   `nh home build <absolute-worktree-path>`. `NH_HOME_FLAKE` is set by the host
+   environment, so this applies even though `nh` is run from inside the worktree.
 3. **Apply (switch):** after a successful build, activate the configuration by
    running `nh home switch` for Home Manager or `nh os switch` for NixOS, unless
    the user requested validation only. These are the only permitted switch
@@ -82,3 +89,10 @@ There are slash commands for these steps:
 [`alejandra`](https://github.com/kamadorueda/alejandra) (available on `PATH`).
 When you edit a `.nix` file, you may run `alejandra <file>` (or `alejandra .`)
 before building to keep formatting consistent.
+
+## Maintaining this file
+
+Keep this file for knowledge useful to almost every future agent session in this project.
+Do not repeat what the codebase already shows; point to the authoritative file or command instead.
+Prefer rewriting or pruning existing entries over appending new ones.
+When updating this file, preserve this bar for all agents and keep entries concise.

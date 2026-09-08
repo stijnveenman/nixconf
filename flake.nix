@@ -7,6 +7,8 @@
 
     niri.url = "github:sodiboo/niri-flake";
 
+    oh-my-pi.url = "github:can1357/oh-my-pi";
+
     treehouse.url = "github:kunchenguid/treehouse";
     treehouse.inputs.nixpkgs.follows = "nixpkgs";
   };
