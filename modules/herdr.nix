@@ -48,6 +48,9 @@
   switchNixconfScript = pkgs.writeShellScript "herdr-switch-nixconf" ''
     set -euo pipefail
 
+    # Set the terminal title so the popup top bar shows a friendly name.
+    printf '\033]0;nixconf switch\007'
+
     flake_dir=''${NH_HOME_FLAKE:-/Users/sv/Documents/nixconf}
 
     if [ ! -d "$flake_dir" ]; then
@@ -58,19 +61,27 @@
     ${gumBin} style --foreground cyan "Switching nixconf from $flake_dir"
     cd "$flake_dir" || exit 1
 
-    ${gumBin} spin --spinner dot --title "Fetching latest nixconf from origin main" -- \
-      git pull --ff-only origin main || {
+    # Stage 1: fetch
+    ${gumBin} style --foreground cyan "Fetching latest nixconf from origin main..."
+    if ! git pull --ff-only origin main; then
       ${gumBin} style --foreground red "Fetch failed (diverged or no upstream?). Fix it and retry."
+      read -s -n1 -p "Press any key to close..."
       exit 1
-    }
+    fi
 
-    ${gumBin} spin --spinner dot --title "Switching nixconf home configuration" -- \
-      nh home switch "$flake_dir" || {
+    # Stage 2: switch
+    ${gumBin} style --foreground cyan "Switching nixconf home configuration..."
+    if ! nh home switch "$flake_dir"; then
       ${gumBin} style --foreground red "nh home switch failed, see errors above."
+      read -s -n1 -p "Press any key to close..."
       exit 1
-    }
+    fi
+
+    # Stage 3: reload herdr config so new keybindings take effect immediately.
+    ${herdrBin} server reload-config >/dev/null 2>&1 || true
 
     ${gumBin} style --foreground green "nixconf switched successfully."
+    read -s -n1 -p "Press any key to close..."
   '';
 in {
   home.packages = [
