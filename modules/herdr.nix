@@ -9,6 +9,7 @@
   lazygitBin = lib.getExe config.programs.lazygit.package;
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
+  gumBin = lib.getExe pkgs.gum;
 
   interactiveShell =
     if config.programs.zsh.enable
@@ -39,6 +40,37 @@
     fi
 
     ${herdrBin} agent focus "$target" >/dev/null 2>&1
+  '';
+
+  # Fetch the latest nixconf changes and switch the home configuration,
+  # driven from the directory set through NH_HOME_FLAKE (herdr processes may
+  # not inherit the Nix profile, so fall back to the macbook's flake dir).
+  switchNixconfScript = pkgs.writeShellScript "herdr-switch-nixconf" ''
+    set -euo pipefail
+
+    flake_dir=''${NH_HOME_FLAKE:-/Users/sv/Documents/nixconf}
+
+    if [ ! -d "$flake_dir" ]; then
+      ${gumBin} style --foreground red "nixconf directory not found: $flake_dir"
+      exit 1
+    fi
+
+    ${gumBin} style --foreground cyan "Switching nixconf from $flake_dir"
+    cd "$flake_dir" || exit 1
+
+    ${gumBin} spin --spinner dot --title "Fetching latest nixconf from origin main" -- \
+      git pull --ff-only origin main || {
+      ${gumBin} style --foreground red "Fetch failed (diverged or no upstream?). Fix it and retry."
+      exit 1
+    }
+
+    ${gumBin} spin --spinner dot --title "Switching nixconf home configuration" -- \
+      nh home switch "$flake_dir" || {
+      ${gumBin} style --foreground red "nh home switch failed, see errors above."
+      exit 1
+    }
+
+    ${gumBin} style --foreground green "nixconf switched successfully."
   '';
 in {
   home.packages = [
@@ -80,6 +112,14 @@ in {
           type = "pane";
           command = "${lib.getExe interactiveShell} -i -c 'exec ${lazygitBin}'";
           description = "lazygit";
+        }
+        {
+          key = "prefix+ctrl+r";
+          type = "popup";
+          command = "${lib.getExe interactiveShell} -i -c 'exec ${switchNixconfScript}'";
+          width = 90;
+          height = 24;
+          description = "fetch and switch nixconf";
         }
         {
           key = "prefix+o";

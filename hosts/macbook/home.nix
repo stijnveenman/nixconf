@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  oh-my-pi,
   ...
 }: {
   imports = [
@@ -10,6 +11,7 @@
     ../../modules/ghostty.nix
     ../../modules/opencode.nix
     ../../modules/herdr.nix
+    oh-my-pi
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
@@ -24,6 +26,13 @@
   programs.nh = {
     enable = true;
     homeFlake = "/Users/${config.home.username}/Documents/nixconf";
+  };
+
+  # OMP coding agent (oh-my-pi flake). The flake's home-manager module installs
+  # the `omp` package and owns ~/.omp/agent/config.yml declaratively.
+  programs.omp = {
+    enable = true;
+    settings.startup.quiet = true;
   };
 
   home.sessionVariables = {
