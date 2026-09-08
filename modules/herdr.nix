@@ -9,6 +9,8 @@
   herdrBin = lib.getExe config.programs.herdr.package;
   jqBin = lib.getExe pkgs.jq;
   gumBin = lib.getExe pkgs.gum;
+  gitBin = lib.getExe pkgs.git;
+  direnvBin = lib.getExe config.programs.direnv.package;
 
   interactiveShell =
     if config.programs.zsh.enable
@@ -82,6 +84,38 @@
     ${gumBin} style --foreground green "nixconf switched successfully."
     read -s -n1 -p "Press any key to close..."
   '';
+  # Fires on every `treehouse get` acquisition (new or recycled worktree —
+  # treehouse's post_create hook re-runs on pool reuse, not just first
+  # creation). No-ops for every repo except airport-control. airport-control's
+  # own .envrc sets `nix_direnv_manual_reload`, which means even a brand-new
+  # worktree's first `direnv allow` will NOT build the nix-direnv cache on its
+  # own — so a forced reload is required to actually get flake packages like
+  # git-crypt onto PATH.
+  airportControlPostCreateHook = pkgs.writeShellScript "treehouse-post-create-airport-control" ''
+    set -eu
+
+    dir="$PWD"   # treehouse runs post_create hooks with cwd = the new worktree
+
+    remote_url=$(${gitBin} -C "$dir" remote get-url origin 2>/dev/null) || exit 0
+
+    case "$remote_url" in
+      https://github.com/schiphol-ac/airport-control | \
+      https://github.com/schiphol-ac/airport-control.git | \
+      git@github.com:schiphol-ac/airport-control | \
+      git@github.com:schiphol-ac/airport-control.git)
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
+
+    ${direnvBin} allow "$dir"
+    # Reproduces nix-direnv's own generated nix-direnv-reload script
+    # (.direnv/bin/nix-direnv-reload) without depending on it existing or on
+    # PATH: forces a rebuild even when the project's .envrc opts out of
+    # automatic reload via nix_direnv_manual_reload.
+    _nix_direnv_force_reload=1 ${direnvBin} exec "$dir" true
+  '';
 in {
   home.packages = [
     treehouse
@@ -90,6 +124,9 @@ in {
 
   home.file.".config/treehouse/config.toml".text = ''
     max_trees = 12
+
+    [hooks]
+    post_create = ["${airportControlPostCreateHook}"]
   '';
 
   programs.herdr = {
