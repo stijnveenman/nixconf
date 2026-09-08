@@ -118,10 +118,17 @@ in {
 
       keys.command = [
         {
-          # Use an interactive shell so hooks inherit the normal terminal PATH.
+          # Use an interactive shell so direnv itself (installed via the Nix
+          # profile) ends up on PATH -- herdr processes may not otherwise
+          # inherit it. An interactive shell alone doesn't reliably trigger
+          # the direnv hook before `exec` replaces the shell process (there's
+          # no prompt round-trip in the pane's cwd first), so explicitly run
+          # lazygit through `direnv exec .` to pick up the current
+          # workspace's direnv/flake environment (e.g. airport-control's
+          # git-crypt) before it starts.
           key = "ctrl+g";
           type = "pane";
-          command = "${lib.getExe interactiveShell} -i -c 'exec ${lazygitBin}'";
+          command = "${lib.getExe interactiveShell} -i -c 'if command -v direnv >/dev/null 2>&1; then exec direnv exec . ${lazygitBin}; else exec ${lazygitBin}; fi'";
           description = "lazygit";
         }
         {
