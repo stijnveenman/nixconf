@@ -15,11 +15,6 @@
     then config.programs.zsh.package
     else config.programs.bash.package;
 
-  treehousePlugin = pkgs.callPackage ../herdr/treehouse {
-    inherit treehouse;
-    herdr = config.programs.herdr.package;
-  };
-
   # Cycle through agents by attention priority: blocked, done, then idle.
   nextAgentScript = pkgs.writeShellScript "herdr-next-agent" ''
     agents=$(${herdrBin} agent list) || exit 1
@@ -48,16 +43,11 @@
 in {
   home.packages = [
     treehouse
-    treehousePlugin
     pkgs.gum
   ];
 
   home.file.".config/treehouse/config.toml".text = ''
     max_trees = 12
-  '';
-
-  home.activation.herdrTreehousePlugin = lib.hm.dag.entryAfter ["linkGeneration"] ''
-    run ${lib.getExe treehousePlugin} ${herdrBin}
   '';
 
   programs.herdr = {
