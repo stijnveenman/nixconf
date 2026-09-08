@@ -25,13 +25,6 @@
     homeFlake = "/Users/${config.home.username}/Documents/nixconf";
   };
 
-  # Pi Coding Agent is provided by nixpkgs/home-manager and keeps the startup
-  # header quiet via ~/.pi/agent/settings.json.
-  programs.pi-coding-agent = {
-    enable = true;
-    settings.quietStartup = true;
-  };
-
   home.sessionVariables = {
     RUSH_PARALLELISM = "60%";
     PC_HIDE_DISABLED_PROC = "1";
@@ -42,6 +35,7 @@
 
   home.packages = [
     pkgs._1password-cli
+    pkgs.pi-coding-agent
 
     # formatting
     pkgs.nixd
