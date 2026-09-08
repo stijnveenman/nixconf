@@ -1,7 +1,6 @@
 {
   home-manager,
   nixpkgs,
-  oh-my-pi,
   treehouse,
   ...
 }: let
@@ -11,7 +10,6 @@ in
     inherit pkgs;
     extraSpecialArgs = {
       treehouse = treehouse.packages."aarch64-darwin".default;
-      oh-my-pi = oh-my-pi.homeManagerModules.default;
     };
     modules = [
       ./home.nix
