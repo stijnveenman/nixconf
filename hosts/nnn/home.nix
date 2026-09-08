@@ -195,15 +195,14 @@
 
     programs.ghostty = {
       # Host-specific ghostty settings (shared theme/font/package live in
-      # ../../modules/ghostty.nix). Launch herdr in the first Ghostty surface on
-      # startup, mirroring the macbook. `direct:` runs the absolute herdr binary
-      # without shell wrapping. pkgs.herdr is the default programs.herdr.package.
+      # ../../modules/ghostty.nix). These mirror the macbook host but avoid
+      # auto-launching a specific command on startup.
       settings = {
-        initial-command = "direct:${lib.getExe pkgs.herdr}";
+        # Fully quit Ghostty when the last window closes so reopening starts a
+        # fresh process.
         quit-after-last-window-closed = true;
       };
     };
-
     home.file.".config/noctalia/settings.json".source = ./noctalia.json;
     home.file.".cache/noctalia/wallpapers.json" = {
       text = builtins.toJSON {

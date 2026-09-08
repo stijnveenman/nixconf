@@ -98,21 +98,13 @@
 
   programs.ghostty = {
     # Host-specific ghostty settings (shared theme/font/package live in
-    # ../../modules/ghostty.nix). These are macbook-only: macOS Option-as-Alt,
-    # and launching herdr in the first Ghostty surface.
+    # ../../modules/ghostty.nix). These are macbook-only: macOS Option-as-Alt.
     settings = {
       # Treat the macOS Option key as Alt/Meta so terminal keybinds work.
       macos-option-as-alt = true;
 
-      # Launch herdr in the first Ghostty surface on startup. New tabs/windows
-      # remain plain shells; quitting herdr closes that first surface.
-      # Use the absolute herdr binary with `direct:` so Ghostty runs it without
-      # shell wrapping (which mangles the argv) and without relying on the GUI
-      # launchd PATH.
-      initial-command = "direct:${lib.getExe config.programs.herdr.package}";
-
       # Fully quit Ghostty when the last window closes so reopening starts a
-      # fresh process, which re-runs initial-command (herdr) above.
+      # fresh process.
       quit-after-last-window-closed = true;
     };
   };
