@@ -16,6 +16,12 @@
   programs.nh = {
     enable = true;
     homeFlake = "/home/${config.home.username}/nixconf";
+
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep=10";
+    };
   };
 
   # Omarchy Bashrc

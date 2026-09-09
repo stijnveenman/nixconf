@@ -23,6 +23,12 @@
   programs.nh = {
     enable = true;
     homeFlake = "/Users/${config.home.username}/Documents/nixconf";
+
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep=10";
+    };
   };
 
   home.sessionVariables = {
