@@ -142,7 +142,7 @@ in {
         selection_bg = "#665c54";
       };
 
-      keys.prefix = "ctrl+space";
+      keys.prefix = "ctrl+f";
 
       keys.goto = "prefix+space";
 
