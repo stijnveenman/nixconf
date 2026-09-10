@@ -39,11 +39,10 @@ below.
 ## Validate / apply workflow (important)
 
 When you change any `.nix` file, follow this order. **Never skip the build, and
-never switch on a config that has not built successfully.**
+never switch to a config that has not built successfully.**
 
 1. **Format:** run `alejandra .` to format the Nix files in the repo.
-2. **Validate (build):** run `nh home build` for a Home Manager configuration or
-   `nh os build` for a NixOS configuration. This evaluates and builds without
+2. **Validate (build):** run `nh home build`. This evaluates and builds without
    activating. A non-zero exit code, Nix evaluation error, or build failure
    means validation **failed**. If the build **succeeds**, trust it: treat the
    result as correct and do **not** inspect, read, or dive into `/nix/store`
@@ -55,13 +54,13 @@ never switch on a config that has not built successfully.**
    validating worktree changes, pass the worktree path explicitly:
    `nh home build <absolute-worktree-path>`. `NH_HOME_FLAKE` is set by the host
    environment, so this applies even though `nh` is run from inside the worktree.
-3. **Apply (switch):** after a successful build, activate the configuration by
-   running `nh home switch` for Home Manager or `nh os switch` for NixOS, unless
-   the user requested validation only. These are the only permitted switch
-   commands. Do not add force flags or use lower-level activation commands.
+3. **Switch:** after a successful build, activate the configuration with
+   `nh home switch`, unless the user requested validation only. This is the only
+   permitted switch command. Do not add force flags or use lower-level activation
+   commands.
 
    The `/apply` command assumes the configuration has already built successfully
-   and runs only the appropriate switch command. It does not format or build.
+   and runs only `nh home switch`. It does not format or build.
 
 If the build fails:
 
@@ -69,19 +68,19 @@ If the build fails:
 - Report the Nix evaluation/build error to the user and fix the offending `.nix`
   before retrying the build.
 
-If the switch (activation) fails:
+If switch (activation) fails:
 
-- Stop immediately and report the activation error.
-- Do **not** retry the switch.
+- Stop immediately and report the activation error to the user.
+- Do **not** retry switch.
 - Do **not** run other commands, modify or remove files, or add force flags to
   resolve the failure, including conflicts with existing configuration files.
 - Leave remediation to the user unless they later make a separate request.
 
 There are slash commands for these steps:
 
-- `/validate` formats and runs the appropriate build command without switching.
-- `/apply` runs only the appropriate `nh home switch` or `nh os switch` command.
-  It assumes the build has already succeeded.
+- `/validate` formats and runs `nh home build` without switching.
+- `/apply` runs only `nh home switch`. It assumes the build has already
+  succeeded.
 
 ## Formatting
 
