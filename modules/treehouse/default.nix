@@ -41,7 +41,7 @@ in {
 
     max_trees = lib.mkOption {
       type = lib.types.ints.positive;
-      default = 12;
+      default = 6;
       description = "Maximum number of worktrees managed by Treehouse.";
     };
 
