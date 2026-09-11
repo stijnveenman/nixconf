@@ -12,7 +12,7 @@
       ../../modules/cli-tools.nix
       ../../modules/ghostty.nix
       ../../modules/opencode.nix
-      ../../modules/herdr.nix
+      ../../modules/herdr
     ];
 
     my.git.userEmail = "veenman.stijn@gmail.com";
