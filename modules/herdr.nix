@@ -14,11 +14,6 @@
   awkBin = lib.getExe pkgs.gawk;
   direnvBin = lib.getExe config.programs.direnv.package;
 
-  interactiveShell =
-    if config.programs.zsh.enable
-    then config.programs.zsh.package
-    else config.programs.bash.package;
-
   # Cycle through agents by attention priority: blocked, done, then idle.
   nextAgentScript = pkgs.writeShellScript "herdr-next-agent" ''
     agents=$(${herdrBin} agent list) || exit 1
@@ -129,12 +124,16 @@
     ${gumBin} style --foreground cyan "Switching nixconf from $flake_dir"
     cd "$flake_dir" || exit 1
 
-    # Stage 1: fetch
-    ${gumBin} style --foreground cyan "Fetching latest nixconf from origin main..."
-    if ! git pull --ff-only origin main; then
-      ${gumBin} style --foreground red "Fetch failed (diverged or no upstream?). Fix it and retry."
-      read -s -n1 -p "Press any key to close..."
-      exit 1
+    # Stage 1: fetch (skip if the worktree is dirty)
+    if [ -n "$(${gitBin} status --porcelain)" ]; then
+      ${gumBin} style --foreground yellow "Working tree is dirty; skipping fetch from origin main."
+    else
+      ${gumBin} style --foreground cyan "Fetching latest nixconf from origin main..."
+      if ! ${gitBin} pull --ff-only origin main; then
+        ${gumBin} style --foreground red "Fetch failed (diverged or no upstream?). Fix it and retry."
+        read -s -n1 -p "Press any key to close..."
+        exit 1
+      fi
     fi
 
     # Stage 2: switch
@@ -150,6 +149,12 @@
 
     ${gumBin} style --foreground green "nixconf switched successfully."
     read -s -n1 -p "Press any key to close..."
+  '';
+
+  prefixUPopupScript = pkgs.writeShellScript "herdr-prefix-u-popup" ''
+    set -euo pipefail
+
+    read -r -p "Input: " _input
   '';
   # Fires on every `treehouse get` acquisition (new or recycled worktree —
   # treehouse's post_create hook re-runs on pool reuse, not just first
@@ -231,7 +236,7 @@ in {
         {
           key = "prefix+ctrl+r";
           type = "popup";
-          command = "${lib.getExe interactiveShell} -i -c 'exec ${switchNixconfScript}'";
+          command = "${switchNixconfScript}";
           width = 90;
           height = 24;
           description = "fetch and switch nixconf";
@@ -239,7 +244,7 @@ in {
         {
           key = "prefix+space";
           type = "popup";
-          command = "${lib.getExe interactiveShell} -i -c 'exec ${panePickerScript}'";
+          command = "${panePickerScript}";
           width = 100;
           height = 28;
           description = "fzf workspace picker";
@@ -249,6 +254,14 @@ in {
           type = "shell";
           command = "${nextAgentScript}";
           description = "next agent needing attention";
+        }
+        {
+          key = "prefix+u";
+          type = "popup";
+          command = "${prefixUPopupScript}";
+          width = 60;
+          height = 8;
+          description = "prompt for input";
         }
 
         # smart-splits is cloned at runtime, so link its plugin once:
