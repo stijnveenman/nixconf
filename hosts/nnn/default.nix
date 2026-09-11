@@ -2,7 +2,6 @@
   home-manager,
   niri,
   nixpkgs,
-  treehouse,
   ...
 }: let
   system = "x86_64-linux";
@@ -17,9 +16,6 @@ in
       {
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
-        home-manager.extraSpecialArgs = {
-          treehouse = treehouse.packages."x86_64-linux".default;
-        };
       }
       ./home.nix
     ];

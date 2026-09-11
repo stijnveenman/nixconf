@@ -9,7 +9,7 @@ in
   home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
     extraSpecialArgs = {
-      treehouse = treehouse.packages."aarch64-darwin".default;
+      inherit treehouse;
     };
     modules = [
       ./home.nix

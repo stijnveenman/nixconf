@@ -1,8 +1,6 @@
 {
   pkgs,
   lib,
-  config,
-  treehouse,
   ...
 }: let
   nextAgentScript = import ./scripts/next-agent.nix {inherit pkgs lib;};
@@ -10,22 +8,7 @@
   panePickerScript = import ./scripts/pane-picker.nix {inherit pkgs lib;};
 
   switchNixconfScript = import ./scripts/switch-nixconf.nix {inherit pkgs lib;};
-
-  airportControlPostCreateHook = import ./scripts/treehouse-post-create-airport-control.nix {
-    inherit pkgs lib config;
-  };
 in {
-  home.packages = [
-    treehouse
-  ];
-
-  home.file.".config/treehouse/config.toml".text = ''
-    max_trees = 12
-
-    [hooks]
-    post_create = ["${airportControlPostCreateHook}"]
-  '';
-
   programs.herdr = {
     enable = true;
     package = pkgs.herdr;
