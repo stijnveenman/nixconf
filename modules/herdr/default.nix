@@ -4,9 +4,6 @@
   ...
 }: let
   nextAgentScript = import ./scripts/next-agent.nix {inherit pkgs lib;};
-
-  panePickerScript = import ./scripts/pane-picker.nix {inherit pkgs lib;};
-
   switchNixconfScript = import ./scripts/switch-nixconf.nix {inherit pkgs lib;};
 in {
   programs.herdr = {
@@ -33,9 +30,15 @@ in {
           type = "shell";
           command = pkgs.writeShellScript "lazygit pane" ''
             PANE=$(herdr pane split $HERDR_PANE_ID --direction right --ratio 0.5 --focus | jq '.result.pane.pane_id' -r)
-            herdr pane run $PANE '${lib.getExe pkgs.lazygit} && exit'
+            herdr pane run $PANE 'exec ${lib.getExe pkgs.lazygit}'
           '';
           description = "lazygit";
+        }
+        {
+          key = "prefix+k";
+          command = "herdr-bar.open";
+          description = "Command bar";
+          type = "plugin_action";
         }
         {
           key = "prefix+ctrl+r";
@@ -44,14 +47,6 @@ in {
           width = 90;
           height = 24;
           description = "fetch and switch nixconf";
-        }
-        {
-          key = "prefix+space";
-          type = "popup";
-          command = "${panePickerScript}";
-          width = 100;
-          height = 28;
-          description = "fzf workspace picker";
         }
         {
           key = "prefix+o";
