@@ -42,6 +42,13 @@
     set-option -g status-position top
     set -g @tmux-gruvbox-right-status-z ' '
 
+    set -g @plugin 'christoomey/vim-tmux-navigator'
+    set -g @vim_navigator_mapping_left "C-Left"
+    set -g @vim_navigator_mapping_right "C-Right"
+    set -g @vim_navigator_mapping_up "C-k"
+    set -g @vim_navigator_mapping_down "C-j"
+    set -g @vim_navigator_mapping_prev ""
+
     run '${config.xdg.configHome}/tmux/plugins/tpm/tpm'
   '';
 }
