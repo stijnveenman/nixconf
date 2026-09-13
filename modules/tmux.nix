@@ -4,6 +4,10 @@
   ...
 }: {
   home.packages = [pkgs.tmux pkgs.reattach-to-user-namespace];
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
 
   xdg.configFile."tmux/plugins/tpm" = {
     source = pkgs.fetchFromGitHub {
