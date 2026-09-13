@@ -8,8 +8,11 @@
       sesh list -t --icons | fzf-tmux -p 80%,70% \
         --no-sort --ansi \
         --border-label ' tmux sessions ' --prompt '🪟  ' \
-        --header '  enter switch  •  type new name to create  •  ctrl-d kill session' \
+        --header ' ctrl-a all • ctrl-t tmux • ctrl-x zoxide • ctrl-d tmux kill ' \
         --bind 'tab:down,btab:up' \
+        --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
+        --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
+        --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
         --bind 'ctrl-d:execute-silent(tmux kill-session -t {2..})+reload(sesh list -t --icons)' \
         --preview-window 'right:55%' \
         --preview 'sesh preview {}' \

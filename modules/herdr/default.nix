@@ -26,15 +26,6 @@ in {
 
       keys.command = [
         {
-          key = "ctrl+g";
-          type = "shell";
-          command = pkgs.writeShellScript "lazygit pane" ''
-            PANE=$(herdr pane split $HERDR_PANE_ID --direction right --ratio 0.5 --focus | jq '.result.pane.pane_id' -r)
-            herdr pane run $PANE 'exec ${lib.getExe pkgs.lazygit}'
-          '';
-          description = "lazygit";
-        }
-        {
           key = "prefix+k";
           command = "herdr-bar.open";
           description = "Command bar";
