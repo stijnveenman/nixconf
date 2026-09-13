@@ -2,8 +2,37 @@
   pkgs,
   config,
   ...
-}: {
-  home.packages = [pkgs.tmux pkgs.reattach-to-user-namespace];
+}: let
+  tmuxSessionSwitcher = pkgs.writeShellScript "tmux-session-switcher" ''
+    selected="$(
+      sesh list -t --icons | fzf-tmux -p 80%,70% \
+        --no-sort --ansi \
+        --border-label ' tmux sessions ' --prompt '🪟  ' \
+        --header '  enter switch  •  type new name to create  •  ctrl-d kill session' \
+        --bind 'tab:down,btab:up' \
+        --bind 'ctrl-d:execute-silent(tmux kill-session -t {2..})+reload(sesh list -t --icons)' \
+        --preview-window 'right:55%' \
+        --preview 'sesh preview {}' \
+        --print-query
+    )"
+
+    query="$(printf '%s\n' "$selected" | sed -n '1p')"
+    choice="$(printf '%s\n' "$selected" | sed -n '2p')"
+
+    if [ -n "$choice" ]; then
+      sesh connect "$choice"
+      exit $?
+    fi
+
+    if [ -z "$query" ]; then
+      exit 0
+    fi
+
+    # Placeholder: implement this script later.
+    ~/.local/bin/sesh-create-worktree-session "$query"
+  '';
+in {
+  home.packages = [pkgs.tmux];
   programs.zoxide = {
     enable = true;
     enableZshIntegration = true;
@@ -29,22 +58,23 @@
 
   xdg.configFile."tmux/tmux.conf".text = ''
     # ---Key bindings
-    set -g prefix C-s
+    set -g prefix C-a
     set -g mouse on
 
     unbind r
     bind r source-file ${config.xdg.configHome}/tmux/tmux.conf
-
-    bind C-s 'send-keys C-s'
 
     bind v split-pane -h -c "#{pane_current_path}"
     bind - split-pane -v -c "#{pane_current_path}"
 
     bind n next-window
     bind p previous-window
-    bind c new-window "#{pane_current_path}"
+    bind c new-window
 
     bind g display-popup -w 80% -h 80% lazygit
+
+    unbind f
+    bind-key f run-shell "${tmuxSessionSwitcher}"
 
     set-option -g pane-border-status top
     set-option -g pane-border-lines heavy
@@ -56,8 +86,6 @@
     set -g history-limit 50000
     set -g display-time 4000
     set -g status-interval 5
-    # (OS X) Fix pbcopy/pbpaste for old tmux versions (pre 2.6)
-    set -g default-command "reattach-to-user-namespace -l $SHELL"
     set -g default-terminal "tmux-256color"
     set -as terminal-features ",*:RGB"
     set -g status-keys emacs
