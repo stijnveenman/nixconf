@@ -15,7 +15,7 @@ in {
     ../../modules/opencode.nix
     ../../modules/herdr
     ../../modules/treehouse
-    ../../modules/tmux.nix
+    ../../modules/tmux
   ];
 
   treehouse.repos."schiphol-ac/airport-control".post_create = airportControlPostCreate;

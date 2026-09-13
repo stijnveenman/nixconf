@@ -1,38 +1,56 @@
 {
-  pkgs,
   config,
+  lib,
+  pkgs,
   ...
 }: let
+  tmuxCreateTreehouseWorktreeSession = import ./scripts/tmux-treehouse-worktree-session.nix {
+    inherit config lib pkgs;
+  };
+
+  fzfTmux = lib.getExe' pkgs.fzf "fzf-tmux";
+  sesh = lib.getExe pkgs.sesh;
+  tmux = lib.getExe pkgs.tmux;
+
   tmuxSessionSwitcher = pkgs.writeShellScript "tmux-session-switcher" ''
+    set -euo pipefail
+
+    set +e
     selected="$(
-      sesh list -t --icons | fzf-tmux -p 80%,70% \
+      ${sesh} list -t --icons | ${fzfTmux} -p 80%,70% \
         --no-sort --ansi \
         --border-label ' tmux sessions ' --prompt '🪟  ' \
         --header ' ctrl-a all • ctrl-t tmux • ctrl-x zoxide • ctrl-d tmux kill ' \
         --bind 'tab:down,btab:up' \
-        --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
-        --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
-        --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
-        --bind 'ctrl-d:execute-silent(tmux kill-session -t {2..})+reload(sesh list -t --icons)' \
+        --bind 'ctrl-a:change-prompt(⚡  )+reload(${sesh} list --icons)' \
+        --bind 'ctrl-t:change-prompt(🪟  )+reload(${sesh} list -t --icons)' \
+        --bind 'ctrl-x:change-prompt(📁  )+reload(${sesh} list -z --icons)' \
+        --bind 'ctrl-d:execute-silent(${tmux} kill-session -t {2..})+reload(${sesh} list -t --icons)' \
         --preview-window 'right:55%' \
-        --preview 'sesh preview {}' \
+        --preview '${sesh} preview {}' \
         --print-query
     )"
+    set -e
 
-    query="$(printf '%s\n' "$selected" | sed -n '1p')"
-    choice="$(printf '%s\n' "$selected" | sed -n '2p')"
+
+    query="''${selected%%$'\n'*}"
+    if [ "$selected" = "$query" ]; then
+      choice=""
+    else
+      choice="''${selected#*$'\n'}"
+    fi
 
     if [ -n "$choice" ]; then
-      sesh connect "$choice"
+      ${sesh} connect "$choice"
       exit $?
     fi
 
+    # No selection and no query typed: fzf was cancelled, exit quietly.
     if [ -z "$query" ]; then
       exit 0
     fi
 
-    # Placeholder: implement this script later.
-    ~/.local/bin/sesh-create-worktree-session "$query"
+    ${tmuxCreateTreehouseWorktreeSession} "$query"
   '';
 in {
   home.packages = [pkgs.tmux];
@@ -77,7 +95,7 @@ in {
     bind g display-popup -w 80% -h 80% lazygit
 
     unbind f
-    bind-key f run-shell "${tmuxSessionSwitcher}"
+    bind-key f run-shell "cd \"#{pane_current_path}\" && ${tmuxSessionSwitcher}"
 
     set-option -g pane-border-status top
     set-option -g pane-border-lines heavy
@@ -95,7 +113,9 @@ in {
     set -g focus-events on
     set -g extended-keys on
     set -g extended-keys-format csi-u
+    set -g detach-on-destroy off
     setw -g aggressive-resize on
+    setw -g automatic-rename on
 
     set -g @plugin 'tmux-plugins/tpm'
 

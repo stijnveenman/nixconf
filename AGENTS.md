@@ -89,6 +89,17 @@ There are slash commands for these steps:
 When you edit a `.nix` file, you may run `alejandra <file>` (or `alejandra .`)
 before building to keep formatting consistent.
 
+## Script conventions
+
+- Keep scripts close to the module that uses them: `modules/<module>/scripts`.
+- If a module is currently a single file (`modules/<name>.nix`) and needs scripts,
+  convert it to a directory module with `modules/<name>/default.nix`.
+- Implement scripts with `pkgs.writeShellScript`.
+- Prefer inheriting full arguments in modules (`{ pkgs, lib, ... }`) instead of
+  threading ad-hoc variables.
+- Resolve binaries in a `let` block with `lib.getExe`, keeping variable names
+  close to package names (for example: `git = lib.getExe pkgs.git;`).
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
