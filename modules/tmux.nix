@@ -9,6 +9,15 @@
     enableZshIntegration = true;
   };
 
+  programs.fzf.tmux = {
+    enableShellIntegration = true;
+  };
+
+  programs.sesh = {
+    enable = true;
+    settings = {};
+  };
+
   xdg.configFile."tmux/plugins/tpm" = {
     source = pkgs.fetchFromGitHub {
       owner = "tmux-plugins";
@@ -33,7 +42,7 @@
 
     bind n next-window
     bind p previous-window
-    bind c new-window
+    bind c new-window "#{pane_current_path}"
 
     bind g display-popup -w 80% -h 80% lazygit
 
