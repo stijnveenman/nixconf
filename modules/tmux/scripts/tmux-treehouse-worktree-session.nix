@@ -12,45 +12,28 @@
   bash = lib.getExe pkgs.bash;
   cat = lib.getExe' pkgs.coreutils "cat";
   git = lib.getExe pkgs.git;
+  grep = lib.getExe' pkgs.gnugrep "grep";
   mktemp = lib.getExe' pkgs.coreutils "mktemp";
   rm = lib.getExe' pkgs.coreutils "rm";
   sesh = lib.getExe pkgs.sesh;
   sleep = lib.getExe' pkgs.coreutils "sleep";
   tmux = lib.getExe pkgs.tmux;
 
-  launchShell = pkgs.writeShellScript "tmux-treehouse-launch-shell" ''
+  leaseHolder = pkgs.writeShellScript "tmux-treehouse-lease-holder" ''
     set -euo pipefail
 
-    branch="''${TMUX_TREEHOUSE_BRANCH:?}"
-    safe_branch="''${TMUX_TREEHOUSE_SAFE_BRANCH:?}"
-    session="''${TMUX_TREEHOUSE_SESSION:?}"
+    worktree="''${TMUX_TREEHOUSE_WORKTREE:?}"
+    lease_holder="''${TMUX_TREEHOUSE_LEASE_HOLDER:?}"
 
-    fail() {
-      printf '\n❌ %s\n' "$1" >&2
-      printf '\nTreehouse will return this worktree when this launcher exits.\n' >&2
-      printf 'Press Enter to close launcher and return worktree...' >&2
-      read -r _ || true
-      exit 1
+    cleanup() {
+      ${treehouse} return --if-lease-holder "$lease_holder" "$worktree" >/dev/null 2>&1 || true
     }
 
-    printf '\n🌳 Treehouse acquired worktree:\n  %s\n' "$PWD"
-    printf '🌿 Preparing branch:\n  %s\n\n' "$branch"
-
-    if ${git} show-ref --verify --quiet "refs/heads/$branch"; then
-      ${git} switch "$branch" || fail "git: failed to switch to $branch"
-    elif ${git} show-ref --verify --quiet "refs/remotes/origin/$branch"; then
-      ${git} switch --track -c "$branch" "origin/$branch" || fail "git: failed to create tracking branch $branch"
-    else
-      ${git} switch -c "$branch" || fail "git: failed to create branch $branch"
-    fi
-
-    printf '\n🪟 Opening work window for %s...\n' "$session"
-    work_window="$(${tmux} new-window -d -P -F '#{window_id}' -t "$session:" -c "$PWD")" || fail "tmux: failed to create work window"
-
-    ${tmux} select-window -t "$work_window" || fail "tmux: failed to select work window"
+    trap cleanup EXIT INT TERM
 
     printf '\n✅ Worktree ready.\n'
     printf '\nThis hidden WT window is the Treehouse lease holder.\n'
+    printf 'Worktree: %s\n' "$worktree"
     printf 'Close this WT window (or the tmux session) to return the worktree lease.\n'
     printf 'Treehouse will terminate remaining processes in the worktree during return.\n'
 
@@ -68,6 +51,9 @@ in
 
     session=""
     session_created=0
+    lease_acquired=0
+    lease_holder=""
+    worktree=""
     error_log="$(${mktemp} "''${TMPDIR:-/tmp}/tmux-treehouse-session.XXXXXX")"
 
     show_error() {
@@ -89,6 +75,10 @@ in
     cleanup_on_failure() {
       if [ "$session_created" -eq 1 ] && [ -n "$session" ]; then
         ${tmux} kill-session -t "$session" >>"$error_log" 2>&1 || true
+      fi
+
+      if [ "$lease_acquired" -eq 1 ] && [ -n "$lease_holder" ] && [ -n "$worktree" ]; then
+        ${treehouse} return --if-lease-holder "$lease_holder" "$worktree" >>"$error_log" 2>&1 || true
       fi
     }
 
@@ -112,17 +102,46 @@ in
       fail "tmux: session already exists ($session)"
     fi
 
-    printf -v branch_arg '%q' "$branch"
-    printf -v safe_branch_arg '%q' "$safe_branch"
-    printf -v session_arg '%q' "$session"
+    lease_holder="tmux:''${session}:$$"
+    worktree="$(${treehouse} get --lease --lease-holder "$lease_holder" 2>>"$error_log")" || fail "treehouse: failed to acquire leased worktree"
+    worktree="''${worktree%%$'\n'*}"
+    lease_acquired=1
 
-    launch_cmd="TMUX_TREEHOUSE_BRANCH=$branch_arg TMUX_TREEHOUSE_SAFE_BRANCH=$safe_branch_arg TMUX_TREEHOUSE_SESSION=$session_arg SHELL=${launchShell} ${treehouse} get"
+    if [ -z "$worktree" ] || [ ! -d "$worktree" ]; then
+      fail "treehouse: acquired worktree path is invalid ($worktree)"
+    fi
 
-    ${tmux} new-session -d -s "$session" -n WT -c "$repo_root" "$launch_cmd" >>"$error_log" 2>&1 || fail "tmux: failed to create treehouse launcher session $session"
+    cd "$worktree" 2>>"$error_log" || fail "treehouse: failed to enter worktree ($worktree)"
+
+    if ${git} show-ref --verify --quiet "refs/heads/$branch"; then
+      if ! ${git} switch "$branch" >>"$error_log" 2>&1; then
+        # Branch may already be checked out in another worktree.
+        if ${git} worktree list --porcelain 2>>"$error_log" | ${grep} -Fxq "branch refs/heads/$branch"; then
+          printf 'git: branch %s already checked out elsewhere; using detached HEAD at refs/heads/%s\n' "$branch" "$branch" >>"$error_log"
+          ${git} switch --detach "refs/heads/$branch" >>"$error_log" 2>&1 || fail "git: failed to detach at $branch"
+        else
+          fail "git: failed to switch to $branch"
+        fi
+      fi
+    elif ${git} show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+      ${git} switch --track -c "$branch" "origin/$branch" >>"$error_log" 2>&1 || fail "git: failed to create tracking branch $branch"
+    else
+      ${git} switch -c "$branch" >>"$error_log" 2>&1 || fail "git: failed to create branch $branch"
+    fi
+
+    printf -v worktree_arg '%q' "$worktree"
+    printf -v lease_holder_arg '%q' "$lease_holder"
+
+    holder_cmd="TMUX_TREEHOUSE_WORKTREE=$worktree_arg TMUX_TREEHOUSE_LEASE_HOLDER=$lease_holder_arg ${leaseHolder}"
+
+    ${tmux} new-session -d -s "$session" -n WT -c "$worktree" "$holder_cmd" >>"$error_log" 2>&1 || fail "tmux: failed to create treehouse session $session"
     session_created=1
 
+    work_window="$(${tmux} new-window -d -P -F '#{window_id}' -t "$session:" -c "$worktree" 2>>"$error_log")" || fail "tmux: failed to create work window"
+    ${tmux} select-window -t "$work_window" >>"$error_log" 2>&1 || fail "tmux: failed to select work window"
+
     # Keep the Treehouse owner hidden from the status bar and prevent automatic
-    # rename from exposing it as `treehouse`, `bash`, etc.
+    # rename from exposing it as `sleep`, etc.
     ${tmux} set-option -w -t "$session:WT" automatic-rename off >>"$error_log" 2>&1 || fail "tmux: failed to disable automatic rename for WT"
     ${tmux} set-option -w -t "$session:WT" window-status-format "" >>"$error_log" 2>&1 || fail "tmux: failed to hide WT status entry"
     ${tmux} set-option -w -t "$session:WT" window-status-current-format "" >>"$error_log" 2>&1 || fail "tmux: failed to hide WT current status entry"
