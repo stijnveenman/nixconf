@@ -15,6 +15,7 @@
   mktemp = lib.getExe' pkgs.coreutils "mktemp";
   rm = lib.getExe' pkgs.coreutils "rm";
   sesh = lib.getExe pkgs.sesh;
+  sleep = lib.getExe' pkgs.coreutils "sleep";
   tmux = lib.getExe pkgs.tmux;
 
   launchShell = pkgs.writeShellScript "tmux-treehouse-launch-shell" ''
@@ -50,11 +51,10 @@
 
     printf '\n✅ Worktree ready.\n'
     printf '\nThis hidden WT window is the Treehouse lease holder.\n'
-    printf 'Press any key in this WT window to return the worktree lease.\n'
+    printf 'Close this WT window (or the tmux session) to return the worktree lease.\n'
     printf 'Treehouse will terminate remaining processes in the worktree during return.\n'
 
-    read -rsn 1 _ || true
-    exit 0
+    ${sleep} infinity
   '';
 in
   pkgs.writeShellScript "tmux-treehouse-worktree-session" ''
