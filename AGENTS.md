@@ -82,6 +82,14 @@ There are slash commands for these steps:
 - `/apply` runs only `nh home switch`. It assumes the build has already
   succeeded.
 
+## Reload notes (`nh` and `tmux`)
+
+- `nh` does not have a separate daemon reload step. After changing `.nix`
+  configuration, reload by following the normal flow: `nh home build` then
+  `nh home switch`.
+- Reload `tmux` only when tmux config/scripts change and after a successful
+  switch. Use `tmux source-file ~/.config/tmux/tmux.conf` (or restart tmux).
+
 ## Formatting
 
 `.nix` files in this repo are formatted with
