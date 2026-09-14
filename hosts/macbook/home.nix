@@ -51,6 +51,7 @@ in {
   home.packages = [
     pkgs._1password-cli
     pkgs.pi-coding-agent
+    pkgs.git-crypt
 
     # formatting
     pkgs.nixd

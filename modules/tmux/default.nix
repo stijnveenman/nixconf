@@ -77,7 +77,7 @@ in {
     bind p previous-window
     bind c new-window
 
-    bind g display-popup -w 80% -h 80% lazygit
+    bind-key -n C-g display-popup -d "#{pane_current_path}" -w 80% -h 80% lazygit
 
     unbind f
     bind-key f run-shell "cd \"#{pane_current_path}\" && ${tmuxSessionSwitcher}"
