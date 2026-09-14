@@ -50,11 +50,17 @@ in
     fi
 
     session=""
+    worktree=""
+    lease_holder=""
     session_created=0
     lease_acquired=0
-    lease_holder=""
-    worktree=""
+
     error_log="$(${mktemp} "''${TMPDIR:-/tmp}/tmux-treehouse-session.XXXXXX")"
+    rendered_log="$error_log.rendered"
+
+    cleanup_temp_files() {
+      ${rm} -f "$error_log" "$rendered_log"
+    }
 
     show_error() {
       local summary="$1"
@@ -62,41 +68,74 @@ in
       {
         printf '%s\n\n' "$summary"
         ${cat} "$error_log"
-      } >"$error_log.rendered"
+      } >"$rendered_log"
 
       if [ -n "''${TMUX:-}" ]; then
         ${tmux} display-message -d 10000 "$summary"
-        ${tmux} display-popup -E -w 90% -h 70% "${bash} -lc '${cat} \"$error_log.rendered\"; printf \"\\nPress Enter to close...\"; read -r _'"
+        ${tmux} display-popup -E -w 90% -h 70% "${bash} -lc '${cat} \"$rendered_log\"; printf \"\\nPress Enter to close...\"; read -r _'"
       else
-        ${cat} "$error_log.rendered" >&2
+        ${cat} "$rendered_log" >&2
       fi
     }
 
-    cleanup_on_failure() {
-      if [ "$session_created" -eq 1 ] && [ -n "$session" ]; then
-        ${tmux} kill-session -t "$session" >>"$error_log" 2>&1 || true
-      fi
-
+    release_lease_if_needed() {
       if [ "$lease_acquired" -eq 1 ] && [ -n "$lease_holder" ] && [ -n "$worktree" ]; then
         ${treehouse} return --if-lease-holder "$lease_holder" "$worktree" >>"$error_log" 2>&1 || true
       fi
     }
 
+    destroy_session_if_needed() {
+      if [ "$session_created" -eq 1 ] && [ -n "$session" ]; then
+        ${tmux} kill-session -t "$session" >>"$error_log" 2>&1 || true
+      fi
+    }
+
     fail() {
       local summary="$1"
-      cleanup_on_failure
+      destroy_session_if_needed
+      release_lease_if_needed
       show_error "$summary"
+      cleanup_temp_files
       exit 1
+    }
+
+    sanitize_branch_for_session_name() {
+      local value="$1"
+      value="''${value//\//-}"
+      value="''${value//:/-}"
+      value="''${value//./-}"
+      printf '%s' "$value"
+    }
+
+    checkout_branch() {
+      local target_branch="$1"
+
+      if ${git} show-ref --verify --quiet "refs/heads/$target_branch"; then
+        if ${git} switch "$target_branch" >>"$error_log" 2>&1; then
+          return 0
+        fi
+
+        # Branch may already be checked out in another worktree.
+        if ${git} worktree list --porcelain 2>>"$error_log" | ${grep} -Fxq "branch refs/heads/$target_branch"; then
+          printf 'git: branch %s already checked out elsewhere; using detached HEAD at refs/heads/%s\n' "$target_branch" "$target_branch" >>"$error_log"
+          ${git} switch --detach "refs/heads/$target_branch" >>"$error_log" 2>&1 || fail "git: failed to detach at $target_branch"
+          return 0
+        fi
+
+        fail "git: failed to switch to $target_branch"
+      fi
+
+      if ${git} show-ref --verify --quiet "refs/remotes/origin/$target_branch"; then
+        ${git} switch --track -c "$target_branch" "origin/$target_branch" >>"$error_log" 2>&1 || fail "git: failed to create tracking branch $target_branch"
+        return 0
+      fi
+
+      ${git} switch -c "$target_branch" >>"$error_log" 2>&1 || fail "git: failed to create branch $target_branch"
     }
 
     repo_root="$(${git} rev-parse --show-toplevel 2>>"$error_log")" || fail "git: failed to resolve repository root"
     repo_name="''${repo_root##*/}"
-
-    # tmux session names cannot contain '.' or ':'; keep them filesystem-safe too.
-    safe_branch="''${branch//\//-}"
-    safe_branch="''${safe_branch//:/-}"
-    safe_branch="''${safe_branch//./-}"
-    session="$repo_name@$safe_branch"
+    session="$repo_name@$(sanitize_branch_for_session_name "$branch")"
 
     if ${tmux} has-session -t "$session" 2>/dev/null; then
       fail "tmux: session already exists ($session)"
@@ -112,22 +151,7 @@ in
     fi
 
     cd "$worktree" 2>>"$error_log" || fail "treehouse: failed to enter worktree ($worktree)"
-
-    if ${git} show-ref --verify --quiet "refs/heads/$branch"; then
-      if ! ${git} switch "$branch" >>"$error_log" 2>&1; then
-        # Branch may already be checked out in another worktree.
-        if ${git} worktree list --porcelain 2>>"$error_log" | ${grep} -Fxq "branch refs/heads/$branch"; then
-          printf 'git: branch %s already checked out elsewhere; using detached HEAD at refs/heads/%s\n' "$branch" "$branch" >>"$error_log"
-          ${git} switch --detach "refs/heads/$branch" >>"$error_log" 2>&1 || fail "git: failed to detach at $branch"
-        else
-          fail "git: failed to switch to $branch"
-        fi
-      fi
-    elif ${git} show-ref --verify --quiet "refs/remotes/origin/$branch"; then
-      ${git} switch --track -c "$branch" "origin/$branch" >>"$error_log" 2>&1 || fail "git: failed to create tracking branch $branch"
-    else
-      ${git} switch -c "$branch" >>"$error_log" 2>&1 || fail "git: failed to create branch $branch"
-    fi
+    checkout_branch "$branch"
 
     printf -v worktree_arg '%q' "$worktree"
     printf -v lease_holder_arg '%q' "$lease_holder"
@@ -146,7 +170,6 @@ in
     ${tmux} set-option -w -t "$session:WT" window-status-format "" >>"$error_log" 2>&1 || fail "tmux: failed to hide WT status entry"
     ${tmux} set-option -w -t "$session:WT" window-status-current-format "" >>"$error_log" 2>&1 || fail "tmux: failed to hide WT current status entry"
 
-    ${rm} -f "$error_log" "$error_log.rendered"
-
+    cleanup_temp_files
     ${sesh} connect "$session"
   ''
