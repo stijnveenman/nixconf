@@ -20,37 +20,22 @@
       ${sesh} list -t --icons | ${fzfTmux} -p 80%,70% \
         --no-sort --ansi \
         --border-label ' tmux sessions ' --prompt '🪟  ' \
-        --header ' ctrl-a all • ctrl-t tmux • ctrl-x zoxide • ctrl-d tmux kill ' \
+        --header ' ctrl-a all • ctrl-t tmux • ctrl-x zoxide • ctrl-d tmux kill • ctrl-c new ' \
         --bind 'tab:down,btab:up' \
         --bind 'ctrl-a:change-prompt(⚡  )+reload(${sesh} list --icons)' \
         --bind 'ctrl-t:change-prompt(🪟  )+reload(${sesh} list -t --icons)' \
         --bind 'ctrl-x:change-prompt(📁  )+reload(${sesh} list -z --icons)' \
         --bind 'ctrl-d:execute-silent(${tmux} kill-session -t {2..})+reload(${sesh} list -t --icons)' \
+        --bind 'ctrl-c:execute-silent(${tmuxCreateTreehouseWorktreeSession} {q})+abort' \
         --preview-window 'right:55%' \
-        --preview '${sesh} preview {}' \
-        --print-query
+        --preview '${sesh} preview {}'
     )"
     set -e
 
-
-    query="''${selected%%$'\n'*}"
-    if [ "$selected" = "$query" ]; then
-      choice=""
-    else
-      choice="''${selected#*$'\n'}"
-    fi
-
-    if [ -n "$choice" ]; then
-      ${sesh} connect "$choice"
+    if [ -n "$selected" ]; then
+      ${sesh} connect "$selected"
       exit $?
     fi
-
-    # No selection and no query typed: fzf was cancelled, exit quietly.
-    if [ -z "$query" ]; then
-      exit 0
-    fi
-
-    ${tmuxCreateTreehouseWorktreeSession} "$query"
   '';
 in {
   home.packages = [pkgs.tmux];
