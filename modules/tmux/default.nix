@@ -80,10 +80,9 @@ in {
     unbind l
     bind l run-shell "${sesh} last"
 
-    bind-key -n C-g display-popup -w 80% -h 80% lazygit
+    bind-key -n C-g display-popup -E -w 80% -h 80% lazygit
 
-    unbind f
-    bind-key f run-shell "cd \"#{pane_current_path}\" && ${tmuxSessionSwitcher}"
+    bind-key -n C-o run-shell "${tmuxSessionSwitcher}"
 
     set-option -g pane-border-status top
     set-option -g pane-border-lines heavy

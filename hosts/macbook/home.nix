@@ -16,6 +16,7 @@ in {
     ../../modules/herdr
     ../../modules/treehouse
     ../../modules/tmux
+    ../../modules/worktrunk
   ];
 
   treehouse.repos."schiphol-ac/airport-control".post_create = airportControlPostCreate;

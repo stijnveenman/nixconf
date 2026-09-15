@@ -9,6 +9,8 @@
 
     treehouse.url = "github:kunchenguid/treehouse";
     treehouse.inputs.nixpkgs.follows = "nixpkgs";
+
+    worktrunk.url = "github:max-sixty/worktrunk";
   };
 
   outputs = inputs: {
