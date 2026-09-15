@@ -7,6 +7,9 @@
   tmuxCreateTreehouseWorktreeSession = import ./scripts/tmux-treehouse-worktree-session.nix {
     inherit config lib pkgs;
   };
+  tmuxWorktrunkPicker = import ./scripts/tmux-worktrunk-picker.nix {
+    inherit config lib pkgs;
+  };
 
   fzfTmux = lib.getExe' pkgs.fzf "fzf-tmux";
   sesh = lib.getExe pkgs.sesh;
@@ -82,7 +85,13 @@ in {
 
     bind-key -n C-g display-popup -E -w 80% -h 80% lazygit
 
-    bind-key -n C-o run-shell "${tmuxSessionSwitcher}"
+    # Replace tmux's default worktree picker binding.
+    unbind w
+    bind f run-shell "${tmuxSessionSwitcher}"
+
+    # Open Worktrunk's picker in a 20%-high pane above the current one, with
+    # its preview panel hidden initially.
+    bind C-f run-shell "${tmuxWorktrunkPicker} '#{pane_id}'"
 
     set-option -g pane-border-status top
     set-option -g pane-border-lines heavy

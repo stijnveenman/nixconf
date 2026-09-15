@@ -1,2 +1,34 @@
 # Worktrunk user configuration.
-# Add user-wide settings here; Worktrunk defaults apply while this is empty.
+
+# Tmux is responsible for navigation between worktrees, so do not change the
+# directory of the shell running Worktrunk.
+[switch]
+cd = false
+
+# Start one detached tmux session for every new worktree. The session's initial
+# window keeps its default name; its left pane runs Neovim and its right pane
+# runs Pi.
+[pre-start]
+tmux = """
+S='{{ repo | sanitize }}@{{ branch | sanitize }}'
+W='{{ worktree_path }}'
+tmux new-session -d -s "$S" -c "$W" nvim
+tmux split-window -h -t "$S" -c "$W" pi
+tmux select-pane -t "$S:.0"
+"""
+
+# Switch to the matching session when the target worktree already exists.
+[post-switch]
+tmux = """
+{% if branch == "main" %}
+S='{{ repo | sanitize }}'
+{% else %}
+S='{{ repo | sanitize }}@{{ branch | sanitize }}'
+{% endif %}
+[ -n "${TMUX:-}" ] && tmux has-session -t "$S" 2>/dev/null &&
+  tmux switch-client -t "$S" || true
+"""
+
+# Remove the matching session before its worktree is deleted.
+[pre-remove]
+tmux = "tmux kill-session -t '{{ repo | sanitize }}@{{ branch | sanitize }}' 2>/dev/null || true"
