@@ -76,6 +76,7 @@ in {
     bind n next-window
     bind p previous-window
     bind c new-window
+    bind x kill-pane
     unbind l
     bind l run-shell "${sesh} last"
 
