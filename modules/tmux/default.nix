@@ -78,8 +78,10 @@ in {
     bind c new-window
     bind x kill-pane
     unbind l
-    bind l run-shell "${sesh} last"
+    bind l run-shell "workmux last-done"
     bind b run-shell "workmux sidebar"
+    bind [ run-shell "workmux sidebar prev"
+    bind ] run-shell "workmux sidebar next"
 
     # Run one guarded cleanup loop per tmux server. It sweeps all projects
     # tracked by workmux every five minutes; output is in XDG_STATE_HOME.

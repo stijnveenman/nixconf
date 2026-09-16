@@ -86,6 +86,7 @@ in {
       ac = "cd ~/Documents/airport-control/";
 
       lg = "lazygit";
+      wm = "workmux";
       o = "opencode";
       x = "opencode";
     };
