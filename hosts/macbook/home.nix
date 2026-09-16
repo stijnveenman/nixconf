@@ -13,7 +13,6 @@ in {
     ../../modules/cli-tools.nix
     ../../modules/ghostty.nix
     ../../modules/opencode.nix
-    ../../modules/herdr
     ../../modules/treehouse
     ../../modules/tmux
     ../../modules/worktrunk
@@ -97,7 +96,6 @@ in {
       o = "opencode";
       x = "opencode";
 
-      h = "herdr";
       th = "treehouse";
     };
   };
