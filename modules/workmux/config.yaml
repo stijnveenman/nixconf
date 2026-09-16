@@ -22,7 +22,7 @@ sidebar:
     tiles:
       - "{git_branch}{fill} {pr_number}"
       - "{project} {fill} {git_stats}"
-      - "{status_label} {fill} {pr_checks}"
+      - "{pr_number} {fill} {pr_checks}"
 
 files:
   copy:
