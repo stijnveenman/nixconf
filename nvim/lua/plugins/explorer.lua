@@ -5,7 +5,9 @@ return {
       picker = {
         sources = {
           explorer = {
-            auto_close = true,
+            -- Keep the sidebar while switching focus, but close it after opening a file.
+            auto_close = false,
+            jump = { close = true },
             layout = {
               preset = "sidebar",
               preview = false,
