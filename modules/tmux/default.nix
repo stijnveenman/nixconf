@@ -71,6 +71,7 @@ in {
 
     bind v split-pane -h -c "#{pane_current_path}"
     bind - split-pane -v -c "#{pane_current_path}"
+    bind-key -n C-_ display-popup -w 80% -h 50% -d "#{pane_current_path}"
 
     bind n next-window
     bind p previous-window
@@ -94,6 +95,10 @@ in {
     set-option -g pane-border-lines heavy
     set-option -g pane-border-indicators off
     set-option -g pane-border-format ""
+
+    # Enable OSC 8 hyperlink passthrough for Ghostty
+    set -g allow-passthrough on
+    set -as terminal-features ",xterm-ghostty:hyperlinks"
 
     # --- Sensible defaults
     set -s escape-time 0
