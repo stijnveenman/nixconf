@@ -74,6 +74,7 @@ in {
     bind x kill-pane
     unbind l
     bind l run-shell "${sesh} last"
+    bind b run-shell "workmux sidebar"
 
     bind-key -n C-g display-popup -E -w 80% -h 80% lazygit
 
