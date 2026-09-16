@@ -4,21 +4,15 @@
   lib,
   ...
 }: let
-  airportControlPostCreate = import ./scripts/treehouse-post-create-airport-control.nix {
-    inherit config lib pkgs;
-  };
 in {
   imports = [
     ../../modules/git.nix
     ../../modules/cli-tools.nix
     ../../modules/ghostty.nix
     ../../modules/opencode.nix
-    ../../modules/treehouse
     ../../modules/tmux
     ../../modules/worktrunk
   ];
-
-  treehouse.repos."schiphol-ac/airport-control".post_create = airportControlPostCreate;
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
 
@@ -95,8 +89,6 @@ in {
       lg = "lazygit";
       o = "opencode";
       x = "opencode";
-
-      th = "treehouse";
     };
   };
 

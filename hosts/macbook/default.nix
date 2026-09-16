@@ -1,7 +1,6 @@
 {
   home-manager,
   nixpkgs,
-  treehouse,
   worktrunk,
   ...
 }: let
@@ -10,7 +9,7 @@ in
   home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
     extraSpecialArgs = {
-      inherit treehouse worktrunk;
+      inherit worktrunk;
     };
     modules = [
       ./home.nix

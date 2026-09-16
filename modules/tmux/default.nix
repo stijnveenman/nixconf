@@ -4,9 +4,6 @@
   pkgs,
   ...
 }: let
-  tmuxCreateTreehouseWorktreeSession = import ./scripts/tmux-treehouse-worktree-session.nix {
-    inherit config lib pkgs;
-  };
   tmuxWorktrunkPicker = import ./scripts/tmux-worktrunk-picker.nix {
     inherit config lib pkgs;
   };
@@ -29,7 +26,6 @@
         --bind 'ctrl-t:change-prompt(🪟  )+reload(${sesh} list -t --icons)' \
         --bind 'ctrl-x:change-prompt(📁  )+reload(${sesh} list -z --icons)' \
         --bind 'ctrl-d:execute-silent(${tmux} kill-session -t {2..})+reload(${sesh} list -t --icons)' \
-        --bind 'ctrl-c:execute-silent(${tmuxCreateTreehouseWorktreeSession} {q})+abort' \
         --preview-window 'right:55%' \
         --preview '${sesh} preview {}'
     )"

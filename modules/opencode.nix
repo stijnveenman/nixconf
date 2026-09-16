@@ -15,7 +15,6 @@ in {
       autoupdate = false;
       permission = {
         bash."git *" = "allow";
-        external_directory."~/.treehouse/**" = "allow";
       };
     };
     tui = {
