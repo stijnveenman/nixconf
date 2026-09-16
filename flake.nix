@@ -6,6 +6,9 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     niri.url = "github:sodiboo/niri-flake";
+
+    workmux.url = "github:raine/workmux";
+    workmux.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs: {
