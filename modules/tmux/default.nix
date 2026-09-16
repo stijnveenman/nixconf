@@ -2,11 +2,15 @@
   config,
   lib,
   pkgs,
+  workmux,
   ...
 }: let
   fzfTmux = lib.getExe' pkgs.fzf "fzf-tmux";
   sesh = lib.getExe pkgs.sesh;
   tmux = lib.getExe pkgs.tmux;
+  workmuxGoneCleanup = import ./scripts/workmux-gone-cleanup.nix {
+    inherit lib pkgs workmux;
+  };
 
   tmuxSessionSwitcher = pkgs.writeShellScript "tmux-session-switcher" ''
     set -euo pipefail
@@ -75,6 +79,10 @@ in {
     unbind l
     bind l run-shell "${sesh} last"
     bind b run-shell "workmux sidebar"
+
+    # Run one guarded cleanup loop per tmux server. It sweeps all projects
+    # tracked by workmux every five minutes; output is in XDG_STATE_HOME.
+    run-shell -b "${workmuxGoneCleanup}"
 
     bind-key -n C-g display-popup -E -w 80% -h 80% lazygit
 
