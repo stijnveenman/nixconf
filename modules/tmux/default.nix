@@ -11,6 +11,9 @@
   workmuxGoneCleanup = import ./scripts/workmux-gone-cleanup.nix {
     inherit lib pkgs workmux;
   };
+  workmuxSidebarOpenPr = import ./scripts/workmux-sidebar-open-pr.nix {
+    inherit lib pkgs workmux;
+  };
 
   tmuxSessionSwitcher = pkgs.writeShellScript "tmux-session-switcher" ''
     set -euo pipefail
@@ -38,6 +41,10 @@
   '';
 in {
   home.packages = [pkgs.tmux];
+
+  # Expose the writeShellScript without putting its single-file output in
+  # home.packages (which only accepts package directories).
+  home.file.".local/bin/workmux-sidebar-open-pr".source = workmuxSidebarOpenPr;
   programs.zoxide = {
     enable = true;
     enableZshIntegration = true;
@@ -82,6 +89,10 @@ in {
     bind b run-shell "workmux sidebar"
     bind [ run-shell "workmux sidebar prev"
     bind ] run-shell "workmux sidebar next"
+
+    # Open the highlighted sidebar row's pull request without blocking tmux.
+    # Forward O unchanged when a non-sidebar pane is focused.
+    bind-key -n O if-shell -F '#{==:#{@workmux_role},sidebar}' 'run-shell -b "${config.home.homeDirectory}/.local/bin/workmux-sidebar-open-pr || true"' 'send-keys O'
 
     # Run one guarded cleanup loop per tmux server. It sweeps all projects
     # tracked by workmux every five minutes; output is in XDG_STATE_HOME.
