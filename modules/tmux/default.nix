@@ -4,10 +4,6 @@
   pkgs,
   ...
 }: let
-  tmuxWorktrunkPicker = import ./scripts/tmux-worktrunk-picker.nix {
-    inherit config lib pkgs;
-  };
-
   fzfTmux = lib.getExe' pkgs.fzf "fzf-tmux";
   sesh = lib.getExe pkgs.sesh;
   tmux = lib.getExe pkgs.tmux;
@@ -84,10 +80,6 @@ in {
     # Replace tmux's default worktree picker binding.
     unbind w
     bind f run-shell "${tmuxSessionSwitcher}"
-
-    # Open Worktrunk's picker in a 20%-high pane above the current one, with
-    # its preview panel hidden initially.
-    bind C-f run-shell "${tmuxWorktrunkPicker} '#{pane_id}'"
 
     set-option -g pane-border-status top
     set-option -g pane-border-lines heavy

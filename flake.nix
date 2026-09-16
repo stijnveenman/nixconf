@@ -6,8 +6,6 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     niri.url = "github:sodiboo/niri-flake";
-
-    worktrunk.url = "github:max-sixty/worktrunk";
   };
 
   outputs = inputs: {

@@ -11,7 +11,6 @@ in {
     ../../modules/ghostty.nix
     ../../modules/opencode.nix
     ../../modules/tmux
-    ../../modules/worktrunk
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
