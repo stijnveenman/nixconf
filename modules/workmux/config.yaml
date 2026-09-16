@@ -13,6 +13,7 @@ windows:
 
 agent: pi
 auto_name:
+  command: pi --no-extensions -p
   model: mai-code-1.1-flash
   background: true
 
