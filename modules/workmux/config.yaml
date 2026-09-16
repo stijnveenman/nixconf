@@ -17,6 +17,7 @@ auto_name:
   background: true
 
 sidebar:
+  sort: window
   templates:
     tiles:
       - "{git_branch}{fill} {pr_number}"
