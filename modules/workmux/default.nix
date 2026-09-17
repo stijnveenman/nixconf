@@ -23,7 +23,7 @@ in {
       floax_session="''${floax_session#FLOAX_SESSION_NAME=}"
       [[ "$current_session" == "$floax_session" ]] || return
 
-      command ${workmuxExe} sidebar off --session
+      command ${workmuxExe} sidebar --session off
 
       workmux() {
         if [[ "$1" == add ]]; then
