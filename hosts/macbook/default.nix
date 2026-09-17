@@ -1,4 +1,4 @@
-{
+inputs @ {
   home-manager,
   nixpkgs,
   workmux,
@@ -8,7 +8,7 @@
 in
   home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
-    extraSpecialArgs = {inherit workmux;};
+    extraSpecialArgs = {inherit inputs workmux;};
     modules = [
       ./home.nix
       ../../modules/neovim.nix
