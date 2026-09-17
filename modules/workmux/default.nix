@@ -36,6 +36,8 @@ in {
 
           shift
           command ${workmuxExe} add --background "$@"
+        elif [[ "$1" == open || "$1" == close ]]; then
+          command ${workmuxExe} "$@" &
         else
           command ${workmuxExe} "$@"
         fi
