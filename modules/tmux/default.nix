@@ -56,7 +56,7 @@ in {
 
   programs.sesh = {
     enable = true;
-    settings = {};
+    settings.blacklist = ["^scratch$"];
   };
 
   xdg.configFile."tmux/plugins/tpm" = {
