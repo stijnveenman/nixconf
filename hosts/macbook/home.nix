@@ -4,6 +4,8 @@
   lib,
   ...
 }: let
+  fzf = lib.getExe pkgs.fzf;
+  git = lib.getExe pkgs.git;
 in {
   imports = [
     ../../modules/git.nix
@@ -87,6 +89,7 @@ in {
 
       lg = "lazygit";
       wm = "workmux";
+      wmob = ''branch="$(${git} branch --format='%(refname:short)' | ${fzf} --height=5)"; [[ -n "$branch" ]] && workmux add "$branch"'';
       o = "opencode";
       x = "opencode";
     };
