@@ -7,6 +7,15 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+-- Restore the saved session for the working directory when Neovim starts empty.
+-- This file is loaded on VeryLazy, after VimEnter, so defer the restore instead
+-- of registering a VimEnter autocmd that would have already been missed.
+vim.schedule(function()
+  if vim.fn.argc() == 0 then
+    require("persistence").load()
+  end
+end)
+
 -- fix to run EslintFixAll after writing
 local eslintGroup = vim.api.nvim_create_augroup("EslintAutoSave", { clear = true })
 vim.api.nvim_create_autocmd("BufWrite", {
