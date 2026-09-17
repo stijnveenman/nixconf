@@ -78,7 +78,6 @@ in {
 
     bind v split-pane -h -c "#{pane_current_path}"
     bind - split-pane -v -c "#{pane_current_path}"
-    bind-key -n C-_ display-popup -w 80% -h 50% -d "#{session_path}"
 
     bind n next-window
     bind p previous-window
@@ -142,6 +141,14 @@ in {
     set -g @vim_navigator_mapping_up "C-k"
     set -g @vim_navigator_mapping_down "C-j"
     set -g @vim_navigator_mapping_prev ""
+
+    # Replace tmux's built-in ephemeral popup with FloaX's persistent
+    # floating terminal while preserving the existing global Ctrl-/ toggle.
+    set -g @plugin 'omerxx/tmux-floax'
+    set -g @floax-bind '-n C-_'
+    set -g @floax-width '80%'
+    set -g @floax-height '50%'
+    set -g @floax-title 'Terminal'
 
     run '${config.xdg.configHome}/tmux/plugins/tpm/tpm'
   '';
