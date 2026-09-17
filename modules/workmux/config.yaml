@@ -9,8 +9,6 @@ windows:
       - command: pi
         focus: true
         split: horizontal
-  - panes:
-      - command: rush install && rush build
 
 agent: pi
 auto_name:
