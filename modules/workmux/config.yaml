@@ -5,7 +5,7 @@ mode: session
 window_prefix: ""
 windows:
   - panes:
-      - command: nvim
+      - {}
       - command: pi
         focus: true
         split: horizontal
