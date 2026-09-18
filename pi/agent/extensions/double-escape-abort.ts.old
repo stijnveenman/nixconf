@@ -1,0 +1,66 @@
+import { CustomEditor, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { matchesKey } from "@earendil-works/pi-tui";
+
+const doublePressWindowMs = 500;
+const widgetId = "double-escape-abort";
+
+class DoubleEscapeEditor extends CustomEditor {
+  onEscape?: () => void;
+
+  handleInput(data: string): void {
+    if (matchesKey(data, "escape")) {
+      this.onEscape?.();
+      return;
+    }
+
+    super.handleInput(data);
+  }
+}
+
+export default function (pi: ExtensionAPI) {
+  let previousEscapeAt = 0;
+  let clearTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function clearPrompt(ctx: ExtensionContext) {
+    previousEscapeAt = 0;
+    if (clearTimer) {
+      clearTimeout(clearTimer);
+      clearTimer = undefined;
+    }
+    ctx.ui.setWidget(widgetId, undefined);
+  }
+
+  function handleEscape(ctx: ExtensionContext) {
+    if (ctx.isIdle()) {
+      clearPrompt(ctx);
+      return;
+    }
+
+    const now = Date.now();
+    if (now - previousEscapeAt <= doublePressWindowMs) {
+      clearPrompt(ctx);
+      ctx.abort();
+      return;
+    }
+
+    previousEscapeAt = now;
+    ctx.ui.setWidget(widgetId, [
+      ctx.ui.theme.fg("dim", "Press Escape again to cancel"),
+    ]);
+    if (clearTimer) clearTimeout(clearTimer);
+    clearTimer = setTimeout(() => clearPrompt(ctx), doublePressWindowMs);
+  }
+
+  pi.on("session_start", (_event, ctx) => {
+    if (ctx.mode !== "tui") return;
+
+    ctx.ui.setEditorComponent((tui, theme, keybindings) => {
+      const editor = new DoubleEscapeEditor(tui, theme, keybindings);
+      editor.onEscape = () => handleEscape(ctx);
+      return editor;
+    });
+  });
+
+  pi.on("agent_end", (_event, ctx) => clearPrompt(ctx));
+  pi.on("session_shutdown", (_event, ctx) => clearPrompt(ctx));
+}

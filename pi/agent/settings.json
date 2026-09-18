@@ -1,0 +1,26 @@
+{
+  "lastChangelogVersion": "0.85.1",
+  "theme": "dark",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-5.6-luna",
+  "hideThinkingBlock": true,
+  "editorPaddingX": 0,
+  "terminal": {
+    "showTerminalProgress": true
+  },
+  "steeringMode": "one-at-a-time",
+  "transport": "auto",
+  "quietStartup": false,
+  "doubleEscapeAction": "none",
+  "enabledModels": [
+    "github-copilot/claude-opus-4.8",
+    "github-copilot/claude-opus-5",
+    "github-copilot/gpt-5.6-luna",
+    "github-copilot/gpt-5.6-sol",
+    "github-copilot/gpt-5.6-terra"
+  ],
+  "tuiMode": "fullscreen",
+  "packages": [
+    "npm:@narumitw/pi-btw"
+  ]
+}
