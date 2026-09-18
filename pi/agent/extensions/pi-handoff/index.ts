@@ -1,5 +1,6 @@
-import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
+import { registerDemos } from "./demo.js";
 
 type Screen = "main";
 type Action = "close";
@@ -22,7 +23,7 @@ const menu = defineMenu<undefined, Screen, Action>({
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("handoff", {
     description: "Open the Pi handoff menu",
-    handler: async (_args, ctx: ExtensionCommandContext) => {
+    handler: async (_args, ctx) => {
       await runMenu(ctx, menu, {
         getState: () => undefined,
         onUnsupportedMode: (_ctx, mode) => {
@@ -31,4 +32,6 @@ export default function (pi: ExtensionAPI) {
       });
     },
   });
+
+  registerDemos(pi);
 }
