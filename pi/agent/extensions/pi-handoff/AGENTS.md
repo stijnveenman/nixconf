@@ -7,6 +7,7 @@ This is a repository-managed global Pi extension. Home Manager links `pi/agent/e
 - `@narumitw/pi-tui-kit` is the runtime dependency and is pinned in `package.json`.
 - `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` are Pi-provided peer packages; they are development dependencies here for TypeScript resolution and must not be bundled as runtime dependencies.
 - Keep `node_modules/` untracked; refresh dependencies with `npm install` from this directory.
+- Validate TypeScript with `npm run build` from this directory. The build step runs `tsc --noEmit` using `tsconfig.json`; it is a type-check/validation step and does not emit JavaScript because Pi loads the TypeScript extension directly.
 
 ## Pi TUI Kit API
 

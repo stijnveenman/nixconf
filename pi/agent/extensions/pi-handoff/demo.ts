@@ -12,7 +12,7 @@ import {
   runTask,
   runCustomInteraction,
 } from "@narumitw/pi-tui-kit";
-import { EditorStatusWidget } from "@earendil-works/pi-tui-kit/editor-status-widget";
+import { EditorStatusWidget } from "@narumitw/pi-tui-kit/editor-status-widget";
 import { formatInteractionHints } from "@narumitw/pi-tui-kit/interaction-hints";
 import {
   hardWrapTerminalDocument,
@@ -218,7 +218,7 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
                   : { kind: "detail", title: screenKind, lines: [description] };
       const demoMenu = defineMenu<any, "demo", string>({
         start: "demo",
-        screens: { demo: () => screen },
+        screens: { demo: () => screen as any },
         actions: {
           choose: async () => ({ kind: "stay" }),
           set: async () => ({ kind: "stay" }),
