@@ -42,6 +42,17 @@
 in {
   home.packages = [pkgs.tmux];
 
+  launchd.agents.workmux-gone-cleanup = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+    enable = true;
+    config = {
+      ProgramArguments = ["${workmuxGoneCleanup}"];
+      RunAtLoad = true;
+      StartInterval = 300;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/workmux-gone-cleanup.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/workmux-gone-cleanup.error.log";
+    };
+  };
+
   # Expose the writeShellScript without putting its single-file output in
   # home.packages (which only accepts package directories).
   home.file.".local/bin/workmux-sidebar-open-pr".source = workmuxSidebarOpenPr;
@@ -92,10 +103,6 @@ in {
     # Open the highlighted sidebar row's pull request without blocking tmux.
     # Forward O unchanged when a non-sidebar pane is focused.
     bind-key -n O if-shell -F '#{==:#{@workmux_role},sidebar}' 'run-shell -b "${config.home.homeDirectory}/.local/bin/workmux-sidebar-open-pr || true"' 'send-keys O'
-
-    # Run one guarded cleanup loop per tmux server. It sweeps all projects
-    # tracked by workmux every five minutes; output is in XDG_STATE_HOME.
-    run-shell -b "${workmuxGoneCleanup}"
 
     bind-key -n C-g display-popup -E -w 80% -h 80% lazygit
 
