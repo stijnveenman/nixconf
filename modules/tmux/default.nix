@@ -8,8 +8,11 @@
   fzfTmux = lib.getExe' pkgs.fzf "fzf-tmux";
   sesh = lib.getExe pkgs.sesh;
   tmux = lib.getExe pkgs.tmux;
+  workmuxGithubAskpass = import ./scripts/workmux-github-askpass.nix {
+    inherit lib pkgs;
+  };
   workmuxGoneCleanup = import ./scripts/workmux-gone-cleanup.nix {
-    inherit lib pkgs workmux;
+    inherit lib pkgs workmux workmuxGithubAskpass;
   };
   workmuxSidebarOpenPr = import ./scripts/workmux-sidebar-open-pr.nix {
     inherit lib pkgs workmux;
