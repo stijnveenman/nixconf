@@ -2,6 +2,9 @@
   "name": "pi-handoff",
   "private": true,
   "type": "module",
+  "pi": {
+    "extensions": ["./src/index.ts"]
+  },
   "scripts": {
     "build": "tsc --noEmit"
   },
