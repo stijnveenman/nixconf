@@ -4,16 +4,14 @@
   # tuicr reads this from $XDG_CONFIG_HOME/tuicr/config.toml.
   # These settings fit the Gruvbox/Ghostty, Neovim, and PR-review workflow.
   xdg.configFile."tuicr/config.toml".text = ''
-    theme = "gruvbox-dark"
     diff_view = "side-by-side"
     compact_folders = true
     show_pr_checks = true
     editor = "nvim"
     comment_vim = false
     scroll_offset = 5
-    show_commits = false
     ignore_whitespace = true
-    show_reviewed = false
+    q_quits = true
     diff_watch_interval_ms = 1000
 
     comment_types = [
