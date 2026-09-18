@@ -1,137 +1,10 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import {
-  Editor,
-  type EditorTheme,
-  Key,
-  matchesKey,
-  wrapTextWithAnsi,
-} from "@earendil-works/pi-tui";
-import {
-  defineMenu,
-  formatInteractionHints,
-  HorizontalRule,
-  renderBoundedFrame,
-  runCustomInteraction,
-  runMenu,
-} from "@narumitw/pi-tui-kit";
+import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
+import { showMultiLineInput } from "./multi-line-input.js";
 
 type TaskContext = "none" | "compact" | "fork";
 type Screen = "context";
 type Action = "editContext";
-type EditTaskOutcome =
-  | { kind: "submitted"; task: string }
-  | { kind: "back" }
-  | { kind: "close" }
-  | { kind: "stale" }
-  | { kind: "unsupported" }
-  | { kind: "error" };
-
-class PromptEditor extends Editor {
-  constructor(
-    tui: ConstructorParameters<typeof Editor>[0],
-    theme: EditorTheme,
-    private readonly promptPrefix: string,
-  ) {
-    super(tui, theme);
-  }
-
-  protected renderTopBorder(_width: number, _hiddenLineCount: number): string {
-    return "";
-  }
-
-  protected renderBottomBorder(_width: number, _hiddenLineCount: number): string {
-    return "";
-  }
-
-  render(width: number): string[] {
-    return super
-      .render(Math.max(1, width - 2))
-      .filter(Boolean)
-      .map((line) => `${this.promptPrefix}${line}`);
-  }
-}
-
-export async function showEditTask(
-  ctx: ExtensionCommandContext,
-  signal: AbortSignal,
-): Promise<EditTaskOutcome> {
-  const result = await runCustomInteraction<EditTaskOutcome>(ctx, {
-    signal,
-    onUnsupportedMode: (_ctx, mode) => {
-      ctx.ui.notify(`Task entry is unavailable in ${mode} mode.`, "warning");
-    },
-    create: ({ tui, theme, keybindings, complete }) => {
-      const editorTheme: EditorTheme = {
-        borderColor: (text) => theme.fg("accent", text),
-        selectList: {
-          selectedPrefix: (text) => theme.fg("accent", text),
-          selectedText: (text) => theme.fg("accent", text),
-          description: (text) => theme.fg("muted", text),
-          scrollInfo: (text) => theme.fg("dim", text),
-          noMatch: (text) => theme.fg("warning", text),
-        },
-      };
-      const editor = new PromptEditor(tui, editorTheme, theme.fg("dim", "> "));
-      editor.onSubmit = (task) => complete({ kind: "submitted", task });
-      const rule = new HorizontalRule({
-        ruleStyle: (text) => theme.fg("border", text),
-      });
-      const hint = formatInteractionHints(keybindings, [
-        { bindings: ["tui.input.newLine"], label: "newline" },
-        { bindings: ["tui.input.submit"], label: "submit" },
-        {
-          bindings: ["tui.select.cancel"],
-          excludeKeys: ["ctrl+c"],
-          label: "back",
-        },
-        { keys: ["ctrl+c"], label: "close" },
-      ]);
-
-      return {
-        get focused() {
-          return editor.focused;
-        },
-        set focused(value: boolean) {
-          editor.focused = value;
-        },
-        render: (width: number) => {
-          const safeWidth = Math.max(1, width);
-          const content = [...editor.render(safeWidth)];
-          return renderBoundedFrame({
-            width: safeWidth,
-            maxRows: Math.max(1, Math.floor(tui.terminal.rows) - 3),
-            rule: rule.render(safeWidth)[0] ?? "",
-            title: [theme.fg("accent", theme.bold("Task to hand off"))],
-            context: wrapTextWithAnsi(
-              theme.fg("dim", "Describe the task that should be handed off…"),
-              safeWidth,
-            ),
-            content,
-            hints: ["", theme.fg("dim", hint)],
-            compactHint: theme.fg("dim", hint),
-            priorityRows: [0],
-          });
-        },
-        invalidate: () => editor.invalidate(),
-        handleInput: (data: string) => {
-          if (matchesKey(data, Key.ctrl("c"))) {
-            complete({ kind: "close" });
-          } else if (keybindings.matches(data, "tui.select.cancel")) {
-            complete({ kind: "back" });
-          } else {
-            editor.handleInput(data);
-          }
-          tui.requestRender();
-        },
-      };
-    },
-  });
-
-  if (result.kind === "completed") return result.value;
-  if (result.kind === "stale") return { kind: "stale" };
-  if (result.kind === "unsupported") return { kind: "unsupported" };
-  return { kind: "error" };
-}
 
 export async function showHandoffMenu(ctx: ExtensionCommandContext) {
   let taskContext: TaskContext = "none";
@@ -183,9 +56,13 @@ export async function showHandoffMenu(ctx: ExtensionCommandContext) {
         }
 
         taskContext = itemId;
-        const outcome = await showEditTask(ctx, signal);
+        const outcome = await showMultiLineInput(ctx, {
+          title: "Task",
+          description: "Describe the task",
+          signal,
+        });
         if (outcome.kind === "submitted") {
-          task = outcome.task;
+          task = outcome.value;
           return { kind: "close" };
         }
         if (outcome.kind === "close") return { kind: "close" };
