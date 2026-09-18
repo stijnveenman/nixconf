@@ -6,6 +6,7 @@ import {
   matchesKey,
   wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
+import { type OutcomeType } from "./outcome.js";
 import {
   formatInteractionHints,
   HorizontalRule,
@@ -22,13 +23,7 @@ export interface MultiLineInputOptions {
   signal?: AbortSignal;
 }
 
-export type MultiLineInputResult =
-  | { kind: "submitted"; value: string }
-  | { kind: "back" }
-  | { kind: "close" }
-  | { kind: "stale" }
-  | { kind: "unsupported" }
-  | { kind: "error" };
+export type MultiLineInputResult = OutcomeType<string>;
 
 class PromptEditor extends Editor {
   constructor(
@@ -81,7 +76,7 @@ export async function showMultiLineInput(
         theme.fg("dim", "> "),
       );
       if (options.initialValue) editor.setText(options.initialValue);
-      editor.onSubmit = (value) => complete({ kind: "submitted", value });
+      editor.onSubmit = (value) => complete({ kind: "confirm", value });
 
       const rule = new HorizontalRule({
         ruleStyle: (text) => theme.fg("border", text),
