@@ -10,6 +10,7 @@ in {
   imports = [
     ../../modules/git.nix
     ../../modules/cli-tools.nix
+    ../../modules/tuicr.nix
     ../../modules/ghostty.nix
     ../../modules/opencode.nix
     ../../modules/tmux
