@@ -11,7 +11,7 @@
   "steeringMode": "one-at-a-time",
   "transport": "auto",
   "quietStartup": false,
-  "doubleEscapeAction": "none",
+  "doubleEscapeAction": "tree",
   "enabledModels": [
     "github-copilot/claude-opus-4.8",
     "github-copilot/claude-opus-5",
