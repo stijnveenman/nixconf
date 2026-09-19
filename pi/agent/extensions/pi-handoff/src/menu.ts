@@ -1,18 +1,21 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
 import { buildCompaction } from "./commands.js";
 import { showMultiLineInput } from "./multi-line-input.js";
 
 type TaskContext = "none" | "compact" | "fork";
-type Screen = "context" | "model";
-type Action = "selectContext" | "selectModel";
+type Screen = "context" | "model" | "thinking";
+type Action = "selectContext" | "selectModel" | "selectThinking";
 type HandoffModel = NonNullable<ExtensionCommandContext["model"]>;
+type ThinkingLevel = NonNullable<ExtensionCommandContext["thinkingLevel"]>;
 
 interface HandoffState {
   taskContext: TaskContext;
   task: string;
   compaction?: string;
   model?: HandoffModel;
+  thinkingLevel?: ThinkingLevel;
 }
 
 function modelKey(model: HandoffModel): string {
@@ -75,12 +78,8 @@ export async function showHandoffMenu(
       }),
       model: () => ({
         kind: "choice",
-        title: "Handoff model",
-        lines: [
-          state.compaction
-            ? "Compaction generated. Choose the model for the new session."
-            : "Choose the model for the new session.",
-        ],
+        title: "Model",
+        lines: ["Choose the model for the new session."],
         items: models.map((model) => ({
           id: modelKey(model),
           label: model.name,
@@ -93,6 +92,27 @@ export async function showHandoffMenu(
         enableSearch: true,
         hint: "back",
       }),
+      thinking: () => {
+        const levels = state.model
+          ? getSupportedThinkingLevels(state.model)
+          : ["off"];
+        return {
+          kind: "choice",
+          title: "Thinking level",
+          lines: [
+            `Choose the thinking level for ${state.model?.name ?? "the new session"}.`,
+          ],
+          items: levels.map((level) => ({
+            id: level,
+            label: level,
+            searchText: level,
+          })),
+          action: "selectThinking",
+          currentItemId: state.thinkingLevel,
+          enableSearch: true,
+          hint: "back",
+        };
+      },
     },
     actions: {
       selectContext: async ({ ctx: actionCtx, state, itemId, signal }) => {
@@ -132,6 +152,18 @@ export async function showHandoffMenu(
         if (!model) return { kind: "stay" };
 
         state.model = model;
+        const levels = getSupportedThinkingLevels(model);
+        state.thinkingLevel = levels.includes(ctx.thinkingLevel ?? "off")
+          ? (ctx.thinkingLevel ?? "off")
+          : levels[0];
+        return { kind: "to", screen: "thinking" };
+      },
+      selectThinking: async ({ state, itemId }) => {
+        if (!state.model) return { kind: "back" };
+        const levels = getSupportedThinkingLevels(state.model);
+        if (!levels.includes(itemId as ThinkingLevel)) return { kind: "stay" };
+
+        state.thinkingLevel = itemId as ThinkingLevel;
         await onConfirm(state);
         return { kind: "close" };
       },

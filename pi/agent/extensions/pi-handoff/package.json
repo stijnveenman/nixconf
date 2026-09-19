@@ -12,6 +12,7 @@
     "@narumitw/pi-tui-kit": "0.65.0"
   },
   "devDependencies": {
+    "@earendil-works/pi-ai": "0.85.1",
     "@earendil-works/pi-coding-agent": "0.85.1",
     "@earendil-works/pi-tui": "0.85.1",
     "typescript": "7.0.2"
