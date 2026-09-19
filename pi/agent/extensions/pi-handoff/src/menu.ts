@@ -1,11 +1,15 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
-import { buildCompaction } from "./commands.js";
+import {
+  buildCompaction,
+  generateTaskRecommendations,
+  type TaskRecommendations,
+} from "./commands.js";
 import { showMultiLineInput } from "./multi-line-input.js";
 
 type TaskContext = "none" | "compact" | "fork";
-type Screen = "context" | "model" | "thinking";
+type Screen = "context" | "model" | "thinking" | "recommendations";
 type Action = "selectContext" | "selectModel" | "selectThinking";
 type HandoffModel = NonNullable<ExtensionCommandContext["model"]>;
 type ThinkingLevel = NonNullable<ExtensionCommandContext["thinkingLevel"]>;
@@ -16,6 +20,7 @@ interface HandoffState {
   compaction?: string;
   model?: HandoffModel;
   thinkingLevel?: ThinkingLevel;
+  recommendations?: TaskRecommendations;
 }
 
 function modelKey(model: HandoffModel): string {
@@ -113,6 +118,19 @@ export async function showHandoffMenu(
           hint: "back",
         };
       },
+      recommendations: () => ({
+        kind: "detail",
+        title: "Task recommendations",
+        lines: state.recommendations
+          ? [
+              `Model: ${state.recommendations.model}`,
+              `Thinking: ${state.recommendations.thinking}`,
+              `Branch: ${state.recommendations.branch}`,
+              `Summary: ${state.recommendations.summary}`,
+            ]
+          : ["No recommendations were generated."],
+        hint: "close",
+      }),
     },
     actions: {
       selectContext: async ({ ctx: actionCtx, state, itemId, signal }) => {
@@ -164,8 +182,16 @@ export async function showHandoffMenu(
         if (!levels.includes(itemId as ThinkingLevel)) return { kind: "stay" };
 
         state.thinkingLevel = itemId as ThinkingLevel;
+        const recommendations = await generateTaskRecommendations(
+          ctx,
+          state.task,
+          state.taskContext,
+          state.compaction,
+        );
+        if (!recommendations) return { kind: "stay" };
+        state.recommendations = recommendations;
         await onConfirm(state);
-        return { kind: "close" };
+        return { kind: "to", screen: "recommendations" };
       },
     },
   });
