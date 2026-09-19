@@ -1,9 +1,5 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import {
-  defineMenu,
-  runMenu,
-  runTask,
-} from "@narumitw/pi-tui-kit";
+import { defineMenu, runMenu, runTask } from "@narumitw/pi-tui-kit";
 import {
   DEFAULT_COMPACTION_SETTINGS,
   buildSessionContext,
@@ -37,7 +33,9 @@ export async function buildCompaction(
 
       const headers = auth.headers
         ? Object.fromEntries(
-            Object.entries(auth.headers).filter((entry): entry is [string, string] => entry[1] !== null),
+            Object.entries(auth.headers).filter(
+              (entry): entry is [string, string] => entry[1] !== null,
+            ),
           )
         : undefined;
 
@@ -61,38 +59,14 @@ export async function buildCompaction(
       return summary.text;
     },
     onError: (_ctx, error) => {
-      ctx.ui.notify(`Compaction failed: ${error instanceof Error ? error.message : String(error)}`, "error");
+      ctx.ui.notify(
+        `Compaction failed: ${error instanceof Error ? error.message : String(error)}`,
+        "error",
+      );
     },
   });
 
   if (result.kind !== "completed") return undefined;
   await onComplete?.(result.value);
   return result.value;
-}
-
-export async function showCompactionDetails(
-  ctx: ExtensionCommandContext,
-  summary: string,
-) {
-  const menu = defineMenu<undefined, "summary", "close">({
-    start: "summary",
-    screens: {
-      summary: () => ({
-        kind: "detail",
-        title: "Generated compaction",
-        lines: summary.split("\n"),
-        hint: "close",
-      }),
-    },
-    actions: {
-      close: async () => ({ kind: "close" }),
-    },
-  });
-
-  return runMenu(ctx, menu, {
-    getState: () => undefined,
-    onUnsupportedMode: (_ctx, mode) => {
-      ctx.ui.notify(`Compaction details are unavailable in ${mode} mode.`, "warning");
-    },
-  });
 }
