@@ -1,5 +1,4 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
 import {
   buildCompaction,
@@ -7,23 +6,12 @@ import {
   type TaskRecommendations,
 } from "./commands.js";
 import { showMultiLineInput } from "./multi-line-input.js";
+import { loadWorkmuxAgents } from "./workmux.js";
 
 type TaskContext = "none" | "compact" | "fork";
 type Screen =
-  | "context"
-  | "recommendations"
-  | "modelRecommendation"
-  | "thinkingRecommendation"
-  | "branchRecommendation"
-  | "summaryRecommendation";
-type Action =
-  | "selectContext"
-  | "selectModelRecommendation"
-  | "selectThinkingRecommendation"
-  | "updateBranch"
-  | "updateSummary"
-  | "confirm";
-type HandoffModel = NonNullable<ExtensionCommandContext["model"]>;
+  "context" | "recommendations" | "branchRecommendation" | "agentRecommendation";
+type Action = "selectContext" | "updateBranch" | "updateAgent" | "confirm";
 
 interface HandoffState {
   taskContext: TaskContext;
@@ -32,34 +20,15 @@ interface HandoffState {
   recommendations?: TaskRecommendations;
 }
 
-function modelKey(model: HandoffModel): string {
-  return `${model.provider}/${model.id}`;
-}
-
-function modelForRecommendation(
-  recommendation: string,
-  models: readonly HandoffModel[],
-  fallback?: HandoffModel,
-): HandoffModel | undefined {
-  return (
-    models.find(
-      (model) => modelKey(model) === recommendation || model.name === recommendation,
-    ) ?? fallback
-  );
-}
-
 export async function showHandoffMenu(
   ctx: ExtensionCommandContext,
   onConfirm: (state: Readonly<HandoffState>) => void | Promise<void>,
 ) {
+  const agents = loadWorkmuxAgents();
   const state: HandoffState = {
     taskContext: "none",
     task: "",
   };
-  const models =
-    ctx.scopedModels.length > 0
-      ? ctx.scopedModels.map(({ model }) => model)
-      : ctx.modelRegistry.getAvailable();
   const menu = defineMenu<HandoffState, Screen, Action>({
     start: "context",
     screens: {
@@ -104,28 +73,16 @@ export async function showHandoffMenu(
           ? [
               { id: "confirm", label: "Confirm", action: "confirm" },
               {
-                id: "model",
-                label: "Model",
-                description: state.recommendations.model,
-                action: "selectModelRecommendation",
-              },
-              {
-                id: "thinking",
-                label: "Thinking",
-                description: state.recommendations.thinking,
-                action: "selectThinkingRecommendation",
+                id: "agent",
+                label: "Agent",
+                description: state.recommendations.agent,
+                action: "updateAgent",
               },
               {
                 id: "branch",
                 label: "Branch",
                 description: state.recommendations.branch,
                 action: "updateBranch",
-              },
-              {
-                id: "summary",
-                label: "Summary",
-                description: state.recommendations.summary,
-                action: "updateSummary",
               },
             ]
           : [{ id: "close", label: "Close", close: true }],
@@ -139,50 +96,14 @@ export async function showHandoffMenu(
         action: "updateBranch",
         hint: "back",
       }),
-      summaryRecommendation: () => ({
+      agentRecommendation: () => ({
         kind: "input",
-        title: "Update summary recommendation",
-        lines: ["Edit the task summary and press Enter to save."],
-        initialValue: state.recommendations?.summary,
-        action: "updateSummary",
+        title: "Update agent recommendation",
+        lines: ["Edit the Workmux agent and press Enter to save."],
+        initialValue: state.recommendations?.agent,
+        action: "updateAgent",
         hint: "back",
       }),
-      modelRecommendation: () => {
-        const recommendation = state.recommendations?.model;
-        return {
-          kind: "choice",
-          title: "Update model recommendation",
-          lines: ["Choose a model for the handoff."],
-          items: models.map((model) => ({
-            id: modelKey(model),
-            label: model.name,
-            description: modelKey(model),
-            searchText: modelKey(model),
-          })),
-          action: "selectModelRecommendation",
-          currentItemId: recommendation,
-          enableSearch: true,
-          hint: "back",
-        };
-      },
-      thinkingRecommendation: () => {
-        const model = modelForRecommendation(
-          state.recommendations?.model ?? "",
-          models,
-          ctx.model,
-        );
-        const levels = model ? getSupportedThinkingLevels(model) : ["off"];
-        return {
-          kind: "choice",
-          title: "Update thinking recommendation",
-          lines: [`Choose a thinking level${model ? ` for ${model.name}` : ""}.`],
-          items: levels.map((level) => ({ id: level, label: level })),
-          action: "selectThinkingRecommendation",
-          currentItemId: state.recommendations?.thinking,
-          enableSearch: true,
-          hint: "back",
-        };
-      },
     },
     actions: {
       selectContext: async ({ ctx: actionCtx, state, itemId, signal }) => {
@@ -213,39 +134,12 @@ export async function showHandoffMenu(
           state.task,
           state.taskContext,
           state.compaction,
+          agents,
         );
         if (!recommendations) return { kind: "stay" };
         state.recommendations = recommendations;
 
         return { kind: "to", screen: "recommendations" };
-      },
-      selectModelRecommendation: async ({ state, itemId }) => {
-        if (itemId === "model") return { kind: "to", screen: "modelRecommendation" };
-        if (
-          !state.recommendations ||
-          !models.some((model) => modelKey(model) === itemId)
-        ) {
-          return { kind: "stay" };
-        }
-        state.recommendations.model = itemId;
-        return { kind: "back" };
-      },
-      selectThinkingRecommendation: async ({ state, itemId }) => {
-        if (itemId === "thinking") {
-          return { kind: "to", screen: "thinkingRecommendation" };
-        }
-        if (!state.recommendations) return { kind: "stay" };
-        const model = modelForRecommendation(
-          state.recommendations.model,
-          models,
-          ctx.model,
-        );
-        const levels = model ? getSupportedThinkingLevels(model) : ["off"];
-        if (!levels.includes(itemId as (typeof levels)[number])) {
-          return { kind: "stay" };
-        }
-        state.recommendations.thinking = itemId;
-        return { kind: "back" };
       },
       updateBranch: async ({ state, itemId, value }) => {
         if (itemId === "branch") return { kind: "to", screen: "branchRecommendation" };
@@ -254,11 +148,12 @@ export async function showHandoffMenu(
         }
         return { kind: "back" };
       },
-      updateSummary: async ({ state, itemId, value }) => {
-        if (itemId === "summary")
-          return { kind: "to", screen: "summaryRecommendation" };
+      updateAgent: async ({ state, itemId, value }) => {
+        if (itemId === "agent") {
+          return { kind: "to", screen: "agentRecommendation" };
+        }
         if (state.recommendations && value !== undefined) {
-          state.recommendations.summary = value;
+          state.recommendations.agent = value;
         }
         return { kind: "back" };
       },

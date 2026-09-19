@@ -14,7 +14,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@narumitw/pi-tui-kit": "0.65.0"
+    "@narumitw/pi-tui-kit": "0.65.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@earendil-works/pi-ai": "0.85.1",

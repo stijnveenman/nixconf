@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import type { WorkmuxAgent } from "./workmux.js";
 import { runTask } from "@narumitw/pi-tui-kit";
 import {
   DEFAULT_COMPACTION_SETTINGS,
@@ -21,32 +22,27 @@ const TASK_RECOMMENDATIONS_SYSTEM_PROMPT =
   "Generate task recommendations and only those recommendations.";
 
 export interface TaskRecommendations {
-  model: string;
-  thinking: string;
   branch: string;
-  summary: string;
+  agent: string;
 }
 
 function parseTaskRecommendations(output: string): TaskRecommendations {
   const fields = new Map<string, string>();
-  const fieldPattern =
-    /(?:^|\r?\n)\s*(?:[-*]\s*)?(model|thinking|branch|summary)\s*:\s*(.+?)\s*$/gim;
+  const fieldPattern = /(?:^|\r?\n)\s*(?:[-*]\s*)?(branch|agent)\s*:\s*(.+?)\s*$/gim;
   for (const match of output.matchAll(fieldPattern)) {
     // Keep the last occurrence in case the model repeats the format or
     // includes an example before its final recommendations.
     fields.set(match[1].toLowerCase(), match[2].trim());
   }
 
-  const model = fields.get("model");
-  const thinking = fields.get("thinking");
   const branch = fields.get("branch");
-  const summary = fields.get("summary");
-  if (!model || !thinking || !branch || !summary) {
+  const agent = fields.get("agent");
+  if (!branch || !agent) {
     throw new Error(
       `Task recommendation response did not contain all required fields.\n\nResponse:\n${output}`,
     );
   }
-  return { model, thinking, branch, summary };
+  return { branch, agent };
 }
 
 function lastSessionMessages(ctx: ExtensionCommandContext, maxTokens: number) {
@@ -110,7 +106,8 @@ export async function generateTaskRecommendations(
   ctx: ExtensionCommandContext,
   task: string,
   taskContext: "none" | "compact" | "fork",
-  compaction?: string,
+  compaction: string | undefined,
+  agents: Record<string, WorkmuxAgent>,
 ): Promise<TaskRecommendations | undefined> {
   const model = ctx.modelRegistry.find("github-copilot", "gpt-5.6-luna");
   if (!model)
@@ -119,7 +116,13 @@ export async function generateTaskRecommendations(
   const result = await runTask(ctx, {
     label: "Generating task recommendations…",
     task: async ({ signal }) => {
-      const taskPrompt = TASK_RECOMMENDATIONS_PROMPT.replaceAll("@task", task);
+      const agentPrompt = Object.entries(agents)
+        .map(([name, agent]) => `- ${name}:${agent.when ?? ""}`)
+        .join("\n");
+      const taskPrompt = TASK_RECOMMENDATIONS_PROMPT.replaceAll(
+        "@task",
+        task,
+      ).replaceAll("@agents", agentPrompt);
       const inputLimit = lowestInputTier(model);
       const fixedInputTokens =
         estimateTextTokens(TASK_RECOMMENDATIONS_SYSTEM_PROMPT) +
@@ -134,6 +137,7 @@ export async function generateTaskRecommendations(
         ),
       );
       const prompt = [background, taskPrompt].filter(Boolean).join("\n\n");
+      writeFileSync("/tmp/pi-handoff-task-recommendations.txt", prompt);
 
       const response = await ctx.modelRegistry.complete(
         model,

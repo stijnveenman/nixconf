@@ -1,16 +1,17 @@
 nerdfont: true
 
 base_branch: origin/main
+agent: pi
+
 mode: session
 window_prefix: ""
 windows:
   - panes:
       - {}
-      - command: pi
+      - command: <agent>
         focus: true
         split: horizontal
 
-agent: pi
 auto_name:
   command: pi --no-extensions -p
   model: mai-code-1.1-flash
@@ -27,6 +28,53 @@ sidebar:
 files:
   copy:
     - ".workmux.yaml"
+
+agents:
+  low-effort:
+    type: pi
+    when: for straightforward text, configuration changes or scaffolding
+    description: Simple Cheap Low effort agent
+    args:
+      - --model
+      - github-copilot/gpt-5.6-luna
+      - --thinking
+      - minimal
+  migrator:
+    type: pi
+    when: for easy slightly involved work live renames and migrations
+    description: Simple rename or migration
+    args:
+      - --model
+      - github-copilot/gpt-5.6-luna
+      - --thinking
+      - low
+  basic-feature:
+    type: pi
+    when: for straightforward general purpose feature work
+    description: For basic feature work
+    args:
+      - --model
+      - github-copilot/gpt-5.6-luna
+      - --thinking
+      - medium
+  involved-feature:
+    type: pi
+    when: for an involved feature touching multiple components or requiring more research
+    description: For involved feature work
+    args:
+      - --model
+      - github-copilot/gpt-5.6-terra
+      - --thinking
+      - medium
+  architecture:
+    type: pi
+    when: for complex work on fundamental code, impacting the entire codebase
+    description: For complex fundamental codeSimple rename or migration
+    args:
+      - --model
+      - github-copilot/gpt-5.6-terra
+      - --thinking
+      - medium
 
 #-------------------------------------------------------------------------------
 # Dashboard

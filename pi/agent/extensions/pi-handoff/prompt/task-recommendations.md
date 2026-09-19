@@ -19,24 +19,17 @@ Examples of good branch names:
 - "Add CSV export to reports": export-csv
 - "Shell completion is broken": shell-completion
 
-## Model
+## Agent
 
-Determine what model and thinking level would be recommended for a given task.
+Determine what agent would be recommended for a given task. The following agents are available followed by when they should be used
 
 Recommendations:
 
-- mai-code-1.1-flash: for straightforward text or configuration edits
-- gpt-5.6-luna: for low effort work like renames and migrations
-- gpt-5.6-terra: for general purpose feature work
-- gpt-5.6-sol: for complex work on fundamental code infrastructure
+@agents
 
-## Thinking level
+## Task
 
-Determine what thinking level would be recommended for a given task.
-
-Consider the model decided previously. Prefer when a task is in between models, prefer increasing thinking level slightly
-
-The user wants to creata a task to do the following in a new session
+The user wants to create a a task to do the following in a new session
 <task>
 @task
 </task>
@@ -44,8 +37,6 @@ The user wants to creata a task to do the following in a new session
 Output MUST match exactly and ONLY the following lines. Do NOT output anything else
 
 ```
-model:<model>
-thinking:<thinking level>
-branch:<branch name>
-summary:<task summary>
+branch:<branch>
+agent:<agent>
 ```
