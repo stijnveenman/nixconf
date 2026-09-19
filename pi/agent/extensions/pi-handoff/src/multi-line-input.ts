@@ -34,11 +34,11 @@ class PromptEditor extends Editor {
     super(tui, theme);
   }
 
-  protected renderTopBorder(_width: number, _hiddenLineCount: number): string {
+  protected renderTopBorder(): string {
     return "";
   }
 
-  protected renderBottomBorder(_width: number, _hiddenLineCount: number): string {
+  protected renderBottomBorder(): string {
     return "";
   }
 

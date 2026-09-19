@@ -13,6 +13,7 @@ import {
   runCustomInteraction,
 } from "@narumitw/pi-tui-kit";
 import { EditorStatusWidget } from "@narumitw/pi-tui-kit/editor-status-widget";
+import type { MenuScreen } from "@narumitw/pi-tui-kit";
 import { formatInteractionHints } from "@narumitw/pi-tui-kit/interaction-hints";
 import {
   hardWrapTerminalDocument,
@@ -216,9 +217,9 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
                 : screenKind === "review"
                   ? { kind: "review", title: "Review", content: "A reviewable handoff", format: { kind: "text" } }
                   : { kind: "detail", title: screenKind, lines: [description] };
-      const demoMenu = defineMenu<any, "demo", string>({
+      const demoMenu = defineMenu<unknown, "demo", string>({
         start: "demo",
-        screens: { demo: () => screen as any },
+        screens: { demo: () => screen as MenuScreen<"demo", string> },
         actions: {
           choose: async () => ({ kind: "stay" }),
           set: async () => ({ kind: "stay" }),

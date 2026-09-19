@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { defineMenu, runMenu, runTask } from "@narumitw/pi-tui-kit";
+import { runTask } from "@narumitw/pi-tui-kit";
 import {
   DEFAULT_COMPACTION_SETTINGS,
   buildSessionContext,
