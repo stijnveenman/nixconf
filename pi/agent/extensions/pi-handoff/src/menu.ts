@@ -6,15 +6,22 @@ type TaskContext = "none" | "compact" | "fork";
 type Screen = "context";
 type Action = "selectContext";
 
+interface HandoffState {
+  taskContext: TaskContext;
+  task: string;
+}
+
 export async function showHandoffMenu(
   ctx: ExtensionCommandContext,
   onConfirm: (taskContext: TaskContext, task: string) => void | Promise<void>,
 ) {
-  let taskContext: TaskContext = "none";
-  let task = "";
+  const state: HandoffState = {
+    taskContext: "none",
+    task: "",
+  };
 
   const menu = defineMenu<
-    { taskContext: TaskContext; task: string },
+    HandoffState,
     Screen,
     Action
   >({
@@ -53,12 +60,12 @@ export async function showHandoffMenu(
       }),
     },
     actions: {
-      selectContext: async ({ ctx: actionCtx, itemId, signal }) => {
+      selectContext: async ({ ctx: actionCtx, state, itemId, signal }) => {
         if (itemId !== "none" && itemId !== "compact" && itemId !== "fork") {
           return { kind: "stay" };
         }
 
-        taskContext = itemId;
+        state.taskContext = itemId;
         const taskOutcome = await showMultiLineInput(actionCtx, {
           title: "Task",
           description: "Describe the task",
@@ -67,15 +74,15 @@ export async function showHandoffMenu(
         if (taskOutcome.kind === "close") return { kind: "close" };
         if (taskOutcome.kind !== "confirm") return { kind: "stay" };
 
-        task = taskOutcome.value ?? "";
-        await onConfirm(taskContext, task);
+        state.task = taskOutcome.value ?? "";
+        await onConfirm(state.taskContext, state.task);
         return { kind: "close" };
       },
     },
   });
 
   return runMenu(ctx, menu, {
-    getState: () => ({ taskContext, task }),
+    getState: () => state,
     onUnsupportedMode: (_ctx, mode) => {
       ctx.ui.notify(`The handoff menu is unavailable in ${mode} mode.`, "warning");
     },
