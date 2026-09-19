@@ -1,4 +1,4 @@
-# Your job is to provide some recommendations for a given task.
+# Your job is to provide recommendations for the current task.
 
 ## Branch
 
@@ -36,13 +36,12 @@ Determine what thinking level would be recommended for a given task.
 
 Consider the model decided previously. Prefer when a task is in between models, prefer increasing thinking level slightly
 
-## Summary
+The user wants to creata a task to do the following in a new session
+<task>
+@task
+</task>
 
-Generate a short concise task summary based on the task description.
-
-## Output
-
-Output MUST match exactly and ONLY the following lines
+Output MUST match exactly and ONLY the following lines. Do NOT output anything else
 
 ```
 model:<model>

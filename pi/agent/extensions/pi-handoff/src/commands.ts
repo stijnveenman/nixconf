@@ -6,16 +6,19 @@ import {
   buildSessionContext,
   estimateTokens,
   generateSummaryWithUsage,
+  serializeConversation,
 } from "@earendil-works/pi-coding-agent";
 
 /** Additional instructions applied to handoff compaction summaries. */
 export const HANDOFF_COMPACTION_STEERING =
   "Keep only the relevant information for the given task. Preserve relevant decisions and constraints but remove progress not relevant to the task.";
 
-const TASK_RECOMMENDATIONS_SYSTEM_PROMPT = readFileSync(
+const TASK_RECOMMENDATIONS_PROMPT = readFileSync(
   new URL("../prompt/task-recommendations.md", import.meta.url),
   "utf8",
 ).trim();
+const TASK_RECOMMENDATIONS_SYSTEM_PROMPT =
+  "Generate task recommendations and only those recommendations.";
 
 export interface TaskRecommendations {
   model: string;
@@ -26,9 +29,12 @@ export interface TaskRecommendations {
 
 function parseTaskRecommendations(output: string): TaskRecommendations {
   const fields = new Map<string, string>();
-  for (const line of output.split("\n")) {
-    const match = line.match(/^(model|thinking|branch|summary)\s*:\s*(.+)$/i);
-    if (match) fields.set(match[1].toLowerCase(), match[2].trim());
+  const fieldPattern =
+    /(?:^|\r?\n)\s*(?:[-*]\s*)?(model|thinking|branch|summary)\s*:\s*(.+?)\s*$/gim;
+  for (const match of output.matchAll(fieldPattern)) {
+    // Keep the last occurrence in case the model repeats the format or
+    // includes an example before its final recommendations.
+    fields.set(match[1].toLowerCase(), match[2].trim());
   }
 
   const model = fields.get("model");
@@ -43,7 +49,7 @@ function parseTaskRecommendations(output: string): TaskRecommendations {
   return { model, thinking, branch, summary };
 }
 
-function lastSessionMessages(ctx: ExtensionCommandContext) {
+function lastSessionMessages(ctx: ExtensionCommandContext, maxTokens: number) {
   const messages = buildSessionContext(
     ctx.sessionManager.buildContextEntries(),
   ).messages;
@@ -63,11 +69,41 @@ function lastSessionMessages(ctx: ExtensionCommandContext) {
       continue;
     }
     const messageTokens = estimateTokens(message);
-    if (selected.length > 0 && tokens + messageTokens > 100_000) break;
+    if (selected.length > 0 && tokens + messageTokens > maxTokens) break;
     selected.push(message);
     tokens += messageTokens;
   }
   return selected.reverse();
+}
+
+function buildBackgroundContext(
+  ctx: ExtensionCommandContext,
+  taskContext: "none" | "compact" | "fork",
+  compaction: string | undefined,
+  maxTokens: number,
+): string {
+  if (taskContext === "fork") {
+    return serializeConversation(lastSessionMessages(ctx, maxTokens));
+  }
+  return taskContext === "compact" ? (compaction ?? "") : "";
+}
+
+function lowestInputTier(model: {
+  contextWindow: number;
+  cost: { tiers?: readonly { inputTokensAbove: number }[] };
+}): number {
+  return Math.min(
+    model.contextWindow,
+    ...(model.cost.tiers?.map((tier) => tier.inputTokensAbove) ?? []),
+  );
+}
+
+function estimateTextTokens(text: string): number {
+  return estimateTokens({
+    role: "user",
+    content: [{ type: "text", text }],
+    timestamp: Date.now(),
+  });
 }
 
 export async function generateTaskRecommendations(
@@ -76,32 +112,41 @@ export async function generateTaskRecommendations(
   taskContext: "none" | "compact" | "fork",
   compaction?: string,
 ): Promise<TaskRecommendations | undefined> {
-  const model = ctx.modelRegistry.find("github-copilot", "mai-code-1.1-flash");
+  const model = ctx.modelRegistry.find("github-copilot", "gpt-5.6-luna");
   if (!model)
-    throw new Error(
-      "Recommendation model github-copilot/mai-code-1.1-flash is unavailable",
-    );
+    throw new Error("Recommendation model github-copilot/gpt-5.6-luna is unavailable");
 
   const result = await runTask(ctx, {
     label: "Generating task recommendations…",
     task: async ({ signal }) => {
-      const contextMessages = taskContext === "fork" ? lastSessionMessages(ctx) : [];
-      const promptContext =
-        taskContext === "compact" && compaction
-          ? `Background history:\n${compaction}\n\n`
-          : "";
+      const taskPrompt = TASK_RECOMMENDATIONS_PROMPT.replaceAll("@task", task);
+      const inputLimit = lowestInputTier(model);
+      const fixedInputTokens =
+        estimateTextTokens(TASK_RECOMMENDATIONS_SYSTEM_PROMPT) +
+        estimateTextTokens(taskPrompt);
+      const background = buildBackgroundContext(
+        ctx,
+        taskContext,
+        compaction,
+        Math.max(
+          0,
+          Math.min(model.contextWindow - 64_000, inputLimit - fixedInputTokens),
+        ),
+      );
+      const prompt = [background, taskPrompt].filter(Boolean).join("\n\n");
+
       const response = await ctx.modelRegistry.complete(
         model,
         {
           systemPrompt: TASK_RECOMMENDATIONS_SYSTEM_PROMPT,
           messages: [
-            ...contextMessages,
             {
               role: "user",
-              content: [{ type: "text", text: `${promptContext}Task:\n${task}` }],
+              content: [{ type: "text", text: prompt }],
               timestamp: Date.now(),
             },
           ],
+          tools: [],
         },
         { signal },
       );
@@ -112,6 +157,7 @@ export async function generateTaskRecommendations(
         )
         .map((content) => content.text)
         .join("\n");
+
       return parseTaskRecommendations(output);
     },
     onError: (_ctx, error) => {
@@ -153,10 +199,11 @@ export async function buildCompaction(
             ),
           )
         : undefined;
+      const requestModel = auth.baseUrl ? { ...model, baseUrl: auth.baseUrl } : model;
 
       const summary = await generateSummaryWithUsage(
         buildSessionContext(ctx.sessionManager.buildContextEntries()).messages,
-        model,
+        requestModel,
         DEFAULT_COMPACTION_SETTINGS.reserveTokens,
         auth.apiKey,
         headers,
