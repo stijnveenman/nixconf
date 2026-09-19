@@ -62,18 +62,14 @@ export async function showHandoffMenu(
             label: "Compact",
             description:
               "Compact the current session, steering towards a task provided.",
-            details: [
-              "The current session will be compacted around the handoff task.",
-            ],
+            details: ["The current session will be compacted around the handoff task."],
             searchText: "summarize summary compact current session task",
           },
           {
             id: "fork",
             label: "Fork",
             description: "Provide the entire session, combined with the task.",
-            details: [
-              "The new session receives the full current session and task.",
-            ],
+            details: ["The new session receives the full current session and task."],
             searchText: "full entire fork session task",
           },
         ],
@@ -98,9 +94,7 @@ export async function showHandoffMenu(
         hint: "back",
       }),
       thinking: () => {
-        const levels = state.model
-          ? getSupportedThinkingLevels(state.model)
-          : ["off"];
+        const levels = state.model ? getSupportedThinkingLevels(state.model) : ["off"];
         return {
           kind: "choice",
           title: "Thinking level",
@@ -157,10 +151,7 @@ export async function showHandoffMenu(
         }
 
         if (models.length === 0) {
-          actionCtx.ui.notify(
-            "No models are available for the handoff.",
-            "error",
-          );
+          actionCtx.ui.notify("No models are available for the handoff.", "error");
           return { kind: "stay" };
         }
         return { kind: "to", screen: "model" };
@@ -199,10 +190,7 @@ export async function showHandoffMenu(
   return runMenu(ctx, menu, {
     getState: () => state,
     onUnsupportedMode: (_ctx, mode) => {
-      ctx.ui.notify(
-        `The handoff menu is unavailable in ${mode} mode.`,
-        "warning",
-      );
+      ctx.ui.notify(`The handoff menu is unavailable in ${mode} mode.`, "warning");
     },
   });
 }

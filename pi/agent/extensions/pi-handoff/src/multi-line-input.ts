@@ -70,11 +70,7 @@ export async function showMultiLineInput(
           noMatch: (text) => theme.fg("warning", text),
         },
       };
-      const editor = new PromptEditor(
-        tui,
-        editorTheme,
-        theme.fg("dim", "> "),
-      );
+      const editor = new PromptEditor(tui, editorTheme, theme.fg("dim", "> "));
       if (options.initialValue) editor.setText(options.initialValue);
       editor.onSubmit = (value) => complete({ kind: "confirm", value });
 

@@ -85,8 +85,7 @@ export async function generateTaskRecommendations(
   const result = await runTask(ctx, {
     label: "Generating task recommendations…",
     task: async ({ signal }) => {
-      const contextMessages =
-        taskContext === "fork" ? lastSessionMessages(ctx) : [];
+      const contextMessages = taskContext === "fork" ? lastSessionMessages(ctx) : [];
       const promptContext =
         taskContext === "compact" && compaction
           ? `Background history:\n${compaction}\n\n`
@@ -99,9 +98,7 @@ export async function generateTaskRecommendations(
             ...contextMessages,
             {
               role: "user",
-              content: [
-                { type: "text", text: `${promptContext}Task:\n${task}` },
-              ],
+              content: [{ type: "text", text: `${promptContext}Task:\n${task}` }],
               timestamp: Date.now(),
             },
           ],

@@ -1,4 +1,7 @@
-import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionCommandContext,
+} from "@earendil-works/pi-coding-agent";
 import {
   defineMenu,
   HorizontalRule,
@@ -22,22 +25,32 @@ import {
 
 const demos: Record<string, string> = {
   "demo-horizontal-rule": "HorizontalRule: width-safe labelled dividers.",
-  "demo-editor-status-widget": "EditorStatusWidget: passive status rows above the editor.",
+  "demo-editor-status-widget":
+    "EditorStatusWidget: passive status rows above the editor.",
   "demo-bounded-frame": "renderBoundedFrame: height-bounded, width-safe presentation.",
   "demo-menu": "defineMenu and runMenu: typed navigation with lifecycle handling.",
   "demo-task": "runTask: cancellable work with a Pi-styled loader.",
-  "demo-confirmation": "runConfirmation: typed Confirmed, Back, Close, Stale, and Error results.",
-  "demo-document-review": "runDocumentReview: searchable text, code, diff, and Markdown review.",
-  "demo-multi-select": "runMultiSelect: private-ID selection with search and disabled rows.",
+  "demo-confirmation":
+    "runConfirmation: typed Confirmed, Back, Close, Stale, and Error results.",
+  "demo-document-review":
+    "runDocumentReview: searchable text, code, diff, and Markdown review.",
+  "demo-multi-select":
+    "runMultiSelect: private-ID selection with search and disabled rows.",
   "demo-live-choice": "runLiveChoice: cursor-driven preview with rollback ownership.",
   "demo-secret-input": "runSecretInput: masked single-secret input in TUI mode.",
-  "demo-questionnaire": "runQuestionnaire: bounded choices, free-form answers, notes, and review.",
-  "demo-model-selector": "runModelSelector: searchable model selection and save-default intent.",
+  "demo-questionnaire":
+    "runQuestionnaire: bounded choices, free-form answers, notes, and review.",
+  "demo-model-selector":
+    "runModelSelector: searchable model selection and save-default intent.",
   "demo-thinking-selector": "runThinkingSelector: searchable thinking-level selection.",
-  "demo-interaction-hints": "formatInteractionHints: normalized, reachable keybinding hints.",
-  "demo-terminal-document": "sanitizeTerminalDocument and hardWrapTerminalDocument: safe multiline display.",
-  "demo-custom-interaction": "runCustomInteraction: owned cancellation and exactly-once disposal.",
-  "demo-mermaid": "Mermaid Markdown preparation and synchronous message transformation.",
+  "demo-interaction-hints":
+    "formatInteractionHints: normalized, reachable keybinding hints.",
+  "demo-terminal-document":
+    "sanitizeTerminalDocument and hardWrapTerminalDocument: safe multiline display.",
+  "demo-custom-interaction":
+    "runCustomInteraction: owned cancellation and exactly-once disposal.",
+  "demo-mermaid":
+    "Mermaid Markdown preparation and synchronous message transformation.",
   "demo-actions": "actions screen: navigation, actions, disabled rows, and close.",
   "demo-detail": "detail screen: read-only wrapped content.",
   "demo-browse": "browse screen: searchable catalog and detail pages.",
@@ -45,7 +58,8 @@ const demos: Record<string, string> = {
   "demo-settings": "settings screen: searchable aligned values and serialized saves.",
   "demo-input": "input screen: editable values with validation-owned persistence.",
   "demo-review": "review screen: exact text, code, diff, or Markdown content.",
-  "demo-multi-select-screen": "multiSelect screen: optimistic toggles and bulk actions.",
+  "demo-multi-select-screen":
+    "multiSelect screen: optimistic toggles and bulk actions.",
 };
 
 function registerDemo(pi: ExtensionAPI, command: string, description: string) {
@@ -60,19 +74,29 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
             labelStyle: (text) => theme.fg("muted", text),
           });
           return {
-            render: (width: number) => command === "demo-horizontal-rule"
-              ? [...rule.render(width), theme.fg("text", "A width-safe horizontal rule demo"), ...rule.render(width)]
-              : renderBoundedFrame({
-                  width,
-                  maxRows: 8,
-                  rule: rule.render(width)[0] ?? "",
-                  title: [theme.fg("accent", "Bounded frame")],
-                  content: ["First setting", "Selected setting", "Saving…", "Extra content"],
-                  hints: ["enter change • esc cancel"],
-                  compactHint: "esc cancel",
-                  priorityRows: [1, 2],
-                  focusedRow: 1,
-                }),
+            render: (width: number) =>
+              command === "demo-horizontal-rule"
+                ? [
+                    ...rule.render(width),
+                    theme.fg("text", "A width-safe horizontal rule demo"),
+                    ...rule.render(width),
+                  ]
+                : renderBoundedFrame({
+                    width,
+                    maxRows: 8,
+                    rule: rule.render(width)[0] ?? "",
+                    title: [theme.fg("accent", "Bounded frame")],
+                    content: [
+                      "First setting",
+                      "Selected setting",
+                      "Saving…",
+                      "Extra content",
+                    ],
+                    hints: ["enter change • esc cancel"],
+                    compactHint: "esc cancel",
+                    priorityRows: [1, 2],
+                    focusedRow: 1,
+                  }),
             invalidate() {},
             handleInput(data: string) {
               if (data === "\u001b" || data === "q") done();
@@ -85,13 +109,19 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
       if (command === "demo-editor-status-widget") {
         ctx.ui.setWidget(
           "pi-handoff-demo",
-          (_tui, theme) => new EditorStatusWidget({
-            theme,
-            renderBody: (width) => [theme.fg("muted", `Progress: rendering within ${width} columns`)],
-          }),
+          (_tui, theme) =>
+            new EditorStatusWidget({
+              theme,
+              renderBody: (width) => [
+                theme.fg("muted", `Progress: rendering within ${width} columns`),
+              ],
+            }),
           { placement: "aboveEditor" },
         );
-        ctx.ui.notify("EditorStatusWidget installed. Run /clear-demo-widget to remove it.", "info");
+        ctx.ui.notify(
+          "EditorStatusWidget installed. Run /clear-demo-widget to remove it.",
+          "info",
+        );
         return;
       }
 
@@ -101,10 +131,14 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
           task: async ({ signal }) => {
             await new Promise<void>((resolve, reject) => {
               const timer = setTimeout(resolve, 1200);
-              signal.addEventListener("abort", () => {
-                clearTimeout(timer);
-                reject(signal.reason ?? new Error("aborted"));
-              }, { once: true });
+              signal.addEventListener(
+                "abort",
+                () => {
+                  clearTimeout(timer);
+                  reject(signal.reason ?? new Error("aborted"));
+                },
+                { once: true },
+              );
             });
             return "completed";
           },
@@ -124,13 +158,21 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
         return;
       }
 
-      if (command === "demo-document-review" || command === "demo-review" || command === "demo-mermaid") {
+      if (
+        command === "demo-document-review" ||
+        command === "demo-review" ||
+        command === "demo-mermaid"
+      ) {
         const result = await runDocumentReview(ctx, {
           title: command === "demo-mermaid" ? "Mermaid review" : "Generated handoff",
-          content: command === "demo-mermaid"
-            ? "# Handoff\n\n```mermaid\nflowchart LR\n  A[Current session] --> B[New session]\n```"
-            : "diff --git a/handoff.txt b/handoff.txt\n+handoff preview\n+review before applying",
-          format: command === "demo-mermaid" ? { kind: "markdown" } : { kind: "diff", filePath: "handoff.txt" },
+          content:
+            command === "demo-mermaid"
+              ? "# Handoff\n\n```mermaid\nflowchart LR\n  A[Current session] --> B[New session]\n```"
+              : "diff --git a/handoff.txt b/handoff.txt\n+handoff preview\n+review before applying",
+          format:
+            command === "demo-mermaid"
+              ? { kind: "markdown" }
+              : { kind: "diff", filePath: "handoff.txt" },
           enableSearch: true,
         });
         ctx.ui.notify(`Review result: ${result.kind}`, "info");
@@ -141,9 +183,20 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
         const result = await runMultiSelect(ctx, {
           title: "Handoff files",
           items: [
-            { id: "summary", label: "Summary", selected: true, searchText: "session overview" },
+            {
+              id: "summary",
+              label: "Summary",
+              selected: true,
+              searchText: "session overview",
+            },
             { id: "diff", label: "Diff", selected: true, searchText: "changed files" },
-            { id: "transcript", label: "Transcript", selected: false, disabled: true, disabledReason: "Not available in this demo" },
+            {
+              id: "transcript",
+              label: "Transcript",
+              selected: false,
+              disabled: true,
+              disabledReason: "Not available in this demo",
+            },
           ],
           enableSearch: true,
           completionLabel: "Continue",
@@ -154,15 +207,17 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
 
       if (command === "demo-questionnaire") {
         const result = await runQuestionnaire(ctx, {
-          questions: [{
-            id: "scope",
-            header: "Scope",
-            prompt: "What should the handoff include?",
-            options: [
-              { label: "Summary", description: "Current session summary" },
-              { label: "Everything", description: "Summary, diff, and transcript" },
-            ],
-          }],
+          questions: [
+            {
+              id: "scope",
+              header: "Scope",
+              prompt: "What should the handoff include?",
+              options: [
+                { label: "Summary", description: "Current session summary" },
+                { label: "Everything", description: "Summary, diff, and transcript" },
+              ],
+            },
+          ],
           allowNotes: true,
         });
         ctx.ui.notify(`Questionnaire result: ${result.kind}`, "info");
@@ -170,13 +225,19 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
       }
 
       if (command === "demo-secret-input") {
-        const result = await runSecretInput(ctx, { title: "Handoff passphrase", required: true });
+        const result = await runSecretInput(ctx, {
+          title: "Handoff passphrase",
+          required: true,
+        });
         ctx.ui.notify(`Secret input result: ${result.kind}`, "info");
         return;
       }
 
       if (command === "demo-interaction-hints") {
-        const hint = formatInteractionHints({ getKeys: () => [] }, [{ keys: ["e"], label: "edit" }, { keys: ["esc"], label: "close" }]);
+        const hint = formatInteractionHints({ getKeys: () => [] }, [
+          { keys: ["e"], label: "edit" },
+          { keys: ["esc"], label: "close" },
+        ]);
         ctx.ui.notify(`Hints: ${hint}`, "info");
         return;
       }
@@ -184,7 +245,10 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
       if (command === "demo-custom-interaction") {
         const result = await runCustomInteraction<{ kind: "back" | "close" }>(ctx, {
           create: ({ complete, signal }) => ({
-            render: () => [signal.aborted ? "Closing…" : "Custom interaction demo", "Press Escape to go back."],
+            render: () => [
+              signal.aborted ? "Closing…" : "Custom interaction demo",
+              "Press Escape to go back.",
+            ],
             invalidate() {},
             handleInput(data: string) {
               if (data === "\\u001b") complete({ kind: "back" });
@@ -204,19 +268,63 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
       }
 
       const screenKind = command.slice(5) as string;
-      const screen = screenKind === "actions"
-        ? { kind: "actions", title: "Actions", lines: ["Choose an action"], items: [{ id: "close", label: "Close", close: true }] }
-        : screenKind === "choice"
-          ? { kind: "choice", title: "Choice", items: [{ id: "safe", label: "Safe", description: "Recommended" }, { id: "fast", label: "Fast" }], action: "choose" }
-          : screenKind === "settings"
-            ? { kind: "settings", title: "Settings", items: [{ id: "mode", label: "Mode", currentValue: "Safe", values: ["Safe", "Fast"], action: "set" }] }
-            : screenKind === "input"
-              ? { kind: "input", title: "Input", placeholder: "Type a value", initialValue: "handoff", action: "submit" }
-              : screenKind === "browse"
-                ? { kind: "browse", title: "Browse", items: [{ id: "one", label: "One", details: ["A browsable item"] }, { id: "two", label: "Two", details: ["Another item"] }] }
-                : screenKind === "review"
-                  ? { kind: "review", title: "Review", content: "A reviewable handoff", format: { kind: "text" } }
-                  : { kind: "detail", title: screenKind, lines: [description] };
+      const screen =
+        screenKind === "actions"
+          ? {
+              kind: "actions",
+              title: "Actions",
+              lines: ["Choose an action"],
+              items: [{ id: "close", label: "Close", close: true }],
+            }
+          : screenKind === "choice"
+            ? {
+                kind: "choice",
+                title: "Choice",
+                items: [
+                  { id: "safe", label: "Safe", description: "Recommended" },
+                  { id: "fast", label: "Fast" },
+                ],
+                action: "choose",
+              }
+            : screenKind === "settings"
+              ? {
+                  kind: "settings",
+                  title: "Settings",
+                  items: [
+                    {
+                      id: "mode",
+                      label: "Mode",
+                      currentValue: "Safe",
+                      values: ["Safe", "Fast"],
+                      action: "set",
+                    },
+                  ],
+                }
+              : screenKind === "input"
+                ? {
+                    kind: "input",
+                    title: "Input",
+                    placeholder: "Type a value",
+                    initialValue: "handoff",
+                    action: "submit",
+                  }
+                : screenKind === "browse"
+                  ? {
+                      kind: "browse",
+                      title: "Browse",
+                      items: [
+                        { id: "one", label: "One", details: ["A browsable item"] },
+                        { id: "two", label: "Two", details: ["Another item"] },
+                      ],
+                    }
+                  : screenKind === "review"
+                    ? {
+                        kind: "review",
+                        title: "Review",
+                        content: "A reviewable handoff",
+                        format: { kind: "text" },
+                      }
+                    : { kind: "detail", title: screenKind, lines: [description] };
       const demoMenu = defineMenu<unknown, "demo", string>({
         start: "demo",
         screens: { demo: () => screen as MenuScreen<"demo", string> },
@@ -228,7 +336,8 @@ function registerDemo(pi: ExtensionAPI, command: string, description: string) {
       });
       await runMenu(ctx, demoMenu, {
         getState: () => undefined,
-        onUnsupportedMode: (_ctx, mode) => ctx.ui.notify(`${command} is unavailable in ${mode} mode.`, "warning"),
+        onUnsupportedMode: (_ctx, mode) =>
+          ctx.ui.notify(`${command} is unavailable in ${mode} mode.`, "warning"),
       });
     },
   });

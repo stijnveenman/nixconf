@@ -7,7 +7,7 @@ This is a repository-managed global Pi extension. Home Manager links `pi/agent/e
 - `@narumitw/pi-tui-kit` is the runtime dependency and is pinned in `package.json`.
 - `@earendil-works/pi-ai`, `@earendil-works/pi-coding-agent`, and `@earendil-works/pi-tui` are Pi-provided peer packages; they are development dependencies here for TypeScript resolution and must not be bundled as runtime dependencies.
 - Keep `node_modules/` untracked; refresh dependencies with `npm install` from this directory.
-- Validate with `npm run lint` and `npm run build` from this directory. ESLint uses the flat config in `eslint.config.mjs` with the basic TypeScript recommendations. TypeScript is pinned to 6.0.3 because the current `typescript-eslint` release does not yet support TypeScript 7. The build step runs `tsc --noEmit` using `tsconfig.json`; it is a type-check/validation step and does not emit JavaScript because Pi loads the TypeScript extension directly.
+- Format with `npm run format` and validate with `npm run format:check`, `npm run lint`, and `npm run build` from this directory. Prettier uses `.prettierrc.json`; ESLint uses the flat config in `eslint.config.mjs` with the basic TypeScript recommendations. TypeScript is pinned to 6.0.3 because the current `typescript-eslint` release does not yet support TypeScript 7. The build step runs `tsc --noEmit` using `tsconfig.json`; it is a type-check/validation step and does not emit JavaScript because Pi loads the TypeScript extension directly.
 
 ## Pi TUI Kit API
 

@@ -55,8 +55,10 @@ export async function confirmDetails(
         invalidate() {},
         handleInput: (data: string) => {
           if (matchesKey(data, Key.ctrl("c"))) complete({ kind: "close" });
-          else if (keybindings.matches(data, "tui.select.cancel")) complete({ kind: "back" });
-          else if (keybindings.matches(data, "tui.input.submit")) complete({ kind: "confirm", value: undefined });
+          else if (keybindings.matches(data, "tui.select.cancel"))
+            complete({ kind: "back" });
+          else if (keybindings.matches(data, "tui.input.submit"))
+            complete({ kind: "confirm", value: undefined });
           tui.requestRender();
         },
       };
