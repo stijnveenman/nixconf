@@ -25,7 +25,7 @@ export async function buildCompaction(
   ctx: ExtensionCommandContext,
   task: string,
   onComplete?: (summary: string) => void | Promise<void>,
-): Promise<string> {
+): Promise<string | undefined> {
   const model = ctx.model;
   if (!model) throw new Error("No active model is available for compaction");
 
@@ -65,7 +65,7 @@ export async function buildCompaction(
     },
   });
 
-  if (result.kind !== "completed") return "";
+  if (result.kind !== "completed") return undefined;
   await onComplete?.(result.value);
   return result.value;
 }
