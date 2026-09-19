@@ -1,10 +1,6 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
-import {
-  buildCompaction,
-  generateTaskRecommendations,
-  type TaskRecommendations,
-} from "./commands.js";
+import { buildCompaction, generateTaskRecommendations } from "./commands.js";
 import { showMultiLineInput } from "./multi-line-input.js";
 import { loadWorkmuxAgents } from "./workmux.js";
 
@@ -13,22 +9,23 @@ type Screen =
   "context" | "recommendations" | "branchRecommendation" | "agentRecommendation";
 type Action = "selectContext" | "updateBranch" | "selectAgent" | "confirm";
 
-interface HandoffState {
+export interface HandoffState {
   taskContext: TaskContext;
   task: string;
   compaction?: string;
-  recommendations?: TaskRecommendations;
+  branch?: string;
+  agent?: string;
 }
 
 export async function showHandoffMenu(
   ctx: ExtensionCommandContext,
-  onConfirm: (state: Readonly<HandoffState>) => void | Promise<void>,
-) {
+): Promise<Readonly<HandoffState> | undefined> {
   const agents = loadWorkmuxAgents();
   const state: HandoffState = {
     taskContext: "none",
     task: "",
   };
+  let confirmed = false;
   const menu = defineMenu<HandoffState, Screen, Action>({
     start: "context",
     screens: {
@@ -69,30 +66,31 @@ export async function showHandoffMenu(
         kind: "actions",
         title: "Task recommendations",
         lines: ["Update a recommendation or confirm the handoff."],
-        items: state.recommendations
-          ? [
-              { id: "confirm", label: "Confirm", action: "confirm" },
-              {
-                id: "agent",
-                label: "Agent",
-                description: state.recommendations.agent,
-                action: "selectAgent",
-              },
-              {
-                id: "branch",
-                label: "Branch",
-                description: state.recommendations.branch,
-                action: "updateBranch",
-              },
-            ]
-          : [{ id: "close", label: "Close", close: true }],
+        items:
+          state.branch && state.agent
+            ? [
+                { id: "confirm", label: "Confirm", action: "confirm" },
+                {
+                  id: "agent",
+                  label: "Agent",
+                  description: state.agent,
+                  action: "selectAgent",
+                },
+                {
+                  id: "branch",
+                  label: "Branch",
+                  description: state.branch,
+                  action: "updateBranch",
+                },
+              ]
+            : [{ id: "close", label: "Close", close: true }],
         hint: "close",
       }),
       branchRecommendation: () => ({
         kind: "input",
         title: "Update branch recommendation",
         lines: ["Edit the branch name and press Enter to save."],
-        initialValue: state.recommendations?.branch,
+        initialValue: state.branch,
         action: "updateBranch",
         hint: "back",
       }),
@@ -107,7 +105,7 @@ export async function showHandoffMenu(
           searchText: `${name} ${agent.description ?? ""} ${agent.when ?? ""}`,
         })),
         action: "selectAgent",
-        currentItemId: state.recommendations?.agent,
+        currentItemId: state.agent,
         enableSearch: true,
         hint: "back",
       }),
@@ -144,14 +142,15 @@ export async function showHandoffMenu(
           agents,
         );
         if (!recommendations) return { kind: "stay" };
-        state.recommendations = recommendations;
+        state.branch = recommendations.branch;
+        state.agent = recommendations.agent;
 
         return { kind: "to", screen: "recommendations" };
       },
       updateBranch: async ({ state, itemId, value }) => {
         if (itemId === "branch") return { kind: "to", screen: "branchRecommendation" };
-        if (state.recommendations && value !== undefined) {
-          state.recommendations.branch = value;
+        if (value !== undefined) {
+          state.branch = value;
         }
         return { kind: "back" };
       },
@@ -159,23 +158,25 @@ export async function showHandoffMenu(
         if (itemId === "agent") {
           return { kind: "to", screen: "agentRecommendation" };
         }
-        if (!state.recommendations || !agents[itemId]) {
+        if (!agents[itemId]) {
           return { kind: "stay" };
         }
-        state.recommendations.agent = itemId;
+        state.agent = itemId;
         return { kind: "back" };
       },
-      confirm: async ({ state }) => {
-        await onConfirm(state);
+      confirm: async () => {
+        confirmed = true;
         return { kind: "close" };
       },
     },
   });
 
-  return runMenu(ctx, menu, {
+  await runMenu(ctx, menu, {
     getState: () => state,
     onUnsupportedMode: (_ctx, mode) => {
       ctx.ui.notify(`The handoff menu is unavailable in ${mode} mode.`, "warning");
     },
   });
+
+  return confirmed ? state : undefined;
 }

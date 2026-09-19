@@ -1,8 +1,8 @@
 import { execFile, execFileSync } from "node:child_process";
-import { promisify } from "node:util";
-import { existsSync, readFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { basename, join } from "node:path";
+import { promisify } from "node:util";
 import YAML from "yaml";
 
 export interface WorkmuxAgent {
@@ -36,14 +36,26 @@ function currentGitRoot(): string | undefined {
 
 const execFileAsync = promisify(execFile);
 
-export async function addWorkmuxAgent(agent: string, branch: string): Promise<string> {
-  const result = await execFileAsync("workmux", [
-    "add",
-    "--background",
-    "--agent",
-    agent,
-    branch,
-  ]);
+export async function addWorkmuxAgent(
+  agent: string,
+  branch: string,
+  task: string,
+  compaction?: string,
+  forkSessionId?: string,
+): Promise<string> {
+  const safeBranch = branch.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const promptFile = join(tmpdir(), `pi-hand-off-${safeBranch}.md`);
+  writeFileSync(
+    promptFile,
+    compaction ? `Background:\n${compaction}\n\nTask:\n${task}\n` : `${task}\n`,
+    "utf8",
+  );
+
+  const args = ["add", "--background", "--agent", agent, "--prompt-file", promptFile];
+  if (forkSessionId) args.push("--fork", forkSessionId);
+  args.push(branch);
+
+  const result = await execFileAsync("workmux", args);
   return [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
 }
 
