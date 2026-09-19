@@ -1,4 +1,5 @@
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
+import { promisify } from "node:util";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
@@ -31,6 +32,19 @@ function currentGitRoot(): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+const execFileAsync = promisify(execFile);
+
+export async function addWorkmuxAgent(agent: string, branch: string): Promise<string> {
+  const result = await execFileAsync("workmux", [
+    "add",
+    "--background",
+    "--agent",
+    agent,
+    branch,
+  ]);
+  return [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
 }
 
 export function loadWorkmuxAgents(): Record<string, WorkmuxAgent> {
