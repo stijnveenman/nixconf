@@ -9,22 +9,43 @@ import {
 import { showMultiLineInput } from "./multi-line-input.js";
 
 type TaskContext = "none" | "compact" | "fork";
-type Screen = "context" | "model" | "thinking" | "recommendations";
-type Action = "selectContext" | "selectModel" | "selectThinking";
+type Screen =
+  | "context"
+  | "recommendations"
+  | "modelRecommendation"
+  | "thinkingRecommendation"
+  | "branchRecommendation"
+  | "summaryRecommendation";
+type Action =
+  | "selectContext"
+  | "selectModelRecommendation"
+  | "selectThinkingRecommendation"
+  | "updateBranch"
+  | "updateSummary"
+  | "confirm";
 type HandoffModel = NonNullable<ExtensionCommandContext["model"]>;
-type ThinkingLevel = NonNullable<ExtensionCommandContext["thinkingLevel"]>;
 
 interface HandoffState {
   taskContext: TaskContext;
   task: string;
   compaction?: string;
-  model?: HandoffModel;
-  thinkingLevel?: ThinkingLevel;
   recommendations?: TaskRecommendations;
 }
 
 function modelKey(model: HandoffModel): string {
   return `${model.provider}/${model.id}`;
+}
+
+function modelForRecommendation(
+  recommendation: string,
+  models: readonly HandoffModel[],
+  fallback?: HandoffModel,
+): HandoffModel | undefined {
+  return (
+    models.find(
+      (model) => modelKey(model) === recommendation || model.name === recommendation,
+    ) ?? fallback
+  );
 }
 
 export async function showHandoffMenu(
@@ -39,8 +60,6 @@ export async function showHandoffMenu(
     ctx.scopedModels.length > 0
       ? ctx.scopedModels.map(({ model }) => model)
       : ctx.modelRegistry.getAvailable();
-  const modelsByKey = new Map(models.map((model) => [modelKey(model), model]));
-
   const menu = defineMenu<HandoffState, Screen, Action>({
     start: "context",
     screens: {
@@ -77,54 +96,93 @@ export async function showHandoffMenu(
         enableSearch: true,
         hint: "close",
       }),
-      model: () => ({
-        kind: "choice",
-        title: "Model",
-        lines: ["Choose the model for the new session."],
-        items: models.map((model) => ({
-          id: modelKey(model),
-          label: model.name,
-          description: modelKey(model),
-          details: [modelKey(model)],
-          searchText: modelKey(model),
-        })),
-        action: "selectModel",
-        currentItemId: ctx.model ? modelKey(ctx.model) : undefined,
-        enableSearch: true,
+      recommendations: () => ({
+        kind: "actions",
+        title: "Task recommendations",
+        lines: ["Update a recommendation or confirm the handoff."],
+        items: state.recommendations
+          ? [
+              { id: "confirm", label: "Confirm", action: "confirm" },
+              {
+                id: "model",
+                label: "Model",
+                description: state.recommendations.model,
+                action: "selectModelRecommendation",
+              },
+              {
+                id: "thinking",
+                label: "Thinking",
+                description: state.recommendations.thinking,
+                action: "selectThinkingRecommendation",
+              },
+              {
+                id: "branch",
+                label: "Branch",
+                description: state.recommendations.branch,
+                action: "updateBranch",
+              },
+              {
+                id: "summary",
+                label: "Summary",
+                description: state.recommendations.summary,
+                action: "updateSummary",
+              },
+            ]
+          : [{ id: "close", label: "Close", close: true }],
+        hint: "close",
+      }),
+      branchRecommendation: () => ({
+        kind: "input",
+        title: "Update branch recommendation",
+        lines: ["Edit the branch name and press Enter to save."],
+        initialValue: state.recommendations?.branch,
+        action: "updateBranch",
         hint: "back",
       }),
-      thinking: () => {
-        const levels = state.model ? getSupportedThinkingLevels(state.model) : ["off"];
+      summaryRecommendation: () => ({
+        kind: "input",
+        title: "Update summary recommendation",
+        lines: ["Edit the task summary and press Enter to save."],
+        initialValue: state.recommendations?.summary,
+        action: "updateSummary",
+        hint: "back",
+      }),
+      modelRecommendation: () => {
+        const recommendation = state.recommendations?.model;
         return {
           kind: "choice",
-          title: "Thinking level",
-          lines: [
-            `Choose the thinking level for ${state.model?.name ?? "the new session"}.`,
-          ],
-          items: levels.map((level) => ({
-            id: level,
-            label: level,
-            searchText: level,
+          title: "Update model recommendation",
+          lines: ["Choose a model for the handoff."],
+          items: models.map((model) => ({
+            id: modelKey(model),
+            label: model.name,
+            description: modelKey(model),
+            searchText: modelKey(model),
           })),
-          action: "selectThinking",
-          currentItemId: state.thinkingLevel,
+          action: "selectModelRecommendation",
+          currentItemId: recommendation,
           enableSearch: true,
           hint: "back",
         };
       },
-      recommendations: () => ({
-        kind: "detail",
-        title: "Task recommendations",
-        lines: state.recommendations
-          ? [
-              `Model: ${state.recommendations.model}`,
-              `Thinking: ${state.recommendations.thinking}`,
-              `Branch: ${state.recommendations.branch}`,
-              `Summary: ${state.recommendations.summary}`,
-            ]
-          : ["No recommendations were generated."],
-        hint: "close",
-      }),
+      thinkingRecommendation: () => {
+        const model = modelForRecommendation(
+          state.recommendations?.model ?? "",
+          models,
+          ctx.model,
+        );
+        const levels = model ? getSupportedThinkingLevels(model) : ["off"];
+        return {
+          kind: "choice",
+          title: "Update thinking recommendation",
+          lines: [`Choose a thinking level${model ? ` for ${model.name}` : ""}.`],
+          items: levels.map((level) => ({ id: level, label: level })),
+          action: "selectThinkingRecommendation",
+          currentItemId: state.recommendations?.thinking,
+          enableSearch: true,
+          hint: "back",
+        };
+      },
     },
     actions: {
       selectContext: async ({ ctx: actionCtx, state, itemId, signal }) => {
@@ -150,39 +208,63 @@ export async function showHandoffMenu(
           state.compaction = summary;
         }
 
-        if (models.length === 0) {
-          actionCtx.ui.notify("No models are available for the handoff.", "error");
-          return { kind: "stay" };
-        }
-        return { kind: "to", screen: "model" };
-      },
-      selectModel: async ({ state, itemId }) => {
-        const model = modelsByKey.get(itemId);
-        if (!model) return { kind: "stay" };
-
-        state.model = model;
-        const levels = getSupportedThinkingLevels(model);
-        state.thinkingLevel = levels.includes(ctx.thinkingLevel ?? "off")
-          ? (ctx.thinkingLevel ?? "off")
-          : levels[0];
-        return { kind: "to", screen: "thinking" };
-      },
-      selectThinking: async ({ state, itemId }) => {
-        if (!state.model) return { kind: "back" };
-        const levels = getSupportedThinkingLevels(state.model);
-        if (!levels.includes(itemId as ThinkingLevel)) return { kind: "stay" };
-
-        state.thinkingLevel = itemId as ThinkingLevel;
         const recommendations = await generateTaskRecommendations(
-          ctx,
+          actionCtx,
           state.task,
           state.taskContext,
           state.compaction,
         );
         if (!recommendations) return { kind: "stay" };
         state.recommendations = recommendations;
-        await onConfirm(state);
+
         return { kind: "to", screen: "recommendations" };
+      },
+      selectModelRecommendation: async ({ state, itemId }) => {
+        if (itemId === "model") return { kind: "to", screen: "modelRecommendation" };
+        if (
+          !state.recommendations ||
+          !models.some((model) => modelKey(model) === itemId)
+        ) {
+          return { kind: "stay" };
+        }
+        state.recommendations.model = itemId;
+        return { kind: "back" };
+      },
+      selectThinkingRecommendation: async ({ state, itemId }) => {
+        if (itemId === "thinking") {
+          return { kind: "to", screen: "thinkingRecommendation" };
+        }
+        if (!state.recommendations) return { kind: "stay" };
+        const model = modelForRecommendation(
+          state.recommendations.model,
+          models,
+          ctx.model,
+        );
+        const levels = model ? getSupportedThinkingLevels(model) : ["off"];
+        if (!levels.includes(itemId as (typeof levels)[number])) {
+          return { kind: "stay" };
+        }
+        state.recommendations.thinking = itemId;
+        return { kind: "back" };
+      },
+      updateBranch: async ({ state, itemId, value }) => {
+        if (itemId === "branch") return { kind: "to", screen: "branchRecommendation" };
+        if (state.recommendations && value !== undefined) {
+          state.recommendations.branch = value;
+        }
+        return { kind: "back" };
+      },
+      updateSummary: async ({ state, itemId, value }) => {
+        if (itemId === "summary")
+          return { kind: "to", screen: "summaryRecommendation" };
+        if (state.recommendations && value !== undefined) {
+          state.recommendations.summary = value;
+        }
+        return { kind: "back" };
+      },
+      confirm: async ({ state }) => {
+        await onConfirm(state);
+        return { kind: "close" };
       },
     },
   });
