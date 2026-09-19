@@ -1,15 +1,10 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { defineMenu, runMenu } from "@narumitw/pi-tui-kit";
-import { confirmDetails } from "./confirm-details.js";
 import { showMultiLineInput } from "./multi-line-input.js";
 
 type TaskContext = "none" | "compact" | "fork";
 type Screen = "context";
-type Action = "editContext";
-
-function taskContextLabel(context: TaskContext): string {
-  return context[0].toUpperCase() + context.slice(1);
-}
+type Action = "selectContext";
 
 export async function showHandoffMenu(
   ctx: ExtensionCommandContext,
@@ -52,40 +47,29 @@ export async function showHandoffMenu(
             searchText: "full entire fork session task",
           },
         ],
-        action: "editContext",
+        action: "selectContext",
         enableSearch: true,
         hint: "close",
       }),
     },
     actions: {
-      editContext: async ({ ctx, itemId, signal }) => {
+      selectContext: async ({ ctx: actionCtx, itemId, signal }) => {
         if (itemId !== "none" && itemId !== "compact" && itemId !== "fork") {
           return { kind: "stay" };
         }
 
         taskContext = itemId;
-        const outcome = await showMultiLineInput(ctx, {
+        const taskOutcome = await showMultiLineInput(actionCtx, {
           title: "Task",
           description: "Describe the task",
           signal,
         });
-        if (outcome.kind === "confirm") {
-          task = outcome.value;
-          const summary = await confirmDetails(ctx, {
-            title: "Confirm handoff",
-            context: [`Context: ${taskContextLabel(taskContext)}`, "Task:"],
-            details: task,
-            signal,
-          });
-          if (summary.kind === "confirm") {
-            await onConfirm(taskContext, task);
-            return { kind: "close" };
-          }
-          if (summary.kind === "close") return { kind: "close" };
-          return { kind: "stay" };
-        }
-        if (outcome.kind === "close") return { kind: "close" };
-        return { kind: "stay" };
+        if (taskOutcome.kind === "close") return { kind: "close" };
+        if (taskOutcome.kind !== "confirm") return { kind: "stay" };
+
+        task = taskOutcome.value ?? "";
+        await onConfirm(taskContext, task);
+        return { kind: "close" };
       },
     },
   });

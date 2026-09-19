@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Box, Text } from "@earendil-works/pi-tui";
+import { buildCompaction, showCompactionDetails } from "./commands.js";
 import { registerDemos } from "./demo.js";
 import { showHandoffMenu } from "./menu.js";
 
@@ -14,8 +15,13 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("handoff", {
     description: "Hand off a task to another session",
     handler: async (_args, ctx) => {
-      await showHandoffMenu(ctx, async (_taskContext, task) => {
+      await showHandoffMenu(ctx, async (taskContext, task) => {
         pi.appendEntry("pi-handoff-task", { task });
+        if (taskContext === "compact") {
+          await buildCompaction(ctx, task, async (summary) => {
+            await showCompactionDetails(ctx, summary);
+          });
+        }
       });
     },
   });
