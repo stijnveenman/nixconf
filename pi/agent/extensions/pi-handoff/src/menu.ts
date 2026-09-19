@@ -11,7 +11,7 @@ import { loadWorkmuxAgents } from "./workmux.js";
 type TaskContext = "none" | "compact" | "fork";
 type Screen =
   "context" | "recommendations" | "branchRecommendation" | "agentRecommendation";
-type Action = "selectContext" | "updateBranch" | "updateAgent" | "confirm";
+type Action = "selectContext" | "updateBranch" | "selectAgent" | "confirm";
 
 interface HandoffState {
   taskContext: TaskContext;
@@ -76,7 +76,7 @@ export async function showHandoffMenu(
                 id: "agent",
                 label: "Agent",
                 description: state.recommendations.agent,
-                action: "updateAgent",
+                action: "selectAgent",
               },
               {
                 id: "branch",
@@ -97,11 +97,18 @@ export async function showHandoffMenu(
         hint: "back",
       }),
       agentRecommendation: () => ({
-        kind: "input",
+        kind: "choice",
         title: "Update agent recommendation",
-        lines: ["Edit the Workmux agent and press Enter to save."],
-        initialValue: state.recommendations?.agent,
-        action: "updateAgent",
+        lines: ["Choose a Workmux agent for the handoff."],
+        items: Object.entries(agents).map(([name, agent]) => ({
+          id: name,
+          label: name,
+          description: agent.description ?? "",
+          searchText: `${name} ${agent.description ?? ""} ${agent.when ?? ""}`,
+        })),
+        action: "selectAgent",
+        currentItemId: state.recommendations?.agent,
+        enableSearch: true,
         hint: "back",
       }),
     },
@@ -148,13 +155,14 @@ export async function showHandoffMenu(
         }
         return { kind: "back" };
       },
-      updateAgent: async ({ state, itemId, value }) => {
+      selectAgent: async ({ state, itemId }) => {
         if (itemId === "agent") {
           return { kind: "to", screen: "agentRecommendation" };
         }
-        if (state.recommendations && value !== undefined) {
-          state.recommendations.agent = value;
+        if (!state.recommendations || !agents[itemId]) {
+          return { kind: "stay" };
         }
+        state.recommendations.agent = itemId;
         return { kind: "back" };
       },
       confirm: async ({ state }) => {
