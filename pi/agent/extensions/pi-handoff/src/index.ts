@@ -9,7 +9,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerEntryRenderer("pi-handoff-task", (entry, _options, theme) => {
     const data = entry.data as { task: string };
     const box = new Box(1, 0, (text) => theme.fg("muted", text));
-    box.addChild(new Text(theme.fg("accent", `Task: ${data.task}`), 0, 0));
+    box.addChild(new Text(theme.fg("accent", `${data.task}`), 0, 0));
     return box;
   });
 
