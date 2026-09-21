@@ -14,6 +14,7 @@ in {
     ../../modules/ghostty.nix
     ../../modules/opencode.nix
     ../../modules/pi.nix
+    ../../modules/raycast
     ../../modules/tmux
   ];
 
