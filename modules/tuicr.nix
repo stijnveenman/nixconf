@@ -8,7 +8,7 @@
     compact_folders = true
     show_pr_checks = true
     editor = "nvim"
-    comment_vim = false
+    comment_vim = true
     scroll_offset = 5
     ignore_whitespace = true
     q_quits = true
