@@ -18,6 +18,7 @@ in {
   home.file = {
     ".pi/agent/settings.json".source = liveLink "settings.json";
     ".pi/agent/keybindings.json".source = liveLink "keybindings.json";
+    ".pi/agent/AGENTS.md".source = liveLink "AGENTS.md";
     ".pi/agent/extensions".source = liveLink "extensions";
     ".pi/agent/skills".source = liveLink "skills";
   };
