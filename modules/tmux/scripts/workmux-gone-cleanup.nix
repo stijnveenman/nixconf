@@ -7,11 +7,16 @@
   find = lib.getExe' pkgs.findutils "find";
   jq = lib.getExe pkgs.jq;
   tmux = lib.getExe pkgs.tmux;
+  tmuxBinDir = builtins.dirOf tmux;
   workmuxPackage = workmux.packages.${pkgs.stdenv.hostPlatform.system}.default;
   workmuxExe = lib.getExe' workmuxPackage "workmux";
 in
   pkgs.writeShellScript "workmux-gone-cleanup" ''
     set -uo pipefail
+
+    # launchd does not provide the Home Manager package PATH. Workmux invokes
+    # tmux by name, so make the exact tmux used below discoverable to it.
+    export PATH="${tmuxBinDir}:$PATH"
 
     export GIT_CONFIG_COUNT=3
     export GIT_CONFIG_KEY_0='url.https://github.com/.insteadOf'
