@@ -3,8 +3,18 @@
   pkgs,
   workmux,
   workmuxGithubAskpass,
+  workmuxGithubCredentialHelper,
 }: let
   find = lib.getExe' pkgs.findutils "find";
+  git = lib.getExe pkgs.git;
+  gitPat = pkgs.writeShellScriptBin "git" ''
+    exec ${git} \
+      -c 'url.https://github.com/.insteadOf=git@github.com:' \
+      -c 'url.https://github.com/.insteadOf=ssh://git@github.com/' \
+      -c 'credential.helper=' \
+      -c 'core.askPass=${workmuxGithubAskpass}' \
+      "$@"
+  '';
   jq = lib.getExe pkgs.jq;
   tmux = lib.getExe pkgs.tmux;
   tmuxBinDir = builtins.dirOf tmux;
@@ -18,15 +28,15 @@ in
     # tmux by name, so make the exact tmux used below discoverable to it.
     export PATH="${tmuxBinDir}:$PATH"
 
-    export GIT_CONFIG_COUNT=3
+    export GIT_CONFIG_COUNT=2
     export GIT_CONFIG_KEY_0='url.https://github.com/.insteadOf'
     export GIT_CONFIG_VALUE_0='git@github.com:'
     export GIT_CONFIG_KEY_1='url.https://github.com/.insteadOf'
     export GIT_CONFIG_VALUE_1='ssh://git@github.com/'
-    export GIT_CONFIG_KEY_2='credential.helper'
-    export GIT_CONFIG_VALUE_2=
     export GIT_ASKPASS="${workmuxGithubAskpass}"
     export GIT_TERMINAL_PROMPT=0
+    export GIT_SSH_COMMAND='ssh -oBatchMode=yes'
+    export PATH="${gitPat}/bin:$PATH"
 
     patNotified=0
     printf '%s: cleaning worktrees with deleted upstream branches\n' "$(${pkgs.coreutils}/bin/date '+%Y-%m-%dT%H:%M:%S%z')"
@@ -41,7 +51,25 @@ in
       export TMUX_PANE="$tmuxPane"
       while IFS= read -r repo; do
         [ -d "$repo" ] || continue
-        output="$(cd "$repo" && ${workmuxExe} remove --gone --force 2>&1)" || {
+        output="$(
+          cd "$repo" || exit
+          remoteUrl="$(${git} config --get remote.origin.url)"
+          case "$remoteUrl" in
+            git@github.com:*) httpsUrl="https://github.com/''${remoteUrl#git@github.com:}" ;;
+            ssh://git@github.com/*) httpsUrl="https://github.com/''${remoteUrl#ssh://git@github.com/}" ;;
+            *) httpsUrl="$remoteUrl" ;;
+          esac
+          restore() {
+            ${git} config --local remote.origin.url "$remoteUrl"
+            ${git} config --local --unset-all credential.helper 2>/dev/null || true
+          }
+          trap restore EXIT HUP INT TERM
+          ${git} config --local remote.origin.url "$httpsUrl"
+          ${git} config --local credential.helper "!${workmuxGithubCredentialHelper}"
+          ${git} fetch --prune || exit
+          ${git} config --local remote.origin.url "$repo"
+          ${workmuxExe} remove --gone --force 2>&1
+        )" || {
           printf '%s\n' "$output" >&2
           case "$output" in
             *401*|*403*|*Authentication*|*authentication*|*"terminal prompts disabled"*)

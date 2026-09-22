@@ -11,8 +11,11 @@
   workmuxGithubAskpass = import ./scripts/workmux-github-askpass.nix {
     inherit lib pkgs;
   };
+  workmuxGithubCredentialHelper = import ./scripts/workmux-github-credential-helper.nix {
+    inherit pkgs;
+  };
   workmuxGoneCleanup = import ./scripts/workmux-gone-cleanup.nix {
-    inherit lib pkgs workmux workmuxGithubAskpass;
+    inherit lib pkgs workmux workmuxGithubAskpass workmuxGithubCredentialHelper;
   };
   workmuxSidebarOpenPr = import ./scripts/workmux-sidebar-open-pr.nix {
     inherit lib pkgs workmux;
