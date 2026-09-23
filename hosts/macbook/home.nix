@@ -49,6 +49,7 @@ in {
   home.packages = [
     pkgs._1password-cli
     pkgs.pi-coding-agent
+    pkgs.todoist-cli
     pkgs.git-crypt
 
     # formatting
