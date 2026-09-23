@@ -5,6 +5,8 @@ return {
       picker = {
         sources = {
           explorer = {
+            -- Show hidden files in the current explorer folder.
+            hidden = true,
             -- Keep the sidebar while switching focus, but close it after opening a file.
             auto_close = false,
             actions = {
