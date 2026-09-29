@@ -67,7 +67,9 @@ in
           ${git} config --local remote.origin.url "$httpsUrl"
           ${git} config --local credential.helper "!${workmuxGithubCredentialHelper}"
           ${git} fetch --prune || exit
-          ${git} config --local remote.origin.url "$repo"
+          # Keep the origin URL intact while Workmux checks branch tracking.
+          # Replacing it with the local repo path makes `remove --gone` lose
+          # the remote-tracking context and report no gone worktrees.
           ${workmuxExe} remove --gone --force 2>&1
         )" || {
           printf '%s\n' "$output" >&2
