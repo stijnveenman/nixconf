@@ -8,15 +8,6 @@
   fzfTmux = lib.getExe' pkgs.fzf "fzf-tmux";
   sesh = lib.getExe pkgs.sesh;
   tmux = lib.getExe pkgs.tmux;
-  workmuxGithubAskpass = import ./scripts/workmux-github-askpass.nix {
-    inherit lib pkgs;
-  };
-  workmuxGithubCredentialHelper = import ./scripts/workmux-github-credential-helper.nix {
-    inherit pkgs;
-  };
-  workmuxGoneCleanup = import ./scripts/workmux-gone-cleanup.nix {
-    inherit lib pkgs workmux workmuxGithubAskpass workmuxGithubCredentialHelper;
-  };
   workmuxSidebarOpenPr = import ./scripts/workmux-sidebar-open-pr.nix {
     inherit lib pkgs workmux;
   };
@@ -47,17 +38,6 @@
   '';
 in {
   home.packages = [pkgs.tmux];
-
-  launchd.agents.workmux-gone-cleanup = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-    enable = true;
-    config = {
-      ProgramArguments = ["${workmuxGoneCleanup}"];
-      RunAtLoad = true;
-      StartInterval = 300;
-      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/workmux-gone-cleanup.log";
-      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/workmux-gone-cleanup.error.log";
-    };
-  };
 
   # Expose the writeShellScript without putting its single-file output in
   # home.packages (which only accepts package directories).
