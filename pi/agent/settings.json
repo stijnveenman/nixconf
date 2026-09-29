@@ -21,6 +21,7 @@
   ],
   "tuiMode": "fullscreen",
   "packages": [
-    "npm:@narumitw/pi-btw"
+    "npm:@narumitw/pi-btw",
+    "npm:pi-web-access"
   ]
 }
