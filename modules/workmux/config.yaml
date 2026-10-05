@@ -2,6 +2,7 @@ nerdfont: true
 
 base_branch: origin/main
 agent: pi
+confirm_unmerged_removal: false
 
 mode: session
 window_prefix: ""

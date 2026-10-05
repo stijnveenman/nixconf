@@ -2,6 +2,7 @@
   pkgs,
   config,
   lib,
+  pi,
   ...
 }: let
   fzf = lib.getExe pkgs.fzf;
@@ -48,7 +49,7 @@ in {
 
   home.packages = [
     pkgs._1password-cli
-    pkgs.pi-coding-agent
+    pi.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.todoist-cli
     pkgs.git-crypt
 

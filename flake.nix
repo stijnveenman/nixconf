@@ -2,6 +2,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
+    pi.url = "github:earendil-works/pi/v1.0.1";
+    pi.inputs.nixpkgs.follows = "nixpkgs";
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
