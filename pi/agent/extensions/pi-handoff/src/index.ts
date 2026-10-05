@@ -5,7 +5,6 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { runTask } from "@narumitw/pi-tui-kit";
 import { Box, Text } from "@earendil-works/pi-tui";
-import { registerDemos } from "./demo.js";
 import { showHandoffMenu } from "./menu.js";
 import { addWorkmuxAgent } from "./workmux.js";
 
@@ -58,6 +57,4 @@ export default function (pi: ExtensionAPI) {
     description: "Open the handoff menu",
     handler: async (ctx) => runHandoff(ctx),
   });
-
-  registerDemos(pi);
 }
