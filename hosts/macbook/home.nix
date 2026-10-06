@@ -129,7 +129,7 @@ in {
       update.method = "never"; # no periodic update checks
 
       gui = {
-        branchColors = {
+        theme.branchColorPatterns = {
           config = "#11aaff";
         };
 
