@@ -39,7 +39,7 @@ agents:
     description: Simple Cheap Low effort agent
     args:
       - --model
-      - github-copilot/gpt-5.6-luna
+      - github-copilot/gpt-6-luna
       - --thinking
       - minimal
   migrator:
@@ -48,7 +48,7 @@ agents:
     description: Simple rename or migration
     args:
       - --model
-      - github-copilot/gpt-5.6-luna
+      - github-copilot/gpt-6-luna
       - --thinking
       - low
   basic-feature:
@@ -57,7 +57,7 @@ agents:
     description: For basic feature work
     args:
       - --model
-      - github-copilot/gpt-5.6-luna
+      - github-copilot/gpt-6.1-sol
       - --thinking
       - medium
   involved-feature:
@@ -66,7 +66,7 @@ agents:
     description: For involved feature work
     args:
       - --model
-      - github-copilot/gpt-5.6-terra
+      - github-copilot/gpt-6.1-sol
       - --thinking
       - medium
   architecture:
@@ -75,7 +75,7 @@ agents:
     description: For complex fundamental codeSimple rename or migration
     args:
       - --model
-      - github-copilot/gpt-5.6-terra
+      - github-copilot/gpt-6-astra
       - --thinking
       - medium
 
