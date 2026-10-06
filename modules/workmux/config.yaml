@@ -21,6 +21,7 @@ auto_name:
 sidebar:
   sort: recency
   group: project
+  collapse_stale: false
   templates:
     tiles:
       - "{git_branch}{fill} {pr_number}"
