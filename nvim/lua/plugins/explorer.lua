@@ -23,7 +23,12 @@ return {
                   table.insert(paths, vim.fn.fnamemodify(path, ":."))
                 end
                 picker.list:set_selected()
-                vim.fn.setreg(vim.v.register or "+", table.concat(paths, "\n"), "c")
+                -- setreg() does not sync the unnamed register to the clipboard.
+                local register = vim.v.register
+                if register == '"' or register == "" then
+                  register = "+"
+                end
+                vim.fn.setreg(register, table.concat(paths, "\n"), "c")
                 Snacks.notify.info("Yanked " .. #paths .. " paths relative to " .. cwd)
               end,
             },
