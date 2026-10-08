@@ -94,7 +94,8 @@ in {
 
     # Replace tmux's default worktree picker binding.
     unbind w
-    bind f run-shell "${tmuxSessionSwitcher}"
+    bind f display-popup -E -w 80% -h 80% -d "#{pane_current_path}" "workmux dashboard --tab worktrees --preview-size 10"
+    bind F run-shell "${tmuxSessionSwitcher}"
 
     set-option -g pane-border-status top
     set-option -g pane-border-lines heavy
