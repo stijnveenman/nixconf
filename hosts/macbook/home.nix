@@ -21,6 +21,21 @@ in {
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
 
+  programs.git = {
+    signing = {
+      format = "ssh";
+      key = lib.mkForce "${config.home.homeDirectory}/.ssh/git_signing_ed25519";
+    };
+    settings.gpg.ssh = {
+      program = lib.getExe' pkgs.openssh "ssh-keygen";
+      allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
+    };
+  };
+
+  xdg.configFile."git/allowed_signers".text = ''
+    ${config.my.git.userEmail} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILEY5bJWNajK+ztybM3brdY7bMOA971DhISUocLiZI21
+  '';
+
   nixpkgs.config.allowUnfree = true;
 
   home.username = "sv";
