@@ -1,16 +1,19 @@
 {
-  "lastChangelogVersion": "1.0.4",
+  "lastChangelogVersion": "1.1.0",
   "theme": "dark",
   "defaultProvider": "github-copilot",
-  "defaultModel": "gpt-6.1-sol",
+  "defaultModel": "claude-sonnet-5.5",
   "hideThinkingBlock": true,
+  "defaultTools": [
+    "+codemode"
+  ],
   "editorPaddingX": 0,
   "terminal": {
     "showTerminalProgress": true
   },
   "steeringMode": "one-at-a-time",
   "transport": "auto",
-  "quietStartup": false,
+  "quietStartup": "header",
   "doubleEscapeAction": "tree",
   "enabledModels": [
     "github-copilot/gpt-5.6-luna",
