@@ -23,10 +23,13 @@ sidebar:
   group: project
   collapse_stale: false
   templates:
+    compact: "{status_icon} {git_branch} {pane_suffix} {fill} {elapsed}"
     tiles:
       - "{git_branch}{fill} {pr_number}"
       - "{project} {fill} {git_stats}"
       - "{pr_number} {fill} {pr_checks}"
+    grouped:
+      compact: "{status_icon} {git_branch} {pane_suffix} {fill} {elapsed}"
 
 files:
   copy:
