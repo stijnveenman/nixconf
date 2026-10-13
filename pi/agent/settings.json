@@ -27,9 +27,6 @@
     "github-copilot/claude-sonnet-5.5"
   ],
   "tuiMode": "fullscreen",
-  "extensions": [
-    "-extensions/pi-gh-pr"
-  ],
   "packages": [
     "npm:@narumitw/pi-btw",
     "npm:pi-web-access"
