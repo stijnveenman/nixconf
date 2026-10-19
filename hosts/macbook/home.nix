@@ -3,6 +3,7 @@
   config,
   lib,
   pi,
+  inputs,
   ...
 }: let
   fzf = lib.getExe pkgs.fzf;
@@ -55,6 +56,8 @@ in {
   };
 
   home.sessionVariables = {
+    # Pin nix-shell's <nixpkgs> to this flake's nixpkgs.
+    NIX_PATH = "nixpkgs=${inputs.nixpkgs}";
     RUSH_PARALLELISM = "60%";
     PC_HIDE_DISABLED_PROC = "1";
   };
@@ -67,6 +70,7 @@ in {
     pi.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.todoist-cli
     pkgs.git-crypt
+    pkgs.hunk
 
     # formatting
     pkgs.nixd
