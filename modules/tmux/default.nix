@@ -127,6 +127,9 @@ in {
     set -g @plugin 'catppuccin/tmux'
     set -g @catppuccin_flavor 'mocha'
     set -g @catppuccin_status_background 'none'
+    set -g @catppuccin_window_status_style 'rounded'
+    set -g @catppuccin_window_text ' #W'
+    set -g @catppuccin_window_current_text ' #W'
     set-option -g status-position top
 
     set -g @plugin 'christoomey/vim-tmux-navigator'
@@ -145,5 +148,11 @@ in {
     set -g @floax-title 'Terminal'
 
     run '${config.xdg.configHome}/tmux/plugins/tpm/tpm'
+
+    # catppuccin leaves status-left/right empty; set after the plugin has loaded.
+    set -g status-left-length 100
+    set -g status-right-length 100
+    set -g status-left "#{E:@catppuccin_status_session} "
+    set -g status-right "#{E:@catppuccin_status_date_time}"
   '';
 }
