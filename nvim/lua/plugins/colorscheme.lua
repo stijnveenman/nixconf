@@ -4,8 +4,8 @@ return {
     name = "catppuccin",
     opts = {
       flavour = "mocha",
-      -- Opaque: catppuccin mocha base (#1e1e2e) matches Ghostty's background.
-      transparent_background = false,
+      -- Let Ghostty's background show through so nvim always matches the terminal.
+      transparent_background = true,
     },
   },
 
