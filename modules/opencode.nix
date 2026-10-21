@@ -18,7 +18,7 @@ in {
       };
     };
     tui = {
-      theme = "gruvbox";
+      theme = "catppuccin";
       attention = {
         enabled = true;
         notifications = true;

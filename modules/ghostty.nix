@@ -20,7 +20,7 @@ in {
     enableBashIntegration = lib.mkIf useBash true;
 
     settings = {
-      theme = "Gruvbox Dark";
+      theme = "Catppuccin Mocha";
 
       font-family = "JetBrainsMono Nerd Font Mono";
       font-size = 12;

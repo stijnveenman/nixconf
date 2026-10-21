@@ -1,12 +1,18 @@
 return {
-  -- add gruvbox
-  { "ellisonleao/gruvbox.nvim" },
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    opts = {
+      flavour = "mocha",
+      -- Let Ghostty's background show through so nvim always matches the terminal.
+      transparent_background = true,
+    },
+  },
 
-  -- Configure LazyVim to load gruvbox
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "gruvbox",
+      colorscheme = "catppuccin-mocha",
     },
   },
 }

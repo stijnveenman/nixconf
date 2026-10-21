@@ -124,10 +124,10 @@ in {
     set -g @plugin 'tmux-plugins/tpm'
 
     # --- plugins
-    set -g @plugin 'egel/tmux-gruvbox'
-    set -g @tmux-gruvbox 'dark'
+    set -g @plugin 'catppuccin/tmux'
+    set -g @catppuccin_flavor 'mocha'
+    set -g @catppuccin_status_background 'default'
     set-option -g status-position top
-    set -g @tmux-gruvbox-right-status-z ' '
 
     set -g @plugin 'christoomey/vim-tmux-navigator'
     set -g @vim_navigator_mapping_left "C-h"
