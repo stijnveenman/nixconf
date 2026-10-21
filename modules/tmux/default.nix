@@ -126,12 +126,6 @@ in {
     # --- plugins
     set -g @plugin 'catppuccin/tmux'
     set -g @catppuccin_flavor 'mocha'
-    set -g @catppuccin_status_background 'none'
-    set -g @catppuccin_window_status_style 'basic'
-    # Blocky segments: the powerline glyphs render poorly in the Mono font.
-    set -g @catppuccin_status_left_separator ""
-    set -g @catppuccin_status_right_separator ""
-    set -g @catppuccin_status_middle_separator ""
     set -g @catppuccin_window_text ' #W'
     set -g @catppuccin_window_current_text ' #W'
     set-option -g status-position top
