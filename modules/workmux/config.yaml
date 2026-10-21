@@ -1,5 +1,25 @@
 nerdfont: true
 
+# Catppuccin Mocha (no built-in scheme, so override the palette).
+theme:
+  mode: dark
+  custom:
+    current_row_bg: "#313244"
+    highlight_row_bg: "#45475a"
+    current_worktree_fg: "#89b4fa"
+    dimmed: "#6c7086"
+    text: "#cdd6f4"
+    border: "#585b70"
+    help_border: "#89b4fa"
+    help_muted: "#7f849c"
+    header: "#89b4fa"
+    keycap: "#f9e2af"
+    info: "#89dceb"
+    success: "#a6e3a1"
+    warning: "#f9e2af"
+    danger: "#f38ba8"
+    accent: "#cba6f7"
+
 base_branch: origin/main
 agent: pi
 confirm_unmerged_removal: false
