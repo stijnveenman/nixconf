@@ -126,7 +126,7 @@ in {
     # --- plugins
     set -g @plugin 'catppuccin/tmux'
     set -g @catppuccin_flavor 'mocha'
-    set -g @catppuccin_status_background 'default'
+    set -g @catppuccin_status_background 'none'
     set-option -g status-position top
 
     set -g @plugin 'christoomey/vim-tmux-navigator'
