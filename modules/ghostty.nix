@@ -22,7 +22,7 @@ in {
     settings = {
       theme = "Catppuccin Mocha";
 
-      font-family = "JetBrainsMono Nerd Font";
+      font-family = "JetBrainsMono Nerd Font Mono";
       font-size = 12;
       # Disable programming ligatures (e.g. != stays as two glyphs).
       font-feature = ["-calt" "-liga" "-dlig"];
