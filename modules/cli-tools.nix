@@ -34,6 +34,6 @@ in {
 
   programs.gh = {
     enable = true;
-    extensions = [pkgs.gh-poi];
+    extensions = [pkgs.gh-poi pkgs.gh-stack];
   };
 }
