@@ -148,8 +148,18 @@ in {
       update.method = "never"; # no periodic update checks
 
       gui = {
-        theme.branchColorPatterns = {
-          config = "#11aaff";
+        # Catppuccin Mocha (blue accent).
+        theme = {
+          activeBorderColor = ["#89b4fa" "bold"];
+          inactiveBorderColor = ["#a6adc8"];
+          optionsTextColor = ["#89b4fa"];
+          selectedLineBgColor = ["#313244"];
+          cherryPickedCommitBgColor = ["#45475a"];
+          cherryPickedCommitFgColor = ["#89b4fa"];
+          unstagedChangesColor = ["#f38ba8"];
+          defaultFgColor = ["#cdd6f4"];
+          searchingActiveBorderColor = ["#f9e2af"];
+          branchColorPatterns.config = "#11aaff";
         };
 
         # Remove the submodules and tags panels.
