@@ -4,6 +4,7 @@
   # tuicr reads this from $XDG_CONFIG_HOME/tuicr/config.toml.
   # These settings fit the Catppuccin/Ghostty, Neovim, and PR-review workflow.
   xdg.configFile."tuicr/config.toml".text = ''
+    theme = "catppuccin-mocha"
     diff_view = "side-by-side"
     compact_folders = true
     show_pr_checks = true
