@@ -43,6 +43,10 @@ If switch (activation) fails:
 - After a successful switch, reload tmux with
   `tmux source-file ~/.config/tmux/tmux.conf` (or restart tmux).
 
+## Searching packages
+
+Always use `nh search <query>` to find packages; do not use `nix search`.
+
 ## Formatting
 
 `.nix` files in this repo are formatted with
