@@ -12,6 +12,10 @@
     inherit lib pkgs workmux;
   };
 
+  tpadRun = import ./scripts/tpad-run.nix {
+    inherit lib pkgs workmux;
+  };
+
   tmuxSessionSwitcher = pkgs.writeShellScript "tmux-session-switcher" ''
     set -euo pipefail
 
@@ -53,7 +57,7 @@ in {
 
   programs.sesh = {
     enable = true;
-    settings.blacklist = ["^scratch$"];
+    settings.blacklist = ["^scratch$" "^tpad_"];
   };
 
   xdg.configFile."tmux/plugins/tpm" = {
@@ -90,11 +94,8 @@ in {
     # Forward O unchanged when a non-sidebar pane is focused.
     bind-key -n O if-shell -F '#{==:#{@workmux_role},sidebar}' 'run-shell -b "${config.home.homeDirectory}/.local/bin/workmux-sidebar-open-pr || true"' 'send-keys O'
 
-    bind-key -n C-g display-popup -E -w 80% -h 80% lazygit
-
     # Replace tmux's default worktree picker binding.
     unbind w
-    bind f display-popup -E -w 80% -h 80% -d "#{pane_current_path}" "workmux dashboard --tab worktrees --preview-size 10"
     bind F run-shell "${tmuxSessionSwitcher}"
 
     set-option -g pane-border-status top
@@ -138,13 +139,28 @@ in {
     set -g @vim_navigator_mapping_down "C-j"
     set -g @vim_navigator_mapping_prev ""
 
-    # Replace tmux's built-in ephemeral popup with FloaX's persistent
-    # floating terminal while preserving the existing global Ctrl-/ toggle.
-    set -g @plugin 'omerxx/tmux-floax'
-    set -g @floax-bind '-n C-_'
-    set -g @floax-width '80%'
-    set -g @floax-height '50%'
-    set -g @floax-title 'Terminal'
+    # Floating windows via tmux-tpad (root table: no prefix needed).
+    set -g @plugin 'Subbeh/tmux-tpad'
+
+    set -g @tpad-scratchpad-cmd    "${tpadRun} zsh"
+    set -g @tpad-scratchpad-bind   "C-_"
+    set -g @tpad-scratchpad-table  "root"
+    set -g @tpad-scratchpad-width  "80%"
+    set -g @tpad-scratchpad-height "50%"
+    set -g @tpad-scratchpad-dir    "#{pane_current_path}"
+
+    set -g @tpad-git-bind          "C-g"
+    set -g @tpad-git-table         "root"
+    set -g @tpad-git-cmd           "${tpadRun} lazygit"
+    set -g @tpad-git-per-dir       "true"
+    set -g @tpad-git-width         "80%"
+    set -g @tpad-git-height        "80%"
+
+    set -g @tpad-dashboard-bind    "f"
+    set -g @tpad-dashboard-cmd     "${tpadRun} workmux dashboard --tab worktrees --preview-size 10"
+    set -g @tpad-dashboard-dir     "#{pane_current_path}"
+    set -g @tpad-dashboard-width   "80%"
+    set -g @tpad-dashboard-height  "80%"
 
     run '${config.xdg.configHome}/tmux/plugins/tpm/tpm'
 

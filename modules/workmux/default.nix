@@ -11,19 +11,13 @@ in {
   home.packages = [workmuxPackage];
 
   programs.zsh.initContent = lib.mkAfter ''
-    # FLOAX_SESSION_NAME is global to the tmux server, so use it only as the
-    # configured target session after confirming this shell's current session.
-    __floax_workmux_setup() {
+    # Apply the workmux wrappers only inside the tmux-tpad scratchpad session.
+    __tpad_workmux_setup() {
       [[ -n "''${TMUX-}" ]] || return
 
-      local current_session floax_session argument
+      local current_session argument
       current_session="$(${tmux} display-message -p '#S' 2>/dev/null)" || return
-      floax_session="$(${tmux} show-environment -g FLOAX_SESSION_NAME 2>/dev/null)" || return
-      [[ "$floax_session" == FLOAX_SESSION_NAME=* ]] || return
-      floax_session="''${floax_session#FLOAX_SESSION_NAME=}"
-      [[ "$current_session" == "$floax_session" ]] || return
-
-      command ${workmuxExe} sidebar --session off
+      [[ "$current_session" == tpad_scratchpad* ]] || return
 
       workmux() {
         if [[ "$1" == add ]]; then
@@ -43,16 +37,16 @@ in {
         fi
       }
 
-      typeset -g __floax_workmux_configured=1
+      typeset -g __tpad_workmux_configured=1
     }
 
-    __floax_workmux_hook() {
-      [[ -n "''${__floax_workmux_configured-}" ]] || __floax_workmux_setup
+    __tpad_workmux_hook() {
+      [[ -n "''${__tpad_workmux_configured-}" ]] || __tpad_workmux_setup
     }
 
     autoload -Uz add-zsh-hook
-    add-zsh-hook precmd __floax_workmux_hook
-    __floax_workmux_hook
+    add-zsh-hook precmd __tpad_workmux_hook
+    __tpad_workmux_hook
   '';
 
   xdg.configFile."workmux/config.yaml".source = ./config.yaml;

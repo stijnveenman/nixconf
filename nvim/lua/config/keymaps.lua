@@ -8,7 +8,7 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move line down" })
 
 vim.keymap.set("i", "jj", "<Esc>", { desc = "Escape insert mode" })
 
--- Leave Ctrl-/ available for tmux's global popup binding.
+-- Leave Ctrl-/ available for tmux-tpad's scratchpad binding.
 for _, mode in ipairs({ "n", "t" }) do
   for _, lhs in ipairs({ "<C-/>", "<C-_>" }) do
     pcall(vim.keymap.del, mode, lhs)
