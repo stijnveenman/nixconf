@@ -25,10 +25,12 @@ metadata:
 - Read and list commands commonly support `--json`, but other output and pagination flags vary by family. Many list commands support subsets of `--ndjson`, `--ids-only`, `--full`, `--raw`, `--limit <n>`, `--all`, `--cursor <cursor>`, or `--show-urls`; check `td <command> --help` for the exact surface.
 - When supported, `--ids-only` prints one stable result ID per line with no empty-state text. Any incomplete-page notice goes to stderr, so stdout remains pipeable. It is mutually exclusive with `--json` and `--ndjson`. Check `td <command> --help` for support and the type of ID returned.
 - Create and update commands commonly support `--json` to return the created or updated entity.
-- Mutating commands support `--dry-run` to preview actions without executing them.
+- Check `td <command> --help` for `--dry-run` before previewing a mutation. Unsupported commands reject the flag without sending a write.
+- Todoist data mutations without a returned entity support `--json`: successful writes emit `ok`, `command`, and `messages`; dry runs emit `status: "preview"`, `command`, and `messages`. Errors use the standard JSON error envelope. Check help for other command families.
+- `td --help --json` emits a machine-readable command tree. Use `td <command> --help --json` for one command family or subcommand.
 - Destructive commands typically require `--yes`.
 - `--quiet` / `-q` suppresses success messages. Create commands still print the bare ID for scripting (e.g. `id=$(td task add "Buy milk" --quiet)`).
-- Global flags: `--no-spinner`, `--progress-jsonl`, `-v/--verbose`, `--accessible`, `--quiet`, `--user <id|email>`.
+- Global flags: `--no-spinner`, `--progress-jsonl`, `-v/--verbose`, `--accessible`, `--quiet`, `--user <id|email>`. `TD_USER` is read as the fallback for `--user`.
 
 ## Authentication
 
@@ -68,7 +70,7 @@ Combine freely with `--read-only` to keep data access read-only while still gran
 
 Tokens are stored in the OS credential manager by default. If it is unavailable, credential writes fail without a plaintext fallback. Pass `--credential-store=plaintext` to `td auth login` or `td auth token` only when you explicitly accept plaintext config-file storage; every such write emits a warning to stderr. `TODOIST_API_TOKEN` takes precedence over stored credentials.
 
-`td auth token view` writes the stored token to stdout for use in scripts. **Always capture it into a shell variable** (e.g. `TOKEN=$(td auth token view)`) — never invoke it bare in an agent transcript or piped to a shell that echoes its output, since that would leak the secret. Honors `--user <id|email>` for multi-account installs and refuses when `TODOIST_API_TOKEN` is set in the environment (the token is already available there).
+`td auth token view` writes the stored token to stdout for use in scripts. **Always capture it into a shell variable** (e.g. `TOKEN=$(td auth token view)`) — never invoke it bare in an agent transcript or piped to a shell that echoes its output, since that would leak the secret. Honors `--user <id|email>` (falling back to `TD_USER`) for multi-account installs and refuses when `TODOIST_API_TOKEN` is set in the environment (the token is already available there).
 
 ## Multi-user
 
@@ -82,12 +84,13 @@ td accounts use <id|email>             # set the default account (alias: td acco
 td accounts current                    # show the active account (--json/--ndjson supported)
 td accounts remove <id|email>          # delete an account and its token (--json/--ndjson supported)
 td --user <id|email> task list         # one-off override for any command
+TD_USER=<id|email> td task list        # same, for every nested call in a script
 td auth logout --user <id|email>       # log out a specific account
 ```
 
 `td accounts` is also available as `td user` / `td users` (back-compat aliases).
 
-Resolution order: `--user <ref>` > `user.defaultUser` from config > the only stored account. With multiple accounts and no default, commands error and ask for `--user` (or `td accounts use`). `<ref>` matches an exact id or email (case-insensitive on email). `TODOIST_API_TOKEN` still bypasses the resolver entirely.
+Resolution order: `--user <ref>` > `TD_USER` > `user.defaultUser` from config > the only stored account. With multiple accounts and no default, commands error and ask for `--user` (or `td accounts use`). `<ref>` matches an exact id or email (case-insensitive on email). `TODOIST_API_TOKEN` still bypasses the resolver entirely.
 
 ## Quick Reference
 
@@ -100,6 +103,7 @@ Resolution order: `--user <ref>` > `user.defaultUser` from config > the only sto
 - Templates and files: `td template ...`, `td attachment view <file-url>`, `td backup ...`
 - Help Center: `td hc locales/search/view`
 - Account and tooling: `td stats`, `td settings ...`, `td config view`, `td accounts ...`, `td completion ...`, `td view <todoist-url>`, `td doctor`, `td update`, `td changelog`
+- Extensions: `td extension create/install/list/upgrade/remove/exec` (alias: `td ext`)
 - Developer apps: `td apps list/view` (requires `td auth login --additional-scopes=app-management`)
 - Backups: `td backup list/download` (requires `td auth login --additional-scopes=backups`)
 - Billing: `td billing subscription/plan/prices/pricing` (requires `td auth login --additional-scopes=billing`)
@@ -288,8 +292,11 @@ td attachment view "https://files.todoist.com/..."
 td notification list --unread
 td notification view id:123
 td notification accept id:123
+td notification accept id:123 --dry-run
 td notification reject id:123
 td notification read --all --yes
+td notification read --all --dry-run
+td notification unread id:123 --json
 
 td reminder list "Plan sprint"
 td reminder list --type time
@@ -357,6 +364,8 @@ td apps update id:9909 --add-oauth-redirect https://example.com/callback
 td apps update id:9909 --remove-oauth-redirect https://example.com/callback --yes
 td apps update id:9909 --set-webhook-url https://example.com/webhook
 td apps update id:9909 --name "My App" --description "New blurb" --set-webhook-url https://example.com/webhook
+td apps update id:9909 --icon ./icon.png
+td apps update id:9909 --icon ./icon-60.png --icon-size small
 td apps delete id:9909 --yes
 ```
 
@@ -366,15 +375,17 @@ The `apps` command surface manages the user's registered Todoist developer apps 
 
 `td apps view <ref>` accepts a name (fuzzy/case-insensitive), `id:N`, or a raw numeric id. Plain output shows display name as a header, then a labelled key/value block (id, status, users, created date, service URL, OAuth redirect, token scopes, icon URL, client id) followed by the description. Webhook configuration is always fetched (`getAppWebhook` — callback URL is user-supplied, not a secret). When the app has UI extensions, a `UI extensions:` section lists each one as `<name> (<type>[: <sub-type>])` (type is `context-menu`/`composer`/`settings`; sub-type is the `context-menu` context `project`/`task` or the `composer` location `task`/`comment`), followed by an `Install URL:` line (`https://app.todoist.com/app/install/<distribution_token>`) — the link shared so others can install the integration. In `--json` / `--ndjson` the payload always carries `uiExtensions`, `distributionToken`, and `installUrl` (the last is `null` when there are no UI extensions). When `--include-secrets` is set, the command additionally fetches the app's secrets (`client_secret`), verification token, and test token.
 
-All `td apps update` flags combine in a single invocation, which performs up to two API calls: an app-record patch (`updateApp`, carrying any of display name, description, OAuth redirect URIs) followed by a webhook URL swap (`updateAppWebhook`, a separate endpoint). The record patch runs first; if it succeeds and the webhook call then fails, the record change stays persisted (no rollback). Passing no flags errors with `NO_CHANGES`. The only mutually-exclusive pair is `--add-oauth-redirect` + `--remove-oauth-redirect` (they read-modify-write the same field) → `CONFLICTING_OPTIONS`.
+All `td apps update` flags combine in a single invocation, which performs up to three API calls, in this order: an app-record patch (`updateApp`, carrying any of display name, description, OAuth redirect URIs), an icon upload (`uploadAppIcon`), and a webhook URL swap (`updateAppWebhook`, a separate endpoint). If a later call fails, the earlier changes stay persisted (no rollback). Passing no flags errors with `NO_CHANGES`. The only mutually-exclusive pair is `--add-oauth-redirect` + `--remove-oauth-redirect` (they read-modify-write the same field) → `CONFLICTING_OPTIONS`.
 
 `--name <name>` sets the app's display name (SDK `displayName`) and `--description <description>` sets its description; an empty `--description ""` clears the description, while an empty/whitespace `--name` is rejected with `INVALID_OPTIONS`.
 
-`--add-oauth-redirect <url>` appends an OAuth redirect URI to the app, and `--remove-oauth-redirect <url>` takes one off (requires `--yes` to actually mutate, like `td task delete`). The URI is validated before any API call: `https://<host>`, `http(s)://localhost[:port][/path]`, `http(s)://127.0.0.1[:port][/path]`, or a custom-scheme URI (e.g. `myapp://callback`) are accepted; `javascript`, `data`, `file`, `vbscript`, and `ftp` custom schemes are rejected. Removals skip validation so users can clean up legacy malformed URIs. Adding a URI already set on the app fails with `ALREADY_EXISTS`; removing a URI that isn't on the app is a no-op (message, no API call). A real removal gates the whole invocation: without `--yes` nothing is performed (plain output prints a batch "would update" preview; `--json` throws `CONFIRMATION_REQUIRED`), so any name/description/webhook change in the same command is withheld too.
+`--add-oauth-redirect <url>` appends an OAuth redirect URI to the app, and `--remove-oauth-redirect <url>` takes one off (requires `--yes` to actually mutate, like `td task delete`). The URI is validated before any API call: `https://<host>`, `http(s)://localhost[:port][/path]`, `http(s)://127.0.0.1[:port][/path]`, or a custom-scheme URI (e.g. `myapp://callback`) are accepted; `javascript`, `data`, `file`, `vbscript`, and `ftp` custom schemes are rejected. Removals skip validation so users can clean up legacy malformed URIs. Adding a URI already set on the app fails with `ALREADY_EXISTS`; removing a URI that isn't on the app is a no-op (message, no API call). A real removal gates the whole invocation: without `--yes` nothing is performed (plain output prints a batch "would update" preview; `--json` throws `CONFIRMATION_REQUIRED`), so any name/description/icon/webhook change in the same command is withheld too.
 
 `--set-webhook-url <url>` swaps the callback URL on the app's existing webhook. The webhook holds a single URL, so this is a straight set; the current webhook's event list and version are read (`getAppWebhook`) and preserved — only the URL changes. It errors with `NO_WEBHOOK` if the app has no webhook configured yet (a webhook must exist before its URL can be changed, since creating one needs an event list). The URL must be a public `https://<host>` URL. Setting the URL to the value already configured is a no-op (message, no API call).
 
-`--dry-run` prints one combined preview of every pending change. `--json` output shape depends on which surfaces the flags touched: a lone app-record change emits the bare app object, a lone webhook change emits the bare webhook object, and touching both emits `{ "app": <app>, "webhook": <webhook> }`.
+`--icon <path>` uploads a local PNG or JPEG (`.png`, `.jpg`, `.jpeg`) as the app's icon. Apps have three independent icon slots, picked with `--icon-size`: `small` (60×60, max 8KB), `medium` (300×300, max 300KB — the default when `--icon-size` is omitted, and the one the web app console sets), and `large` (600×600, max 500KB). Uploading to one slot does not fill the others. The extension and file size are checked before any API call (`INVALID_TYPE` / `FILE_TOO_LARGE`; a missing file is `FILE_NOT_FOUND`); exact pixel dimensions are checked by the server, which rejects a mismatch. `--icon-size` without `--icon` is `INVALID_OPTIONS`. An upload is never treated as a no-op, since the new file can't be compared with the stored icon. The resulting URLs appear as `iconSm` / `iconMd` / `iconLg` in `td apps view --json`.
+
+`--dry-run` prints one combined preview of every pending change. `--json` output shape depends on which surfaces the flags touched: a lone app change (record fields and/or `--icon`) emits the bare app object, a lone webhook change emits the bare webhook object, and touching both emits `{ "app": <app>, "webhook": <webhook> }`.
 
 `td apps delete <ref>` deletes a registered app (resolved by name, `id:N`, or raw numeric id). **This is destructive and irreversible: deleting an app immediately breaks it for everyone who uses it — any user who authorized the integration loses access, and the app cannot be restored. Always confirm with the user that they are sure before running with `--yes`.** It requires `--yes` to actually delete; without it the command prints a `Would delete app: …` preview and makes no API call (same convention as `td folder delete` / `td workspace delete`). `--dry-run` prints the standard dry-run preview.
 
@@ -393,14 +404,39 @@ The `billing` command surface is **read-only** and requires the `billing` OAuth 
 
 `td billing subscription` (the default subcommand) shows the current plan, status, activation method, expiration date, plan price, invoice credit balance, and billing-portal URLs when present. `td billing plan` shows Pro plan status, downgrade date, and the per-cycle price list. `td billing prices` lists available Pro and Teams prices by billing cycle. `td billing pricing` shows current and legacy pricing keyed by version; `--formatted` returns localized price strings instead of minor-unit numbers.
 
+### Extensions
+
+An extension is an executable named `td-<name>` that td runs as `td <name> ...`. It can be written in any language; the contract is the process boundary, not a JavaScript API.
+
+```bash
+td extension create goals              # scaffold one (--template bash|node)
+td extension install owner/td-goals    # from a GitHub release or a clone
+td extension install --pin v0.3.0 owner/td-goals
+td extension install ./td-scratch      # a local directory, symlinked, for development
+td extension list                      # --json for the full record of each one
+td extension upgrade --all             # --dry-run to preview; --force to pass a pin
+td extension remove goals              # --force for a clone with uncommitted changes
+td extension exec goals list --json    # bypass the built-in commands entirely
+```
+
+Two rules matter when calling one:
+
+- Everything after the extension name is passed through untouched. `td goals --json` is `--json` for `goals`, not for td. Global flags only apply before the name: `td --user alice goals list`.
+- td exits with the extension's exit code.
+
+An extension is not reviewed or endorsed by Todoist, and runs with the user's own permissions.
+
 ### Settings, Stats, And Utilities
 ```bash
 td stats
 td stats goals --daily 10 --weekly 50
+td stats goals --daily 10 --dry-run
 td stats vacation --on
+td stats vacation --off --dry-run
 
 td settings view
 td settings update --timezone "America/New_York" --time-format 24 --date-format intl
+td settings update --timezone UTC --dry-run
 td settings themes
 
 td config view
