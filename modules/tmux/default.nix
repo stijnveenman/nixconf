@@ -12,7 +12,7 @@
     inherit lib pkgs workmux;
   };
 
-  tpadRun = import ./scripts/tpad-run.nix {
+  workmuxSidebarSessionHook = import ./scripts/workmux-sidebar-session-hook.nix {
     inherit lib pkgs workmux;
   };
 
@@ -86,9 +86,12 @@ in {
     bind x kill-pane
     unbind l
     bind l run-shell "workmux last-done"
-    bind b run-shell "workmux sidebar"
+    bind b run-shell "workmux sidebar --session"
     bind [ run-shell "workmux sidebar prev"
     bind ] run-shell "workmux sidebar next"
+
+    # Enable the workmux sidebar per session (not globally); tpad sessions skipped.
+    set-hook -g session-created 'run-shell -b "${workmuxSidebarSessionHook} #{hook_session_name}"'
 
     # Open the highlighted sidebar row's pull request without blocking tmux.
     # Forward O unchanged when a non-sidebar pane is focused.
@@ -142,7 +145,7 @@ in {
     # Floating windows via tmux-tpad (root table: no prefix needed).
     set -g @plugin 'Subbeh/tmux-tpad'
 
-    set -g @tpad-scratchpad-cmd    "${tpadRun} zsh"
+    set -g @tpad-scratchpad-cmd    "zsh"
     set -g @tpad-scratchpad-bind   "C-_"
     set -g @tpad-scratchpad-table  "root"
     set -g @tpad-scratchpad-width  "80%"
@@ -151,13 +154,13 @@ in {
 
     set -g @tpad-git-bind          "C-g"
     set -g @tpad-git-table         "root"
-    set -g @tpad-git-cmd           "${tpadRun} lazygit"
+    set -g @tpad-git-cmd           "lazygit"
     set -g @tpad-git-per-dir       "true"
     set -g @tpad-git-width         "80%"
     set -g @tpad-git-height        "80%"
 
     set -g @tpad-dashboard-bind    "f"
-    set -g @tpad-dashboard-cmd     "${tpadRun} workmux dashboard --tab worktrees --preview-size 10"
+    set -g @tpad-dashboard-cmd     "workmux dashboard --tab worktrees --preview-size 10"
     set -g @tpad-dashboard-dir     "#{pane_current_path}"
     set -g @tpad-dashboard-width   "80%"
     set -g @tpad-dashboard-height  "80%"
