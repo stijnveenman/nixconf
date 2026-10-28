@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.3.0",
+  "lastChangelogVersion": "1.4.0",
   "theme": "system",
   "defaultProvider": "github-copilot",
   "defaultModel": "claude-sonnet-5.5",
@@ -16,9 +16,12 @@
   "quietStartup": false,
   "doubleEscapeAction": "tree",
   "enabledModels": [
-    "github-copilot/claude-haiku-4.5",
     "github-copilot/claude-opus-5.5",
-    "github-copilot/claude-sonnet-5.5"
+    "github-copilot/claude-sonnet-5.5",
+    "github-copilot/claude-haiku-5.5",
+    "github-copilot/gpt-6.1-sol",
+    "github-copilot/gpt-6.1-terra",
+    "github-copilot/gpt-6-luna"
   ],
   "tuiMode": "fullscreen",
   "packages": [
