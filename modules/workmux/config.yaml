@@ -56,51 +56,42 @@ files:
     - ".workmux.yaml"
 
 agents:
-  low-effort:
+  opus:
     type: pi
-    when: for straightforward text, configuration changes or scaffolding
-    description: Simple Cheap Low effort agent
+    description: claude-opus-5.5
     args:
       - --model
-      - github-copilot/gpt-6-luna
-      - --thinking
-      - minimal
-  migrator:
+      - github-copilot/claude-opus-5.5
+  sonnet:
     type: pi
-    when: for easy slightly involved work live renames and migrations
-    description: Simple rename or migration
+    description: claude-sonnet-5.5
     args:
       - --model
-      - github-copilot/gpt-6-luna
-      - --thinking
-      - low
-  basic-feature:
+      - github-copilot/claude-sonnet-5.5
+  haiku:
     type: pi
-    when: for straightforward general purpose feature work
-    description: For basic feature work
+    description: claude-haiku-5.5
     args:
       - --model
-      - github-copilot/gpt-6.1-sol
-      - --thinking
-      - medium
-  involved-feature:
+      - github-copilot/claude-haiku-5.5
+  gpt-sol:
     type: pi
-    when: for an involved feature touching multiple components or requiring more research
-    description: For involved feature work
+    description: gpt-6.1-sol
     args:
       - --model
       - github-copilot/gpt-6.1-sol
-      - --thinking
-      - medium
-  architecture:
+  gpt-terra:
     type: pi
-    when: for complex work on fundamental code, impacting the entire codebase
-    description: For complex fundamental codeSimple rename or migration
+    description: gpt-6.1-terra
     args:
       - --model
-      - github-copilot/gpt-6-astra
-      - --thinking
-      - medium
+      - github-copilot/gpt-6.1-terra
+  gpt-luna:
+    type: pi
+    description: gpt-6-luna
+    args:
+      - --model
+      - github-copilot/gpt-6-luna
 
 #-------------------------------------------------------------------------------
 # Dashboard
