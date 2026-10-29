@@ -25,7 +25,7 @@ in {
   programs.git = {
     signing = {
       format = "ssh";
-      key = lib.mkForce "${config.home.homeDirectory}/.ssh/git_signing_ed25519";
+      key = lib.mkForce "${config.home.homeDirectory}/.ssh/id_ed25519";
     };
     settings.gpg.ssh = {
       program = lib.getExe' pkgs.openssh "ssh-keygen";
@@ -34,7 +34,7 @@ in {
   };
 
   xdg.configFile."git/allowed_signers".text = ''
-    ${config.my.git.userEmail} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILEY5bJWNajK+ztybM3brdY7bMOA971DhISUocLiZI21
+    ${config.my.git.userEmail} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIORX2ooYwWuacnHMvtFDoEGiNeJs1XllK/e+MZzrpkuf
   '';
 
   nixpkgs.config.allowUnfree = true;
