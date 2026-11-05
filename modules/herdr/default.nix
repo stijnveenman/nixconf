@@ -40,6 +40,7 @@
   };
 in {
   home.packages = [herdr pkgs.bash pkgs.fzf pkgs.git pkgs.jq pkgs.worktrunk];
+  home.file.".local/bin/wt-start".source = import ./scripts/wt-start.nix {inherit inputs lib pkgs;};
 
   programs.zoxide = {
     enable = true;
