@@ -7,6 +7,7 @@
   herdr = inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
   plugins = [inputs.herdr-worktrunk.outPath inputs.smart-splits.outPath];
   inherit (import ./lib.nix {inherit lib;}) pluginEntry action;
+  popupSize = "80%";
   settings = {
     onboarding = false;
     ui.prompt_new_tab_name = false;
@@ -31,8 +32,8 @@
           type = "popup";
           command = lib.getExe pkgs.lazygit;
           description = "lazygit";
-          width = "80%";
-          height = "80%";
+          width = popupSize;
+          height = popupSize;
         }
       ];
     };
@@ -49,4 +50,10 @@ in {
 
   xdg.configFile."herdr/config.toml".source = (pkgs.formats.toml {}).generate "herdr-config.toml" settings;
   xdg.configFile."herdr/plugins.json".text = builtins.toJSON (map pluginEntry plugins);
+  xdg.configFile."herdr/plugins/config/worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "herdr-worktrunk-config.toml" {
+    slugify_new_branches = true;
+    picker_placement = "popup";
+    popup_width = popupSize;
+    popup_height = popupSize;
+  };
 }
