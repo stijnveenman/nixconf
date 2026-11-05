@@ -6,4 +6,4 @@ Commits should be:
 - use lowercase, imperative mood, succint commit messages
 
 If a branch already has an upstream branch, push after committing
-DO NOT create a upstream unless asked explicitly
+DO NOT create a upstream unless asked explicitly. When asked to create a branch, this counts as permission to push upstream
