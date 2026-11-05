@@ -36,12 +36,11 @@ If switch (activation) fails:
   resolve the failure, including conflicts with existing configuration files.
 - Leave remediation to the user unless they later make a separate request.
 
-## Reload notes (`nh` and `tmux`)
+## Reload notes
 
-- `nh` does not have a separate daemon reload step; use the normal build and
-  switch workflow.
-- After a successful switch, reload tmux with
-  `tmux source-file ~/.config/tmux/tmux.conf` (or restart tmux).
+`nh` does not have a separate daemon reload step; use the normal build and
+switch workflow. Reload a running Herdr server after changing its config with
+`herdr server reload-config`.
 
 ## Searching packages
 
@@ -53,6 +52,11 @@ Always use `nh search <query>` to find packages; do not use `nix search`.
 [`alejandra`](https://github.com/kamadorueda/alejandra) (available on `PATH`).
 When you edit a `.nix` file, you may run `alejandra <file>` (or `alejandra .`)
 before building to keep formatting consistent.
+
+## Upstream code changes
+
+Never add package patches to implement behavior that requires upstream code
+changes. Explain the limitation and leave upstream behavior unchanged.
 
 ## Script conventions
 

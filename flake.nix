@@ -10,8 +10,17 @@
 
     niri.url = "github:sodiboo/niri-flake";
 
-    workmux.url = "github:raine/workmux";
-    workmux.inputs.nixpkgs.follows = "nixpkgs";
+    herdr.url = "github:herdrdev/herdr/v0.9.5";
+    herdr.inputs.nixpkgs.follows = "nixpkgs";
+
+    herdr-worktrunk = {
+      url = "github:devashish2203/herdr-worktrunk/f9df9ba700b8a4f4d97ddfe3ea3eb345e80b880b";
+      flake = false;
+    };
+    smart-splits = {
+      url = "github:mrjones2014/smart-splits.nvim/0ab2e4928dc867dfea3ff1da186e69f289d8a532";
+      flake = false;
+    };
   };
 
   outputs = inputs: {

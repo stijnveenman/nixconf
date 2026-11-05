@@ -5,10 +5,7 @@
   pi,
   inputs,
   ...
-}: let
-  fzf = lib.getExe pkgs.fzf;
-  git = lib.getExe pkgs.git;
-in {
+}: {
   imports = [
     ../../modules/git.nix
     ../../modules/cli-tools.nix
@@ -17,7 +14,7 @@ in {
     ../../modules/opencode.nix
     ../../modules/pi.nix
     ../../modules/raycast
-    ../../modules/tmux
+    ../../modules/herdr
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
@@ -112,8 +109,6 @@ in {
       ac = "cd ~/Documents/airport-control/";
 
       lg = "lazygit";
-      wm = "workmux";
-      wmob = ''branch="$(${git} branch --format='%(refname:short)' | ${fzf} --height=5)"; [[ -n "$branch" ]] && workmux add "$branch"'';
       o = "opencode";
       x = "opencode";
     };
