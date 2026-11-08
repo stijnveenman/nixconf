@@ -49,6 +49,10 @@ in {
     enableZshIntegration = true;
   };
 
+  xdg.configFile."worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "worktrunk-config.toml" {
+    post-remove.herdr = "${import ./scripts/wt-remove.nix {inherit inputs lib pkgs;}} {{ worktree_path }}";
+  };
+
   xdg.configFile."herdr/config.toml".source = (pkgs.formats.toml {}).generate "herdr-config.toml" settings;
   xdg.configFile."herdr/plugins.json".text = builtins.toJSON (map pluginEntry plugins);
   xdg.configFile."herdr/plugins/config/worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "herdr-worktrunk-config.toml" {
