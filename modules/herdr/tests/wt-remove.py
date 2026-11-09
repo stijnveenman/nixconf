@@ -60,8 +60,25 @@ fi
         path = self.root / "checkout"
         path.mkdir()
         self.workspace_data(path)
-        self.assertEqual(self.run_hook(path).returncode, 0)
+        result = self.run_hook(path, WT_HERDR_REMOVE_TIMEOUT="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"checkout still exists", result.stderr)
         self.assertEqual(self.calls(), [])
+
+    def test_waits_for_background_removal(self):
+        path = self.root / "checkout"
+        path.mkdir()
+        self.workspace_data(path)
+        process = subprocess.Popen([self.wrapper, str(path)], env=self.env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.addCleanup(lambda: process.kill() if process.poll() is None else None)
+        time.sleep(0.5)
+        self.assertIsNone(process.poll())
+        self.assertEqual(self.calls(), [])
+        path.rmdir()
+        _, stderr = process.communicate(timeout=10)
+        self.assertEqual(process.returncode, 0, stderr)
+        self.assertEqual(self.calls(), ["workspace list", "workspace close w-feature"])
 
     def test_no_match_and_server_failure(self):
         path = self.root / "checkout"
@@ -86,6 +103,26 @@ fi
         config.write_text(f'[post-remove]\nherdr = "{self.wrapper} {{{{ worktree_path }}}}"\n')
         subprocess.run(["wt", "--config", str(config), "-C", str(repo), "remove", "--foreground", "feature"],
                        check=True, env=self.env, capture_output=True)
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and "workspace close w-feature" not in self.calls():
+            time.sleep(0.05)
+        self.assertFalse(checkout.exists())
+        self.assertEqual(self.calls(), ["workspace list", "workspace close w-feature"])
+
+    def test_worktrunk_background_remove_from_worktree(self):
+        repo = self.root / "repo"
+        repo.mkdir()
+        def git(*args):
+            subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
+        git("init", "-b", "main")
+        git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--allow-empty", "-m", "initial")
+        checkout = self.root / "feature checkout"
+        git("worktree", "add", "-b", "feature", str(checkout))
+        self.workspace_data(checkout.resolve())
+        config = self.root / "config.toml"
+        config.write_text(f'[post-remove]\nherdr = "{self.wrapper} {{{{ worktree_path }}}}"\n')
+        subprocess.run(["wt", "--config", str(config), "remove", "--no-delete-branch"],
+                       cwd=checkout, check=True, env=self.env, capture_output=True)
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline and "workspace close w-feature" not in self.calls():
             time.sleep(0.05)
