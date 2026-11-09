@@ -88,10 +88,33 @@ name=${name,,}
 name=${name:0:32}
 
 "$herdr" agent start "$name" --kind pi --pane "$pane" --timeout 60000 >/dev/null
-if [ -n "$prompt" ]; then
-  "$herdr" agent prompt "$name" "$prompt" >/dev/null
-fi
 if "$focus"; then
   "$herdr" agent focus "$name" >/dev/null
+fi
+if [ -n "$prompt" ]; then
+  # Herdr can report Pi ready while its project-trust selector is still open.
+  # Pi sets this title after its interactive UI and startup extensions initialize.
+  deadline=$((SECONDS + 300))
+  announced=false
+  while :; do
+    agent_json=$("$herdr" agent get "$name") || fail "cannot inspect $name; prompt was not sent"
+    title=$(printf '%s\n' "$agent_json" | "$jq" -r '.result.agent.terminal_title_stripped // ""')
+    status=$(printf '%s\n' "$agent_json" | "$jq" -r '.result.agent.agent_status // ""')
+    if [[ $title == 'π - '* ]]; then
+      [ "$status" != blocked ] || fail "$name is blocked; prompt was not sent"
+      break
+    fi
+    if ! "$announced"; then
+      printf 'Waiting for Pi startup in %s; resolve any project-trust dialog there.\n' "$name" >&2
+      announced=true
+    fi
+    [ "$SECONDS" -lt "$deadline" ] || fail "timed out waiting for $name; prompt was not sent"
+    sleep 0.25
+  done
+  # Confirm the turn starts, but do not wait for the task to finish or retry a
+  # stalled submission: Herdr cannot prove that a timed-out prompt was lost.
+  if ! "$herdr" agent prompt "$name" "$prompt" --wait --until working --timeout 15000 >/dev/null; then
+    fail "could not confirm prompt delivery to $name; it may already have been sent, so inspect the pane before retrying"
+  fi
 fi
 printf 'Started %s in %s (workspace %s, pane %s)\n' "$name" "$checkout" "$workspace" "$pane"

@@ -33,6 +33,19 @@ elif args[:2] == ["pane", "split"]:
     print(json.dumps({"result": {"pane": {"pane_id": "w1:p2"}}}))
 elif args[:2] == ["agent", "start"] and os.environ.get("FAIL_START"):
     sys.exit(1)
+elif args[:2] == ["agent", "get"]:
+    if os.environ.get("FAIL_GET"):
+        sys.exit(1)
+    count_file = Path(os.environ["CALLS"] + ".get-count")
+    count = int(count_file.read_text()) if count_file.exists() else 0
+    count_file.write_text(str(count + 1))
+    pending = count < int(os.environ.get("PENDING_GETS", "0"))
+    print(json.dumps({"result": {"agent": {
+        "terminal_title_stripped": "pi" if pending else "π - repo",
+        "agent_status": "blocked" if os.environ.get("BLOCKED") else "idle"
+    }}}))
+elif args[:2] == ["agent", "prompt"] and os.environ.get("FAIL_PROMPT"):
+    sys.exit(1)
 else:
     print("{}")
 '''
@@ -49,6 +62,7 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
 
     def run(args, **overrides):
         calls.write_text("")
+        (root / "calls.jsonl.get-count").unlink(missing_ok=True)
         result = subprocess.run(
             [shutil.which("bash"), str(SCRIPT), *args],
             env=dict(env, **overrides), capture_output=True, text=True,
@@ -67,7 +81,8 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
     split = next(call for call in log if call[:3] == ["herdr", "pane", "split"])
     assert split == ["herdr", "pane", "split", "w1:p1", "--direction", "right",
                      "--cwd", "/tmp/checkouts/feature one", "--no-focus"]
-    assert ["herdr", "agent", "prompt", "pi-w1-p2", prompt] in log
+    assert ["herdr", "agent", "prompt", "pi-w1-p2", prompt,
+            "--wait", "--until", "working", "--timeout", "15000"] in log
     assert not any("--focus" in call or "focus" in call for call in log)
 
     prompt_file = root / "prompt with spaces.txt"
@@ -75,7 +90,8 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
     prompt_file.write_text(file_prompt)
     result, log = run(["feature-one", "--prompt-file", str(prompt_file)])
     assert result.returncode == 0, result.stderr
-    assert ["herdr", "agent", "prompt", "pi-w1-p2", file_prompt] in log
+    assert ["herdr", "agent", "prompt", "pi-w1-p2", file_prompt,
+            "--wait", "--until", "working", "--timeout", "15000"] in log
 
     empty_file = root / "empty.txt"
     empty_file.write_text("")
@@ -91,7 +107,8 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
 
     result, log = run(["feature-one", "--focus", "-p", "hello"])
     assert result.returncode == 0, result.stderr
-    assert log[-1] == ["herdr", "agent", "focus", "pi-w1-p2"]
+    assert log.index(["herdr", "agent", "focus", "pi-w1-p2"]) < next(
+        i for i, call in enumerate(log) if call[:3] == ["herdr", "agent", "prompt"])
     assert all("--no-focus" in call for call in log
                if call[:3] in (["herdr", "worktree", "open"], ["herdr", "pane", "split"]))
 
@@ -129,5 +146,22 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
     result, log = run(["feature", "-p", "hello"], FAIL_START="1")
     assert result.returncode != 0
     assert not any(call[:3] == ["herdr", "agent", "prompt"] for call in log)
+
+    result, log = run(["feature", "-p", "hello"], PENDING_GETS="2")
+    assert result.returncode == 0, result.stderr
+    assert "resolve any project-trust dialog" in result.stderr
+    assert sum(call[:3] == ["herdr", "agent", "get"] for call in log) == 3
+    assert log[-1][:3] == ["herdr", "agent", "prompt"]
+
+    for failure in ("BLOCKED", "FAIL_GET"):
+        result, log = run(["feature", "--prompt", "hello"], **{failure: "1"})
+        assert result.returncode != 0, failure
+        assert "prompt was not sent" in result.stderr
+        assert not any(call[:3] == ["herdr", "agent", "prompt"] for call in log)
+
+    result, log = run(["feature", "-p", "hello"], FAIL_PROMPT="1")
+    assert result.returncode != 0
+    assert "may already have been sent" in result.stderr
+    assert sum(call[:3] == ["herdr", "agent", "prompt"] for call in log) == 1
 
 print("PASS: creation, base selection, parent nesting, pane layout, prompt quoting, existing branches, argument validation and failures")
