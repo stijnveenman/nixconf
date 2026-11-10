@@ -5,6 +5,7 @@
 }: {
   home.username = "stiixxy";
   home.homeDirectory = "/home/stiixxy";
+  my.nixconf.liveRepoPath = "${config.home.homeDirectory}/nixconf";
 
   home.stateVersion = "25.11";
 

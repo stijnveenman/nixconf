@@ -6,15 +6,16 @@
   ...
 }: let
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-  repoPath =
-    if isDarwin
-    then "/Users/${config.home.username}/Documents/nixconf"
-    else "/home/${config.home.username}/nixconf";
+  repoPath = config.my.nixconf.liveRepoPath;
 in {
+  imports = [./repo.nix];
+
   home.sessionVariables.NVIM_APPNAME = "nvim-nixconf";
 
   home.file.".config/nvim-nixconf".source =
-    config.lib.file.mkOutOfStoreSymlink "${repoPath}/nvim";
+    if repoPath == null
+    then ../nvim
+    else config.lib.file.mkOutOfStoreSymlink "${repoPath}/nvim";
 
   programs.neovim = {
     enable = true;

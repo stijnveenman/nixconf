@@ -16,6 +16,7 @@
     ];
 
     my.git.userEmail = "veenman.stijn@gmail.com";
+    my.nixconf.liveRepoPath = "/home/stiixxy/nixconf";
 
     home.username = "stiixxy";
     home.homeDirectory = "/home/stiixxy";

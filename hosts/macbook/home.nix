@@ -18,6 +18,8 @@
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
+  my.nixconf.liveRepoPath = "${config.home.homeDirectory}/Documents/nixconf";
+  my.herdr.worktreePath = "~/Documents/.wt-worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
 
   programs.git = {
     signing = {

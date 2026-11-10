@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   lib,
   pkgs,
@@ -41,26 +42,35 @@
     theme.name = "catppuccin";
   };
 in {
-  home.packages = [herdr pkgs.bash pkgs.fzf pkgs.git pkgs.jq pkgs.worktrunk];
-  home.file.".local/bin/wt-start".source = import ./scripts/wt-start.nix {inherit inputs lib pkgs;};
-
-  programs.zoxide = {
-    enable = true;
-    enableZshIntegration = true;
+  options.my.herdr.worktreePath = lib.mkOption {
+    type = lib.types.str;
+    default = "~/.local/share/worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
+    description = "Worktrunk worktree path template.";
   };
 
-  xdg.configFile."worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "worktrunk-config.toml" {
-    worktree-path = "~/Documents/.wt-worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
-    post-remove.herdr = "${import ./scripts/wt-remove.nix {inherit inputs lib pkgs;}} {{ worktree_path }}";
-    aliases.remove-gone = "${import ./scripts/wt-remove-gone.nix {inherit lib pkgs;}} {{ args }}";
-  };
+  config = {
+    home.packages = [herdr pkgs.bash pkgs.fzf pkgs.git pkgs.jq pkgs.worktrunk];
+    home.file.".local/bin/wt-start".source = import ./scripts/wt-start.nix {inherit inputs lib pkgs;};
 
-  xdg.configFile."herdr/config.toml".source = (pkgs.formats.toml {}).generate "herdr-config.toml" settings;
-  xdg.configFile."herdr/plugins.json".text = builtins.toJSON (map pluginEntry plugins);
-  xdg.configFile."herdr/plugins/config/worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "herdr-worktrunk-config.toml" {
-    slugify_new_branches = true;
-    picker_placement = "popup";
-    popup_width = popupSize;
-    popup_height = popupSize;
+    programs.zoxide = {
+      enable = true;
+      enableZshIntegration = lib.mkIf config.programs.zsh.enable true;
+      enableBashIntegration = lib.mkIf config.programs.bash.enable true;
+    };
+
+    xdg.configFile."worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "worktrunk-config.toml" {
+      worktree-path = config.my.herdr.worktreePath;
+      post-remove.herdr = "${import ./scripts/wt-remove.nix {inherit inputs lib pkgs;}} {{ worktree_path }}";
+      aliases.remove-gone = "${import ./scripts/wt-remove-gone.nix {inherit lib pkgs;}} {{ args }}";
+    };
+
+    xdg.configFile."herdr/config.toml".source = (pkgs.formats.toml {}).generate "herdr-config.toml" settings;
+    xdg.configFile."herdr/plugins.json".text = builtins.toJSON (map pluginEntry plugins);
+    xdg.configFile."herdr/plugins/config/worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "herdr-worktrunk-config.toml" {
+      slugify_new_branches = true;
+      picker_placement = "popup";
+      popup_width = popupSize;
+      popup_height = popupSize;
+    };
   };
 }
