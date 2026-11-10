@@ -8,6 +8,9 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
+
     niri.url = "github:sodiboo/niri-flake";
 
     herdr.url = "github:herdrdev/herdr/v0.9.5";
@@ -28,5 +31,6 @@
     homeConfigurations."sv" = import ./hosts/macbook inputs;
 
     nixosConfigurations."nnn" = import ./hosts/nnn inputs;
+    nixosConfigurations."herdr-remote" = import ./hosts/herdr-remote inputs;
   };
 }
