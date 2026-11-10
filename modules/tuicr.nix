@@ -7,6 +7,7 @@
     theme = "catppuccin-mocha"
     diff_view = "side-by-side"
     compact_folders = true
+    show_reviewed = false
     show_pr_checks = true
     editor = "nvim"
     comment_vim = true
