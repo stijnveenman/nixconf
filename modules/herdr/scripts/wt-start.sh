@@ -1,7 +1,7 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' 'Usage: wt start <branch> [--base <base>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
+  printf '%s\n' 'Usage: wt start <branch> [--base <base>] [--model <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
 }
 
 fail() {
@@ -11,6 +11,7 @@ fail() {
 
 branch=
 base=
+model=
 prompt=
 prompt_file=
 prompt_source=
@@ -20,6 +21,11 @@ while [ "$#" -gt 0 ]; do
     --base)
       [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--base requires a value'
       base=$2
+      shift 2
+      ;;
+    --model)
+      [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--model requires a value'
+      model=$2
       shift 2
       ;;
     --prompt|-p)
@@ -87,7 +93,9 @@ name="pi-${pane//[^a-zA-Z0-9]/-}"
 name=${name,,}
 name=${name:0:32}
 
-"$herdr" agent start "$name" --kind pi --pane "$pane" --timeout 60000 >/dev/null
+agent_args=()
+[ -z "$model" ] || agent_args+=(-- --model "$model")
+"$herdr" agent start "$name" --kind pi --pane "$pane" --timeout 60000 "${agent_args[@]}" >/dev/null
 if "$focus"; then
   "$herdr" agent focus "$name" >/dev/null
 fi
