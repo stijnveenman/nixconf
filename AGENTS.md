@@ -2,7 +2,7 @@
 
 This repo is a Nix [home-manager](https://github.com/nix-community/home-manager)
 flake managed with [`nh`](https://github.com/nix-community/nh) (nix-helper).
-Use `nh home` for Home Manager hosts and `nh os` for the NixOS host.
+Use `nh home` for Home Manager hosts and `nh os` for NixOS hosts.
 
 - Host `sv` (macOS, `aarch64-darwin`) lives at `~/Documents/nixconf`.
 - Host `stiixxy` (Linux) lives at `~/nixconf`.
@@ -35,6 +35,14 @@ If switch (activation) fails:
 - Do **not** run other commands, modify or remove files, or add force flags to
   resolve the failure, including conflicts with existing configuration files.
 - Leave remediation to the user unless they later make a separate request.
+
+## herdr-remote
+
+Follow the normal build and switch rules when working on the VM itself. Ask
+permission before using NixOS Anywhere or running a remote build or switch for
+this VM. Only mention updating it when the user explicitly asks for changes to
+this machine. See `hosts/herdr-remote/README.md` for update and install commands;
+NixOS Anywhere's default install flow erases the configured disk.
 
 ## Reload notes
 
