@@ -15,14 +15,14 @@ in {
         bash."git *" = "allow";
       };
     };
-    tui = {
-      theme = "catppuccin";
+    cli = {
+      theme.name = "catppuccin";
       attention = {
-        enabled = true;
         notifications = true;
         sound = false;
       };
     };
+    validateFiles.cli = true;
   };
 
   home.file.".config/opencode/skill".source = repoSource "opencode/skill";
