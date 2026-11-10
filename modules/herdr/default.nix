@@ -50,6 +50,7 @@ in {
   };
 
   xdg.configFile."worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "worktrunk-config.toml" {
+    worktree-path = "~/Documents/.wt-worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
     post-remove.herdr = "${import ./scripts/wt-remove.nix {inherit inputs lib pkgs;}} {{ worktree_path }}";
   };
 
