@@ -1,7 +1,7 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' 'Usage: wt start <branch> [--base <base>] [--model <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
+  printf '%s\n' 'Usage: wt start <branch> [--base <base>] [--model|-m <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
 }
 
 fail() {
@@ -23,8 +23,8 @@ while [ "$#" -gt 0 ]; do
       base=$2
       shift 2
       ;;
-    --model)
-      [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--model requires a value'
+    --model|-m)
+      [ "$#" -ge 2 ] && [ -n "$2" ] || fail "$1 requires a value"
       model=$2
       shift 2
       ;;
