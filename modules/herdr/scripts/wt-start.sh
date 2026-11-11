@@ -95,7 +95,22 @@ name=${name:0:32}
 
 agent_args=()
 [ -z "$model" ] || agent_args+=(-- --model "$model")
-"$herdr" agent start "$name" --kind pi --pane "$pane" --timeout 60000 "${agent_args[@]}" >/dev/null
+# A new pane is busy while shell init runs (e.g. direnv evaluating a flake for
+# a fresh checkout). Herdr rejects the start before sending input, so retry.
+deadline=$((SECONDS + 300))
+announced=false
+while ! start_err=$("$herdr" agent start "$name" --kind pi --pane "$pane" --timeout 60000 "${agent_args[@]}" 2>&1 >/dev/null); do
+  code=$(printf '%s\n' "$start_err" | "$jq" -r '.error.code? // empty' 2>/dev/null) || code=
+  if [ "$code" != agent_pane_busy ] || [ "$SECONDS" -ge "$deadline" ]; then
+    printf '%s\n' "$start_err" >&2
+    fail "could not start pi in pane $pane"
+  fi
+  if ! "$announced"; then
+    printf 'Waiting for shell initialization in pane %s (e.g. direnv).\n' "$pane" >&2
+    announced=true
+  fi
+  sleep 0.5
+done
 if "$focus"; then
   "$herdr" agent focus "$name" >/dev/null
 fi

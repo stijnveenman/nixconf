@@ -33,6 +33,14 @@ elif args[:2] == ["pane", "split"]:
     print(json.dumps({"result": {"pane": {"pane_id": "w1:p2"}}}))
 elif args[:2] == ["agent", "start"] and os.environ.get("FAIL_START"):
     sys.exit(1)
+elif args[:2] == ["agent", "start"] and os.environ.get("BUSY_STARTS"):
+    count_file = Path(os.environ["CALLS"] + ".start-count")
+    count = int(count_file.read_text()) if count_file.exists() else 0
+    count_file.write_text(str(count + 1))
+    if count < int(os.environ["BUSY_STARTS"]):
+        print(json.dumps({"error": {"code": "agent_pane_busy"}}), file=sys.stderr)
+        sys.exit(1)
+    print("{}")
 elif args[:2] == ["agent", "get"]:
     if os.environ.get("FAIL_GET"):
         sys.exit(1)
@@ -63,6 +71,7 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
     def run(args, **overrides):
         calls.write_text("")
         (root / "calls.jsonl.get-count").unlink(missing_ok=True)
+        (root / "calls.jsonl.start-count").unlink(missing_ok=True)
         result = subprocess.run(
             [shutil.which("bash"), str(SCRIPT), *args],
             env=dict(env, **overrides), capture_output=True, text=True,
@@ -146,6 +155,12 @@ with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
     result, log = run(["feature", "-p", "hello"], FAIL_START="1")
     assert result.returncode != 0
     assert not any(call[:3] == ["herdr", "agent", "prompt"] for call in log)
+
+    result, log = run(["feature", "-p", "hello"], BUSY_STARTS="2")
+    assert result.returncode == 0, result.stderr
+    assert "Waiting for shell initialization" in result.stderr
+    assert sum(call[:3] == ["herdr", "agent", "start"] for call in log) == 3
+    assert log[-1][:3] == ["herdr", "agent", "prompt"]
 
     result, log = run(["feature", "-p", "hello"], PENDING_GETS="2")
     assert result.returncode == 0, result.stderr
