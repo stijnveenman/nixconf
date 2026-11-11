@@ -1,5 +1,12 @@
-{pkgs, ...}: {
-  home.packages = [pkgs.tuicr];
+{pkgs, ...}: let
+  # Backport of nixpkgs c805633012 ("tuicr: fix build with sys lib").
+  # Remove once the nixpkgs channel includes that commit.
+  tuicr = pkgs.tuicr.overrideAttrs (old: {
+    buildInputs = (old.buildInputs or []) ++ [pkgs.libgit2 pkgs.oniguruma];
+    nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.pkg-config];
+  });
+in {
+  home.packages = [tuicr];
 
   # tuicr reads this from $XDG_CONFIG_HOME/tuicr/config.toml.
   # These settings fit the Catppuccin/Ghostty, Neovim, and PR-review workflow.
