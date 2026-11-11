@@ -1,8 +1,8 @@
 {
-  "lastChangelogVersion": "1.4.0",
+  "lastChangelogVersion": "1.5.2",
   "theme": "system",
   "defaultProvider": "github-copilot",
-  "defaultModel": "gpt-6.1-terra",
+  "defaultModel": "claude-sonnet-5.5",
   "hideThinkingBlock": true,
   "defaultTools": [
     "+codemode"
@@ -26,5 +26,8 @@
   "tuiMode": "fullscreen",
   "packages": [
     "npm:pi-web-access"
-  ]
+  ],
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.47.0"
+  }
 }
