@@ -9,3 +9,5 @@ If a branch already has an upstream branch, push after committing
 DO NOT create a upstream unless asked explicitly. When asked to create a branch, this counts as permission to push upstream
 
 When creating a pull request, push the local branch to remote and set the upstream properly
+
+For Jira tickets (e.g. schiphol.atlassian.net links), use `acli jira workitem view <KEY>`; web fetch cannot read them.
