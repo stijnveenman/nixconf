@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   pkgs,
   ...
@@ -13,6 +14,9 @@
   home.username = "herdr-remote";
   home.homeDirectory = "/home/herdr-remote";
   home.stateVersion = "26.05";
+
+  # live checkout so nvim/pi config dirs are writable symlinks, not store paths
+  my.nixconf.liveRepoPath = "${config.home.homeDirectory}/nixconf";
 
   programs.bash.enable = true;
   programs.zsh = {
