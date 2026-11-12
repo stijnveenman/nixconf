@@ -47,9 +47,10 @@ root SSH with the authorized key for administration.
 1. Connect as root over the VM's LAN address and run `tailscale up --ssh`. Follow
    the login URL and approve the device. Configure your tailnet's network and
    SSH policy to allow the `herdr-remote` Linux user.
-2. From your Mac, verify `ssh herdr-remote@herdr-remote`, then run
-   `herdr --remote herdr-remote@herdr-remote`. The second `herdr-remote` is the
-   Tailscale device name; use its actual name or Tailscale IP if different.
+2. From your Mac, verify `ssh herdr-remote@<tailscale-ip>`, then run
+   `herdr --remote herdr-remote@<tailscale-ip>`. Always use the VM's Tailscale
+   IP (see `tailscale ip -4` on the VM or the Tailscale admin console); the
+   `herdr-remote` hostname is not set up to resolve, so don't rely on it.
 3. Create your Git SSH key and configure your Git identity inside the VM. Log in
    to Pi and Claude Code using their normal authentication flows. Place or mount
    repositories wherever you prefer; no repository mount is configured here.
