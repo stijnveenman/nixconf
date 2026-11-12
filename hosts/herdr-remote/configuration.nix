@@ -35,9 +35,12 @@ in {
     };
   };
 
+  programs.zsh.enable = true;
+
   users.users.root.openssh.authorizedKeys.keys = [bootstrapKey];
   users.users.herdr-remote = {
     isNormalUser = true;
+    shell = pkgs.zsh;
     description = "Herdr Remote";
     openssh.authorizedKeys.keys = [bootstrapKey];
   };
