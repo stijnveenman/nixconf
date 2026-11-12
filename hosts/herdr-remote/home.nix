@@ -28,7 +28,7 @@
   home.packages = [
     inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.claude-code
-    pkgs.gh
     pkgs.openssh
+    pkgs.xclip
   ];
 }
