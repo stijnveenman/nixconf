@@ -1,15 +1,34 @@
 {
   config,
+  lib,
   inputs,
   pkgs,
   ...
 }: {
   imports = [
+    ../../modules/git.nix
     ../../modules/cli-tools.nix
     ../../modules/herdr
     ../../modules/neovim.nix
     ../../modules/pi.nix
   ];
+
+  my.git.userEmail = "veenman.stijn@gmail.com";
+
+  programs.git = {
+    signing = {
+      format = "ssh";
+      key = lib.mkForce "${config.home.homeDirectory}/.ssh/id_ed25519";
+    };
+    settings.gpg.ssh = {
+      program = lib.getExe' pkgs.openssh "ssh-keygen";
+      allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
+    };
+  };
+
+  xdg.configFile."git/allowed_signers".text = ''
+    ${config.my.git.userEmail} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGEYvT8ozLHuscXbK/sMYxiyJwKqf0pkw42lpJOnyajY
+  '';
 
   home.username = "herdr-remote";
   home.homeDirectory = "/home/herdr-remote";
