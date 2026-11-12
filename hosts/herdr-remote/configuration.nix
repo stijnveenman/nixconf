@@ -37,6 +37,16 @@ in {
 
   programs.zsh.enable = true;
 
+  programs.nh = {
+    enable = true;
+    flake = "/home/herdr-remote/nixconf";
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep=10";
+    };
+  };
+
   users.users.root.openssh.authorizedKeys.keys = [bootstrapKey];
   users.users.herdr-remote = {
     isNormalUser = true;
@@ -45,5 +55,5 @@ in {
     openssh.authorizedKeys.keys = [bootstrapKey];
   };
 
-  environment.systemPackages = [pkgs.git pkgs.nh];
+  environment.systemPackages = [pkgs.git];
 }

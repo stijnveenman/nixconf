@@ -11,6 +11,7 @@
     ../../modules/herdr
     ../../modules/neovim.nix
     ../../modules/pi.nix
+    ../../modules/tuicr.nix
   ];
 
   my.git.userEmail = "veenman.stijn@gmail.com";
@@ -38,6 +39,7 @@
   my.nixconf.liveRepoPath = "${config.home.homeDirectory}/nixconf";
 
   programs.bash.enable = true;
+  programs.direnv.enable = true;
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -51,6 +53,7 @@
   home.packages = [
     inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.claude-code
+    pkgs.alejandra
     pkgs.openssh
     pkgs.xclip
   ];
