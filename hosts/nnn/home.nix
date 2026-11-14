@@ -237,6 +237,11 @@
         end = ["media" "tray" "notifications" "network" "bluetooth" "volume" "brightness" "battery" "session"];
       };
       theme.builtin = "Catppuccin";
+      widget.workspaces = {
+        type = "workspaces";
+        show_labels = true;
+        label_source = "name";
+      };
       wallpaper.default.path = "${pkgs.nixos-artwork.wallpapers.simple-dark-gray.gnomeFilePath}";
     };
 
