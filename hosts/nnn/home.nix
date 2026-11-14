@@ -78,7 +78,13 @@
         {argv = ["${lib.getExe pkgs.noctalia}"];}
         {argv = ["${lib.getExe pkgs._1password-gui}" "--silent"];}
         {argv = ["${lib.getExe pkgs.spotify}"];}
-        {argv = ["${lib.getExe pkgs.discord}"];}
+        {
+          argv = [
+            pkgs.runtimeShell
+            "-c"
+            "sleep 5; exec ${lib.getExe pkgs.discord} >> $HOME/.cache/discord-startup.log 2>&1"
+          ];
+        }
       ];
 
       layout = {
@@ -134,7 +140,7 @@
               at-startup = true;
             }
             {
-              app-id = "^spotify$";
+              app-id = "^Spotify$";
               at-startup = true;
             }
           ];
