@@ -236,6 +236,7 @@
 
     home.packages = with pkgs; [
       noctalia
+      claude-code
       todoist-cli
       _1password-cli
       git-crypt
