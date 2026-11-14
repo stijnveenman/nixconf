@@ -241,6 +241,7 @@
         type = "workspaces";
         show_labels = true;
         label_source = "name";
+        hide_when_empty = true;
       };
       wallpaper.default.path = "${pkgs.nixos-artwork.wallpapers.simple-dark-gray.gnomeFilePath}";
     };
