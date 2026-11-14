@@ -77,7 +77,7 @@
       spawn-at-startup = [
         {argv = ["${lib.getExe pkgs.noctalia}"];}
         {argv = ["${lib.getExe pkgs._1password-gui}" "--silent"];}
-        {argv = ["${lib.getExe pkgs.pear-desktop}"];}
+        {argv = ["${lib.getExe pkgs.spotify}"];}
         {argv = ["${lib.getExe pkgs.discord}"];}
       ];
 
@@ -130,11 +130,11 @@
         {
           matches = [
             {
-              app-id = "discord";
+              app-id = "^discord$";
               at-startup = true;
             }
             {
-              app-id = "lom.github.th-ch.youtube_music";
+              app-id = "^spotify$";
               at-startup = true;
             }
           ];
@@ -246,7 +246,7 @@
       nerd-fonts.jetbrains-mono
       inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
       todoist-electron
-      pear-desktop
+      spotify
     ];
 
     programs.ghostty = {

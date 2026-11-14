@@ -9,7 +9,7 @@
 
   home.stateVersion = "25.11";
 
-  home.packages = [pkgs.nixd pkgs.alejandra pkgs.pear-desktop];
+  home.packages = [pkgs.nixd pkgs.alejandra];
 
   programs.home-manager.enable = true;
   programs.direnv.enable = true;
