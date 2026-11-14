@@ -9,6 +9,7 @@ inputs @ {
 in
   nixpkgs.lib.nixosSystem {
     inherit system;
+    specialArgs = {inherit inputs;};
     modules = [
       ./configuration.nix
       niri.nixosModules.niri

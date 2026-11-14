@@ -1,9 +1,10 @@
 {
   lib,
   pkgs,
+  inputs,
   ...
 }: {
-  home-manager.users.stiixxy = {
+  home-manager.users.stiixxy = {config, ...}: {
     home.stateVersion = "26.05";
 
     imports = [
@@ -13,15 +14,47 @@
       ../../modules/tuicr.nix
       ../../modules/ghostty.nix
       ../../modules/opencode.nix
+      ../../modules/pi.nix
+      ../../modules/herdr
+      ../../modules/zsh.nix
+      ../../modules/lazygit.nix
+      ../../modules/askpass
     ];
 
     my.git.userEmail = "veenman.stijn@gmail.com";
+
+    programs.git = {
+      signing = {
+        format = "ssh";
+        key = lib.mkForce "${config.home.homeDirectory}/.ssh/id_ed25519";
+      };
+      settings.gpg.ssh = {
+        program = lib.getExe' pkgs.openssh "ssh-keygen";
+        allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
+      };
+    };
+
+    xdg.configFile."git/allowed_signers".text = ''
+      ${config.my.git.userEmail} namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPQN61R7viARkAAIZF8JWmvXfs49/3l1BL4ozDMTadt2
+    '';
     my.nixconf.liveRepoPath = "/home/stiixxy/nixconf";
 
     home.username = "stiixxy";
     home.homeDirectory = "/home/stiixxy";
 
     programs.bash.enable = true;
+
+    programs.nh = {
+      enable = true;
+      homeFlake = "/home/stiixxy/nixconf";
+      clean = {
+        enable = true;
+        dates = "weekly";
+        extraArgs = "--keep=10";
+      };
+    };
+
+    home.sessionVariables.NIX_PATH = "nixpkgs=${inputs.nixpkgs}";
 
     xdg.portal = {
       enable = true;
@@ -42,7 +75,7 @@
       };
 
       spawn-at-startup = [
-        {argv = ["${lib.getExe pkgs.noctalia-shell}"];}
+        {argv = ["${lib.getExe pkgs.noctalia}"];}
         {argv = ["${lib.getExe pkgs._1password-gui}" "--silent"];}
         {argv = ["${lib.getExe pkgs.pear-desktop}"];}
         {argv = ["${lib.getExe pkgs.discord}"];}
@@ -83,7 +116,7 @@
       };
 
       switch-events = {
-        lid-close.action.spawn = ["${lib.getExe pkgs.noctalia-shell}" "ipc" "call" "lockScreen" "lock"];
+        lid-close.action.spawn = ["${lib.getExe pkgs.noctalia}" "msg" "session" "lock"];
       };
 
       window-rules = [
@@ -133,9 +166,9 @@
         "Mod+Ctrl+Shift+B".action.spawn-sh = "${lib.getExe pkgs.google-chrome} --restore-last-session";
         "Mod+Shift+T".action.spawn-sh = "${lib.getExe pkgs.todoist-electron}";
 
-        "Mod+Space".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call launcher toggle";
-        "Mod+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call sessionMenu toggle";
-        "Mod+Shift+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia-shell} ipc call lockScreen lock";
+        "Mod+Space".action.spawn-sh = "${lib.getExe pkgs.noctalia} msg panel-toggle launcher";
+        "Mod+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia} msg panel-toggle session";
+        "Mod+Shift+Grave".action.spawn-sh = "${lib.getExe pkgs.noctalia} msg session lock";
 
         "Mod+R".action.switch-preset-column-width = {};
         "Mod+F".action.maximize-column = {};
@@ -188,8 +221,29 @@
       };
     };
 
+    xdg.configFile."noctalia/config.toml".source = (pkgs.formats.toml {}).generate "noctalia-config.toml" {
+      accessibility.ui_scale = 0.85;
+      shell.font_family = "JetBrainsMono NFM";
+      bar.default = {
+        font_family = "JetBrainsMono NFM";
+        margin_ends = 0;
+        start = ["workspaces"];
+        end = ["media" "tray" "notifications" "network" "bluetooth" "volume" "brightness" "battery" "session"];
+      };
+      theme.builtin = "Catppuccin";
+      wallpaper.default.path = "${pkgs.nixos-artwork.wallpapers.simple-dark-gray.gnomeFilePath}";
+    };
+
     home.packages = with pkgs; [
-      noctalia-shell
+      noctalia
+      todoist-cli
+      _1password-cli
+      git-crypt
+      hunk
+      nixd
+      alejandra
+      nerd-fonts.jetbrains-mono
+      inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
       todoist-electron
       pear-desktop
     ];
@@ -204,19 +258,12 @@
         quit-after-last-window-closed = true;
       };
     };
-    home.file.".config/noctalia/settings.json".source = ./noctalia.json;
-    home.file.".cache/noctalia/wallpapers.json" = {
-      text = builtins.toJSON {
-        defaultWallpaper = pkgs.nixos-artwork.wallpapers.simple-dark-gray.gnomeFilePath;
-      };
-    };
-
     programs.discord.enable = true;
 
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;
-      settings."*" = {};
+      settings."*".IdentityFile = "~/.ssh/id_ed25519";
       extraConfig = ''
         Host *
             IdentityAgent ~/.1password/agent.sock

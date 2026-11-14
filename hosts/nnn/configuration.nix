@@ -30,8 +30,12 @@
   services.xserver.enable = true;
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = false;
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
+
   programs.niri = {
     enable = true;
+    package = pkgs.niri;
   };
 
   environment.systemPackages = with pkgs; [
@@ -53,9 +57,14 @@
     pulse.enable = true;
   };
 
-  services.power-profiles-daemon.enable = false;
-  services.upower.enable = true;
-
+  powerManagement = {
+    enable = true;
+    cpuFreqGovernor = "ondemand";
+  };
+  # services.power-profiles-daemon.enable = false;
+  # services.upower.enable = true;
+  services.gvfs.enable = true;
+  services.udisks2.enable = true;
   users.users."stiixxy" = {
     isNormalUser = true;
     description = "stiixxy";

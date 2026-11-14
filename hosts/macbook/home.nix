@@ -16,6 +16,8 @@
     ../../modules/pi.nix
     ../../modules/raycast
     ../../modules/herdr
+    ../../modules/zsh.nix
+    ../../modules/lazygit.nix
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
@@ -80,41 +82,12 @@
     pkgs.nerd-fonts.jetbrains-mono
   ];
 
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    plugins = [
-      {
-        name = "zsh-nix-shell";
-        file = "nix-shell.plugin.zsh";
-        src = pkgs.fetchFromGitHub {
-          owner = "chisui";
-          repo = "zsh-nix-shell";
-          rev = "v0.8.0";
-          sha256 = "1lzrn0n4fxfcgg65v0qhnj7wnybybqzs4adz7xsrkgmcsr0ii8b7";
-        };
-      }
-    ];
+  programs.zsh.shellAliases = {
+    ri = "rush install";
+    rb = "rush build";
+    rbt = "rush build --to";
 
-    oh-my-zsh = {
-      enable = true;
-      plugins = [
-        "git"
-      ];
-      theme = "robbyrussell";
-    };
-
-    shellAliases = {
-      ri = "rush install";
-      rb = "rush build";
-      rbt = "rush build --to";
-
-      ac = "cd ~/Documents/airport-control/";
-
-      lg = "lazygit";
-      o = "opencode";
-      x = "opencode";
-    };
+    ac = "cd ~/Documents/airport-control/";
   };
 
   programs.home-manager.enable = true;
@@ -129,46 +102,6 @@
       # Fully quit Ghostty when the last window closes so reopening starts a
       # fresh process.
       quit-after-last-window-closed = true;
-    };
-  };
-
-  programs.lazygit = {
-    enable = true;
-    settings = {
-      quitOnTopLevelReturn = true;
-      git.overrideGpg = false;
-
-      # Disable all background tasks for maximum speed / minimal git activity.
-      git.autoFetch = false; # no periodic `git fetch`
-      git.fetchAll = false; # don't pass --all to git fetch
-      git.autoRefresh = false; # no periodic file/submodule refresh
-      git.autoDetectExternalChanges = false; # no periodic repo polling
-      update.method = "never"; # no periodic update checks
-
-      gui = {
-        # Catppuccin Mocha (blue accent).
-        theme = {
-          activeBorderColor = ["#89b4fa" "bold"];
-          inactiveBorderColor = ["#a6adc8"];
-          optionsTextColor = ["#89b4fa"];
-          selectedLineBgColor = ["#313244"];
-          cherryPickedCommitBgColor = ["#45475a"];
-          cherryPickedCommitFgColor = ["#89b4fa"];
-          unstagedChangesColor = ["#f38ba8"];
-          defaultFgColor = ["#cdd6f4"];
-          searchingActiveBorderColor = ["#f9e2af"];
-          branchColorPatterns.config = "#11aaff";
-        };
-
-        # Remove the submodules and tags panels.
-        sidePanels = [
-          ["status"]
-          ["files" "worktrees"]
-          ["branches" "remotes"]
-          ["commits" "reflog"]
-          ["stash"]
-        ];
-      };
     };
   };
 }
