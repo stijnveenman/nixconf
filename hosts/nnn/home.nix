@@ -247,6 +247,7 @@
       inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
       todoist-electron
       spotify
+      discord
     ];
 
     programs.ghostty = {
@@ -259,7 +260,6 @@
         quit-after-last-window-closed = true;
       };
     };
-    programs.discord.enable = true;
 
     programs.ssh = {
       enable = true;
