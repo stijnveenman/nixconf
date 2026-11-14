@@ -14,7 +14,8 @@
     ui.prompt_new_tab_name = false;
     keys = {
       prefix = "ctrl+a";
-      goto = ["prefix+g" "prefix+space"];
+      goto = "prefix+g";
+      workspace_picker = ["prefix+w" "prefix+space"];
       navigate_workspace_up = ["k" "up"];
       navigate_workspace_down = ["j" "down"];
       navigate_pane_up = "ctrl+k";
