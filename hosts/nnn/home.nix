@@ -252,6 +252,7 @@
     home.packages = with pkgs; [
       noctalia
       claude-code
+      inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.claude-desktop
       todoist-cli
       _1password-cli
       git-crypt
