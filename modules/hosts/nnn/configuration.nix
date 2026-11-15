@@ -8,6 +8,8 @@
 
     boot.loader.systemd-boot.enable = true;
     boot.loader.efi.canTouchEfiVariables = true;
+    # Skip the boot menu; hold Space at power-on to show it.
+    boot.loader.timeout = 0;
 
     networking.hostName = "nnn";
     networking.networkmanager.enable = true;

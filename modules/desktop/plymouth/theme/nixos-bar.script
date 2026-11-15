@@ -1,0 +1,60 @@
+// NixOS logo centred on a dark background with a boot progress bar below it.
+
+Window.SetBackgroundTopColor(0.07, 0.07, 0.09);
+Window.SetBackgroundBottomColor(0.07, 0.07, 0.09);
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+centre_x = Window.GetX() + screen_w / 2;
+centre_y = Window.GetY() + screen_h / 2;
+
+// Logo: a quarter of the screen height, centred slightly above the middle.
+logo_size = Math.Int(screen_h / 4);
+logo.image = Image("logo.png").Scale(logo_size, logo_size);
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetPosition(centre_x - logo_size / 2, centre_y - logo_size / 2 - screen_h / 16, 1);
+
+// Progress bar: track plus fill, below the logo.
+bar_w = Math.Int(logo_size * 1.4);
+bar_h = Math.Max(4, Math.Int(screen_h / 200));
+bar_x = centre_x - bar_w / 2;
+bar_y = centre_y + logo_size / 2 - screen_h / 16 + screen_h / 24;
+
+track.image = Image("track.png").Scale(bar_w, bar_h);
+track.sprite = Sprite(track.image);
+track.sprite.SetPosition(bar_x, bar_y, 1);
+
+fill.source = Image("fill.png");
+fill.sprite = Sprite();
+fill.sprite.SetPosition(bar_x, bar_y, 2);
+fill.width = 0;
+
+mode = Plymouth.GetMode();
+if (mode != "boot" && mode != "resume") {
+  track.sprite.SetOpacity(0);
+  fill.sprite.SetOpacity(0);
+}
+
+fun progress_callback(duration, progress) {
+  width = Math.Int(bar_w * Math.Min(progress, 1));
+  if (width != fill.width && width > 0) {
+    fill.width = width;
+    fill.sprite.SetImage(fill.source.Scale(width, bar_h));
+  }
+}
+Plymouth.SetBootProgressFunction(progress_callback);
+
+// Password prompt (e.g. encrypted disks), shown where the bar is.
+prompt.sprite = Sprite();
+fun display_password_callback(text, bullets) {
+  label = text + "  ";
+  for (i = 0; i < bullets; i++) label += "*";
+  prompt.sprite.SetImage(Image.Text(label, 1, 1, 1));
+  prompt.sprite.SetPosition(centre_x - prompt.sprite.GetImage().GetWidth() / 2, bar_y + bar_h * 4, 3);
+  prompt.sprite.SetOpacity(1);
+}
+fun display_normal_callback() {
+  prompt.sprite.SetOpacity(0);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);

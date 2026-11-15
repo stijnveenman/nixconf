@@ -10,6 +10,7 @@ in {
     system = "x86_64-linux";
     modules = [
       nixos.nnn
+      nixos.plymouth
       inputs.niri.nixosModules.niri
       inputs.home-manager.nixosModules.home-manager
       nixos.home-manager

@@ -12,7 +12,8 @@
     ];
 
     boot.initrd.availableKernelModules = ["nvme" "xhci_pci" "thunderbolt" "usb_storage" "sd_mod"];
-    boot.initrd.kernelModules = [];
+    # amdgpu in the initrd gives the boot splash native resolution (early KMS).
+    boot.initrd.kernelModules = ["amdgpu"];
     boot.kernelModules = ["kvm-amd"];
     boot.extraModulePackages = [];
 
