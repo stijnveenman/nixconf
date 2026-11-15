@@ -12,8 +12,14 @@
   };
 
   config = {
-    home.packages = [pkgs.worktrunk pkgs.bash pkgs.fzf pkgs.git pkgs.jq];
-    home.file.".local/bin/wt-start".source = import ./scripts/wt-start.nix {inherit inputs lib pkgs;};
+    home.packages = [
+      pkgs.worktrunk
+      pkgs.bash
+      pkgs.fzf
+      pkgs.git
+      pkgs.jq
+      (pkgs.runCommand "wt-start" {} "install -Dm755 ${import ./scripts/wt-start.nix {inherit inputs lib pkgs;}} $out/bin/wt-start")
+    ];
 
     xdg.configFile."worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "worktrunk-config.toml" {
       worktree-path = config.my.worktrunk.worktreePath;
