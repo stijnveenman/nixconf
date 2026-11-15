@@ -10,6 +10,7 @@
     imports = [
       ../../modules/neovim.nix
       ../../modules/git.nix
+      ../../modules/nh.nix
       ../../modules/cli-tools.nix
       ../../modules/tuicr.nix
       ../../modules/ghostty.nix
@@ -22,6 +23,7 @@
       ../../modules/askpass
     ];
 
+    my.nh.subcommand = "os";
     my.git.userEmail = "veenman.stijn@gmail.com";
 
     programs.git = {

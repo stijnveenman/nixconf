@@ -7,6 +7,7 @@
 }: {
   imports = [
     ../../modules/git.nix
+    ../../modules/nh.nix
     ../../modules/cli-tools.nix
     ../../modules/herdr
     ../../modules/worktrunk
@@ -15,6 +16,7 @@
     ../../modules/tuicr.nix
   ];
 
+  my.nh.subcommand = "os";
   my.git.userEmail = "veenman.stijn@gmail.com";
 
   programs.git = {

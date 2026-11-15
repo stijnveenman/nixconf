@@ -10,5 +10,6 @@ home-manager.lib.homeManagerConfiguration {
     ./home.nix
     ../../modules/neovim.nix
     ../../modules/opencode.nix
+    ../../modules/nh.nix
   ];
 }

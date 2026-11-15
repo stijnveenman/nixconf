@@ -8,6 +8,7 @@
 }: {
   imports = [
     ../../modules/git.nix
+    ../../modules/nh.nix
     ../../modules/cli-tools.nix
     ../../modules/acli.nix
     ../../modules/tuicr.nix
@@ -21,6 +22,7 @@
     ../../modules/lazygit.nix
   ];
 
+  my.nh.subcommand = "home";
   my.git.userEmail = "stijn.veenman@schiphol.nl";
   my.nixconf.liveRepoPath = "${config.home.homeDirectory}/Documents/nixconf";
   my.worktrunk.worktreePath = "~/Documents/.wt-worktrees/{{ repo }}/{{ branch | sanitize_hash }}";

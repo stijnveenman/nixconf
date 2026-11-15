@@ -7,6 +7,7 @@
   home.homeDirectory = "/home/stiixxy";
   my.nixconf.liveRepoPath = "${config.home.homeDirectory}/nixconf";
 
+  my.nh.subcommand = "home";
   home.stateVersion = "25.11";
 
   home.packages = [pkgs.nixd pkgs.alejandra];

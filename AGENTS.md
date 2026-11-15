@@ -2,7 +2,7 @@
 
 This repo is a Nix [home-manager](https://github.com/nix-community/home-manager)
 flake managed with [`nh`](https://github.com/nix-community/nh) (nix-helper).
-Use `nh home` for Home Manager hosts and `nh os` for NixOS hosts.
+Use `nhb` (build) and `nhs` (switch) on every host. They are installed by `modules/nh.nix` and run the right `nh os|home|darwin` subcommand for the host (set via `my.nh.subcommand`).
 
 - Host `sv` (macOS, `aarch64-darwin`) lives at `~/Documents/nixconf`.
 - Host `stiixxy` (Linux) lives at `~/nixconf`.
@@ -13,13 +13,13 @@ When you change any `.nix` file, follow this order. **Never skip the build, and
 never switch to a configuration that has not built successfully.**
 
 1. **Format:** run `alejandra .` to format the Nix files in the repo.
-2. **Build/validate:** run `nh <home/os> build .`. This evaluates and builds
+2. **Build/validate:** run `nhb .`. This evaluates and builds
    the current worktree without activating it. A non-zero exit code, Nix
    evaluation error, or build failure means validation **failed**. If the build
    succeeds, trust it; do not inspect generated `/nix/store` output.
 3. **Switch:** after a successful build, switching is allowed in the main
    worktree. In another worktree, switch only when the user requests it. Use
-   `nh <home/os> switch .`; do not add force flags or use lower-level activation
+   `nhs .`; do not add force flags or use lower-level activation
    commands.
 
 If the build fails:
