@@ -16,6 +16,7 @@
       ../../modules/opencode.nix
       ../../modules/pi.nix
       ../../modules/herdr
+      ../../modules/worktrunk
       ../../modules/zsh.nix
       ../../modules/lazygit.nix
       ../../modules/askpass

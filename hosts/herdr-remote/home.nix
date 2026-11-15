@@ -9,6 +9,7 @@
     ../../modules/git.nix
     ../../modules/cli-tools.nix
     ../../modules/herdr
+    ../../modules/worktrunk
     ../../modules/neovim.nix
     ../../modules/pi.nix
     ../../modules/tuicr.nix

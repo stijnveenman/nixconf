@@ -16,13 +16,14 @@
     ../../modules/pi.nix
     ../../modules/raycast
     ../../modules/herdr
+    ../../modules/worktrunk
     ../../modules/zsh.nix
     ../../modules/lazygit.nix
   ];
 
   my.git.userEmail = "stijn.veenman@schiphol.nl";
   my.nixconf.liveRepoPath = "${config.home.homeDirectory}/Documents/nixconf";
-  my.herdr.worktreePath = "~/Documents/.wt-worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
+  my.worktrunk.worktreePath = "~/Documents/.wt-worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
 
   programs.git = {
     signing = {
