@@ -1,6 +1,7 @@
 # niri compositor settings and desktop portals for stiixxy@nnn.
 {
   flake.modules.homeManager.nnn-niri = {
+    config,
     lib,
     pkgs,
     ...
@@ -71,7 +72,7 @@
       };
 
       switch-events = {
-        lid-close.action.spawn = ["${lib.getExe pkgs.noctalia}" "msg" "session" "lock"];
+        lid-close.action.spawn = [config.my.lockscreen.command];
       };
 
       window-rules = [

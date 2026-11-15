@@ -83,6 +83,9 @@
       ];
     };
 
+    # hyprlock (modules/desktop/lockscreen) authenticates through PAM.
+    security.pam.services.hyprlock = {};
+
     programs.nix-ld.enable = true;
     fonts.packages = [pkgs.nerd-fonts.jetbrains-mono];
   };

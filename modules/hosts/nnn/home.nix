@@ -24,6 +24,7 @@ in {
       hm.askpass
       hm.nnn-niri
       hm.nnn-noctalia
+      hm.lockscreen
     ];
 
     my.nh.subcommand = "os";
