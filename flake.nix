@@ -1,6 +1,11 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
+    import-tree.url = "github:vic/import-tree";
+
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     pi.url = "github:earendil-works/pi/stable";
     pi.inputs.nixpkgs.follows = "nixpkgs";
@@ -29,11 +34,8 @@
     };
   };
 
-  outputs = inputs: {
-    homeConfigurations."stiixxy" = import ./hosts/stiixxy inputs;
-    homeConfigurations."sv" = import ./hosts/macbook inputs;
-
-    nixosConfigurations."nnn" = import ./hosts/nnn inputs;
-    nixosConfigurations."herdr-remote" = import ./hosts/herdr-remote inputs;
-  };
+  # Dendritic layout: every .nix file under ./modules is a flake-parts module,
+  # loaded by import-tree. Paths with a `_`-prefixed segment are skipped.
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
 }

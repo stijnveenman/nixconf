@@ -1,6 +1,6 @@
 # Pi configuration
 
-`modules/pi.nix` links the hand-maintained parts of Pi's global configuration
+`modules/ai/pi.nix` links the hand-maintained parts of Pi's global configuration
 from `pi/agent` into `~/.pi/agent`. Pi's mutable state remains outside the
 repository: authentication, sessions, model cache, and its npm environment are
 not configuration and should not be committed.

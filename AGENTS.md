@@ -2,7 +2,21 @@
 
 This repo is a Nix [home-manager](https://github.com/nix-community/home-manager)
 flake managed with [`nh`](https://github.com/nix-community/nh) (nix-helper).
-Use `nhb` (build) and `nhs` (switch) on every host. They are installed by `modules/nh.nix` and run the right `nh os|home|darwin` subcommand for the host (set via `my.nh.subcommand`).
+Use `nhb` (build) and `nhs` (switch) on every host. They are installed by `modules/core/nh.nix` and run the right `nh os|home|darwin` subcommand for the host (set via `my.nh.subcommand`).
+
+## Layout (flake-parts, dendritic)
+
+- `flake.nix` only declares inputs; every `.nix` file under `modules/` is a
+  flake-parts module loaded by import-tree (paths with a `_`-prefixed segment
+  are skipped). Keep non-module Nix helpers out of `modules/` or under `_`.
+- Feature files publish modules as `flake.modules.<nixos|homeManager>.<name>`
+  and close over flake `inputs` instead of using `specialArgs`.
+- `modules/hosts/<host>/default.nix` builds the configuration and lists the
+  module order; `<host>/home.nix` etc. hold the host's own modules.
+- The registry is `modules/flake/modules.nix`, not flake-parts'
+  `flakeModules.modules`: it avoids extra import nesting, because import depth
+  and order decide how list options (e.g. `home.packages`) merge and so change
+  store paths. When restructuring, compare `drvPath`s before and after.
 
 - Host `sv` (macOS, `aarch64-darwin`) lives at `~/Documents/nixconf`.
 - Host `stiixxy` (Linux) lives at `~/nixconf`.
@@ -41,7 +55,7 @@ If switch (activation) fails:
 Follow the normal build and switch rules when working on the VM itself. Ask
 permission before using NixOS Anywhere or running a remote build or switch for
 this VM. Only mention updating it when the user explicitly asks for changes to
-this machine. See `hosts/herdr-remote/README.md` for update and install commands;
+this machine. See `modules/hosts/herdr-remote/README.md` for update and install commands;
 NixOS Anywhere's default install flow erases the configured disk.
 
 ## Reload notes
@@ -68,10 +82,11 @@ changes. Explain the limitation and leave upstream behavior unchanged.
 
 ## Script conventions
 
-- Keep scripts close to the module that uses them: `modules/<module>/scripts`.
-- If a module is currently a single file (`modules/<name>.nix`) and needs scripts,
-  convert it to a directory module with `modules/<name>/default.nix`.
-- Implement scripts with `pkgs.writeShellScript`.
+- Keep scripts close to the module that uses them: `<module>/scripts/*.sh`.
+- If a module is currently a single file (`<name>.nix`) and needs scripts,
+  convert it to a directory module with `<name>/default.nix`.
+- Implement scripts with `pkgs.writeShellScript` in the module's `let` block,
+  reading the `.sh` with `builtins.readFile`.
 - Prefer inheriting full arguments in modules (`{ pkgs, lib, ... }`) instead of
   threading ad-hoc variables.
 - Resolve binaries in a `let` block with `lib.getExe`, keeping variable names

@@ -1,0 +1,59 @@
+{
+  config,
+  inputs,
+  ...
+}: let
+  flakeModules = config.flake.modules;
+in {
+  flake.modules.homeManager.neovim = {
+    config,
+    pkgs,
+    lib,
+    ...
+  }: let
+    isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+    repoPath = config.my.nixconf.liveRepoPath;
+  in {
+    imports = [flakeModules.homeManager.repo];
+
+    home.sessionVariables.NVIM_APPNAME = "nvim-nixconf";
+
+    home.file.".config/nvim-nixconf".source =
+      if repoPath == null
+      then ../../nvim
+      else config.lib.file.mkOutOfStoreSymlink "${repoPath}/nvim";
+
+    programs.neovim = {
+      enable = true;
+      package = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      defaultEditor = true;
+      viAlias = true;
+      vimAlias = true;
+      withRuby = false;
+      withPython3 = false;
+      sideloadInitLua = lib.mkIf isDarwin true;
+    };
+
+    programs.lazygit = {
+      enable = true;
+      settings = {
+        quitOnTopLevelReturn = true;
+        git.overrideGpg = false;
+        git.autoFetch = false;
+      };
+    };
+
+    home.packages = with pkgs; [
+      fd
+      fzf
+      gcc
+      unzip
+      wget
+      cargo
+      go
+      alejandra
+      ripgrep
+      nodejs_22
+    ];
+  };
+}
