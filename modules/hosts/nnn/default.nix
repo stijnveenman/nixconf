@@ -11,6 +11,7 @@ in {
     modules = [
       nixos.nnn
       nixos.plymouth
+      nixos.greeter
       inputs.niri.nixosModules.niri
       inputs.home-manager.nixosModules.home-manager
       nixos.home-manager

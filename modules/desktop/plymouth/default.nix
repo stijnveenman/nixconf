@@ -29,14 +29,30 @@
       themePackages = [themePackage];
     };
 
-    # Hide kernel and initrd logs behind the splash.
-    boot.consoleLogLevel = 3;
+    # Keep boot and shutdown silent: no kernel/initrd logs, no systemd status
+    # lines, no blinking console cursor before the splash or greeter appears.
+    # 0 also hides the kernel's highest-priority messages, such as the
+    # firmware warning "RDSEED32 is broken" on this CPU; they stay in the journal.
+    boot.consoleLogLevel = 0;
     boot.kernelParams = [
       "quiet"
       "splash"
       "rd.udev.log_level=3"
-      "udev.log_priority=3"
-      "rd.systemd.show_status=auto"
+      "udev.log_level=3"
+      "rd.systemd.show_status=false"
+      "systemd.show_status=false"
+      "vt.global_cursor_default=0"
     ];
+
+    # logind writes "The system will reboot now!" to every logged-in terminal on
+    # reboot/poweroff, which flashes on the console as the session closes.
+    # `systemctl reboot` turns this back on per call unless given --no-wall
+    # (see the noctalia session actions).
+    services.logind.settings.Login.WallMessages = false;
+
+    # systemd arms the hardware watchdog for the final reboot step; the kernel
+    # then prints "watchdog did not stop!" over the splash. Without it a hung
+    # shutdown is not force-rebooted after 10 minutes.
+    systemd.settings.Manager.RebootWatchdogSec = "off";
   };
 }

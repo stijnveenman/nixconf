@@ -35,7 +35,6 @@
     };
 
     services.xserver.enable = true;
-    services.displayManager.gdm.enable = true;
     services.desktopManager.gnome.enable = false;
     programs.zsh.enable = true;
     users.defaultUserShell = pkgs.zsh;

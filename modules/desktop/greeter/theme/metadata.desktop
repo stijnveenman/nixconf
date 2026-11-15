@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=NixOS Login
+Description=NixOS logo with a password prompt below it, matching the boot splash
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=nixos-login
+Theme-API=2.0
+QtVersion=6

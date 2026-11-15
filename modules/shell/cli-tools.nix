@@ -14,6 +14,7 @@
       pkgs.ripgrep
       pkgs.jq
       pkgs.fzf
+      pkgs.python3
     ];
 
     programs.direnv = {
