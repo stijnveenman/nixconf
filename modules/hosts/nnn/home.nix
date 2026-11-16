@@ -14,6 +14,7 @@ in {
       hm.nh
       hm.cli-tools
       hm.tuicr
+      hm.hunk
       hm.ghostty
       hm.opencode
       hm.pi
@@ -47,7 +48,6 @@ in {
       todoist-cli
       _1password-cli
       git-crypt
-      hunk
       nixd
       alejandra
       nerd-fonts.jetbrains-mono

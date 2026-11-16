@@ -16,6 +16,7 @@ in {
       hm.cli-tools
       hm.acli
       hm.tuicr
+      hm.hunk
       hm.ghostty
       hm.opencode
       hm.pi
@@ -55,7 +56,6 @@ in {
       inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
       pkgs.todoist-cli
       pkgs.git-crypt
-      pkgs.hunk
 
       # formatting
       pkgs.nixd
