@@ -28,6 +28,9 @@ in {
   in {
     imports = [flakeModules.homeManager.repo];
 
+    # Pi comes from Nix, so its self-update notice is not actionable.
+    home.sessionVariables.PI_SKIP_VERSION_CHECK = "1";
+
     # Keep mutable Pi state in the home directory, separate from configuration.
     # In live mode, adding or removing entries still requires a rebuild.
     home.file = {
