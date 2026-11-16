@@ -34,6 +34,13 @@
         # Fully quit Ghostty when the last window closes so reopening starts a
         # fresh process.
         quit-after-last-window-closed = true;
+
+        # Ghostty maps Cmd+Left/Right to Ctrl+A/E by default, and Ctrl+A is the
+        # herdr prefix. Send Home/End instead.
+        keybind = [
+          "super+arrow_left=text:\\x1b[H"
+          "super+arrow_right=text:\\x1b[F"
+        ];
       };
     };
   };
