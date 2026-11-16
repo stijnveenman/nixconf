@@ -20,7 +20,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME, getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
-import { matchesKey } from "@earendil-works/pi-tui";
+import { matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 
 type WatchSettings = { summaryModel: string; intervalSeconds: number; ignoreAuthors: string[] };
 
@@ -43,7 +43,24 @@ type Watch = {
   seenComments: Set<string>;
   seenChecks: Set<string>;
   unsubscribeInput: () => void;
+  // Widget state
+  checks?: Check[];
+  unresolvedThreads?: number;
+  activity?: string;
+  fixing: boolean;
+  error?: string;
+  nextPollAt?: number;
 };
+
+const SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+function formatDuration(ms: number) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m${String(s % 60).padStart(2, "0")}s`;
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}m`;
+}
 
 const WIDGET = "watch-pr";
 const LOG_TAIL_CHARS = 15_000;
@@ -144,10 +161,77 @@ export default function (pi: ExtensionAPI) {
     if (reason) current.ctx.ui.notify(`Stopped watching PR #${current.number}: ${reason}`, "info");
   }
 
-  function setWidget(w: Watch, detail?: string) {
-    const theme = w.ctx.ui.theme;
-    const line = theme.fg("accent", `watching pr #${w.number}`) + (detail ? theme.fg("dim", ` · ${detail}`) : "");
-    w.ctx.ui.setWidget(WIDGET, [line]);
+  function installWidget(w: Watch) {
+    w.ctx.ui.setWidget(WIDGET, (tui, theme) => {
+      let frame = 0;
+      const interval = setInterval(() => {
+        if (watch !== w) return clearInterval(interval);
+        frame = (frame + 1) % SPINNER.length;
+        tui.requestRender();
+      }, 80);
+      const sep = theme.fg("dim", " · ");
+      const spin = () => theme.fg("accent", SPINNER[frame]!);
+
+      function status(): string {
+        if (w.activity) return w.activity;
+        if (w.polling) return "polling…";
+        if (!w.ctx.isIdle()) return w.fixing ? "agent fixing…" : "paused while agent works";
+        if (w.nextPollAt && w.nextPollAt - Date.now() >= 1000) return `next poll in ${formatDuration(w.nextPollAt - Date.now())}`;
+        return "polling…";
+      }
+      const busy = () =>
+        w.polling || !!w.activity || !w.ctx.isIdle() || !w.nextPollAt || w.nextPollAt - Date.now() < 1000;
+
+      function checksRow(): { icon: string; text: string; sub: string[] } {
+        const checks = w.checks;
+        if (!checks) return { icon: spin(), text: theme.fg("muted", "loading…"), sub: [] };
+        if (checks.length === 0) return { icon: theme.fg("dim", "·"), text: theme.fg("muted", "no checks"), sub: [] };
+        const failing = checks.filter((c) => c.bucket === "fail");
+        const pending = checks.filter((c) => c.bucket === "pending").length;
+        const passed = checks.filter((c) => c.bucket === "pass").length;
+        const counts = [
+          failing.length > 0 ? theme.fg("error", `${failing.length} failing`) : undefined,
+          pending > 0 ? theme.fg("warning", `${pending} pending`) : undefined,
+          passed > 0 ? theme.fg("success", `${passed} passed`) : undefined,
+        ].filter(Boolean);
+        const icon =
+          pending > 0 ? spin() : failing.length > 0 ? theme.fg("error", "✗") : theme.fg("success", "✓");
+        const sub = failing.slice(0, 3).map((c) => (c.workflow ? `${c.workflow} / ${c.name}` : c.name));
+        if (failing.length > 3) sub.push(`+${failing.length - 3} more`);
+        return { icon, text: counts.join(sep), sub };
+      }
+
+      function commentsRow(): { icon: string; text: string } {
+        const n = w.unresolvedThreads;
+        if (n === undefined) return { icon: spin(), text: theme.fg("muted", "loading…") };
+        if (n === 0) return { icon: theme.fg("success", "✓"), text: theme.fg("muted", "no unresolved threads") };
+        return { icon: theme.fg("warning", "●"), text: theme.fg("warning", `${n} unresolved thread${n === 1 ? "" : "s"}`) };
+      }
+
+      return {
+        render(width: number) {
+          const tree = (s: string) => theme.fg("dim", s);
+          const elapsed = formatDuration(Date.now() - Date.parse(w.startedAt));
+          const checks = checksRow();
+          const comments = commentsRow();
+          const lines = [
+            theme.fg("accent", "● ") +
+              theme.fg("accent", theme.bold(`Watching PR #${w.number}`)) +
+              " " + theme.fg("dim", `${w.owner}/${w.repo}`) + sep + theme.fg("muted", elapsed),
+            `${tree("├─")} ${checks.icon} ${theme.bold("Checks")}   ${checks.text}`,
+            ...checks.sub.map((s) => `${tree("│")}     ${tree("⎿")} ${theme.fg("muted", s)}`),
+            `${tree("├─")} ${comments.icon} ${theme.bold("Comments")} ${comments.text}`,
+            `${tree("└─")} ${busy() ? spin() : theme.fg("dim", "◦")} ${theme.fg("muted", status())}`,
+          ];
+          if (w.error) lines.push(`     ${tree("⎿")} ${theme.fg("error", w.error)}`);
+          return lines.map((line) => truncateToWidth(line, width));
+        },
+        invalidate() {},
+        dispose() {
+          clearInterval(interval);
+        },
+      };
+    });
   }
 
   async function gh(w: Watch, args: string[]) {
@@ -217,6 +301,7 @@ export default function (pi: ExtensionAPI) {
     const settings = readSettings(w.ctx);
     const model = resolveSummaryModel(w.ctx, settings.summaryModel);
     if (!model) return raw;
+    w.activity = `summarising ${failed.length} failing check${failed.length === 1 ? "" : "s"} with ${model.id}…`;
     try {
       const response = await w.ctx.modelRegistry.complete(
         model,
@@ -265,14 +350,18 @@ export default function (pi: ExtensionAPI) {
     );
 
     const failed = checks.filter((c) => c.bucket === "fail" && !w.seenChecks.has(`${c.name}|${c.link}`));
-    const pending = checks.filter((c) => c.bucket === "pending").length;
-    const failing = checks.filter((c) => c.bucket === "fail").length;
-    setWidget(w, pending > 0 ? `${pending} checks pending` : failing > 0 ? `${failing} checks failing` : checks.length > 0 ? "checks passing" : undefined);
+    w.checks = checks;
+    w.unresolvedThreads = comments.threads.length;
 
     if (failed.length === 0 && newThreads.length === 0 && newGeneral.length === 0) return;
 
-    setWidget(w, failed.length > 0 ? "summarising ci failure" : "new comments");
-    const ciSummary = failed.length > 0 ? await summariseFailures(w, failed) : undefined;
+    if (failed.length > 0) w.activity = "fetching failed logs…";
+    let ciSummary: string | undefined;
+    try {
+      ciSummary = failed.length > 0 ? await summariseFailures(w, failed) : undefined;
+    } finally {
+      w.activity = undefined;
+    }
     // Bail out if cancelled or the user started something meanwhile.
     if (watch !== w || !w.ctx.isIdle()) return;
 
@@ -297,21 +386,24 @@ export default function (pi: ExtensionAPI) {
       NO_REPLY_NOTE,
     );
 
-    setWidget(w, "fixing");
+    w.fixing = true;
     pi.sendUserMessage(parts.join("\n\n"));
   }
 
   function schedule(w: Watch, delayMs: number) {
     if (watch !== w) return;
+    w.nextPollAt = Date.now() + delayMs;
     w.timer = setTimeout(async () => {
       if (watch !== w) return;
       if (w.ctx.isIdle() && !w.ctx.hasPendingMessages() && !w.polling) {
         w.polling = true;
+        w.fixing = false;
         try {
           await poll(w);
+          w.error = undefined;
         } catch (error) {
           if (watch === w && !w.abort.signal.aborted) {
-            setWidget(w, `poll failed: ${(error as Error).message.split("\n")[0]}`);
+            w.error = `poll failed: ${(error as Error).message.split("\n")[0]}`;
           }
         } finally {
           w.polling = false;
@@ -359,13 +451,14 @@ export default function (pi: ExtensionAPI) {
         seenComments: new Set(),
         seenChecks: new Set(),
         unsubscribeInput: () => {},
+        fixing: false,
       };
       w.unsubscribeInput = ctx.ui.onTerminalInput((data) => {
         if (matchesKey(data, "escape")) stop("escape pressed");
         return undefined;
       });
       watch = w;
-      setWidget(w);
+      installWidget(w);
       schedule(w, 0);
     },
   });
