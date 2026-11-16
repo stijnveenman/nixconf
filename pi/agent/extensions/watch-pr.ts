@@ -244,11 +244,16 @@ export default function (pi: ExtensionAPI) {
       "--json", "name,state,bucket,link,workflow",
     ]);
     // `gh pr checks` exits non-zero for failing/pending checks but still prints JSON.
-    try {
-      return JSON.parse(res.stdout || "[]") as Check[];
-    } catch {
-      return [];
+    const stdout = res.stdout.trim();
+    if (stdout) {
+      try {
+        return JSON.parse(stdout) as Check[];
+      } catch {
+        // fall through to the error below
+      }
     }
+    if (/no checks reported/i.test(res.stderr)) return [];
+    throw new Error(`gh pr checks: ${res.stderr.trim().split("\n")[0] || `exit ${res.code}`}`);
   }
 
   async function fetchComments(w: Watch) {
