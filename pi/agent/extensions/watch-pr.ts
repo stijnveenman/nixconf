@@ -7,16 +7,19 @@
  * - Any user prompt or Escape cancels the watch.
  * - While watching, bash commands that would post PR comments/reviews are blocked.
  *
- * Settings (`settings.json`, optional):
- *   "watchPr": {
+ * Config (optional): `~/.pi/agent/watch-pr.json`, overridden per key by
+ * `<project>/.pi/watch-pr.json` when the project is trusted.
+ *   {
  *     "summaryModel": "github-copilot/claude-haiku-5.5", // "provider/id", bare id, or substring; default "haiku"
  *     "intervalSeconds": 30,
- *     "ignoreAuthors": ["codecov[bot]"]
+ *     "ignoreAuthors": ["some-bot[bot]"]
  *   }
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
+import { CONFIG_DIR_NAME, getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import { matchesKey } from "@earendil-works/pi-tui";
 
 type WatchSettings = { summaryModel: string; intervalSeconds: number; ignoreAuthors: string[] };
@@ -53,8 +56,38 @@ Be concise. Do not propose code changes. Ignore noise such as setup steps and wa
 const NO_REPLY_NOTE = `IMPORTANT: Never reply to, react to, resolve, or post PR comments or reviews
 (no \`gh pr comment\`, \`gh pr review\`, \`gh api\` comment/review mutations). Only change code.`;
 
-function readSettings(pi: ExtensionAPI): WatchSettings {
-  const raw = ((pi.getSettings() as Record<string, unknown>).watchPr ?? {}) as Partial<WatchSettings>;
+const CONFIG_FILE = "watch-pr.json";
+
+function configPaths(ctx: ExtensionContext): string[] {
+  const paths = [join(getAgentDir(), CONFIG_FILE)];
+  if (ctx.isProjectTrusted()) paths.push(join(ctx.cwd, CONFIG_DIR_NAME, CONFIG_FILE));
+  return paths;
+}
+
+// Throws on unreadable or malformed config files.
+function loadConfig(ctx: ExtensionContext): Partial<WatchSettings> {
+  let merged: Partial<WatchSettings> = {};
+  for (const path of configPaths(ctx)) {
+    if (!existsSync(path)) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(path, "utf8"));
+    } catch (error) {
+      throw new Error(`${path}: ${(error as Error).message}`);
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(`${path}: expected a JSON object`);
+    merged = { ...merged, ...(parsed as Partial<WatchSettings>) };
+  }
+  return merged;
+}
+
+function readSettings(ctx: ExtensionContext): WatchSettings {
+  let raw: Partial<WatchSettings> = {};
+  try {
+    raw = loadConfig(ctx);
+  } catch {
+    // Reported when the watch starts; fall back to defaults if it breaks later.
+  }
   return {
     summaryModel: typeof raw.summaryModel === "string" && raw.summaryModel ? raw.summaryModel : "haiku",
     intervalSeconds:
@@ -181,7 +214,7 @@ export default function (pi: ExtensionAPI) {
       sections.push(`## ${check.workflow ? `${check.workflow} / ` : ""}${check.name}\n${check.link}\n\n${log ?? "(no log available)"}`);
     }
     const raw = sections.join("\n\n");
-    const settings = readSettings(pi);
+    const settings = readSettings(w.ctx);
     const model = resolveSummaryModel(w.ctx, settings.summaryModel);
     if (!model) return raw;
     try {
@@ -211,7 +244,7 @@ export default function (pi: ExtensionAPI) {
   }
 
   async function poll(w: Watch) {
-    const settings = readSettings(pi);
+    const settings = readSettings(w.ctx);
     const ignored = new Set(settings.ignoreAuthors);
 
     const [checks, comments] = await Promise.all([fetchChecks(w), fetchComments(w)]);
@@ -284,7 +317,7 @@ export default function (pi: ExtensionAPI) {
           w.polling = false;
         }
       }
-      schedule(w, readSettings(pi).intervalSeconds * 1000);
+      schedule(w, readSettings(w.ctx).intervalSeconds * 1000);
     }, delayMs);
   }
 
@@ -292,6 +325,12 @@ export default function (pi: ExtensionAPI) {
     description: "Watch the current branch's PR and fix failing CI checks and review comments",
     handler: async (_args, ctx) => {
       stop();
+      try {
+        loadConfig(ctx);
+      } catch (error) {
+        ctx.ui.notify(`watch-pr config error: ${(error as Error).message}`, "error");
+        return;
+      }
       const res = await pi.exec("gh", ["pr", "view", "--json", "number,url,state"], { cwd: ctx.cwd, timeout: 30_000 });
       if (res.code !== 0) {
         ctx.ui.notify(`No PR for the current branch: ${res.stderr.trim()}`, "error");
