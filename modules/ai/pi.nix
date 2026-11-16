@@ -1,4 +1,8 @@
-{config, ...}: let
+{
+  config,
+  inputs,
+  ...
+}: let
   flakeModules = config.flake.modules;
 in {
   flake.modules.homeManager.pi = {
@@ -12,13 +16,14 @@ in {
       if repoPath == null
       then ../../pi/agent + "/${path}"
       else config.lib.file.mkOutOfStoreSymlink "${repoPath}/pi/agent/${path}";
-    piDirectory = directory: excluded:
+    piDirectory = directory: excluded: extra:
       pkgs.linkFarm "pi-${directory}" (
         map (name: {
           inherit name;
           path = piSource "${directory}/${name}";
         }) (lib.filter (name: !(builtins.elem name excluded))
           (builtins.attrNames (builtins.readDir (../../pi/agent + "/${directory}"))))
+        ++ extra
       );
   in {
     imports = [flakeModules.homeManager.repo];
@@ -29,8 +34,14 @@ in {
       ".pi/agent/settings.json".source = piSource "settings.json";
       ".pi/agent/keybindings.json".source = piSource "keybindings.json";
       ".pi/agent/AGENTS.md".source = piSource "AGENTS.md";
-      ".pi/agent/extensions".source = piDirectory "extensions" ["workmux-status.ts"];
-      ".pi/agent/skills".source = piDirectory "skills" ["worktree"];
+      ".pi/agent/extensions".source = piDirectory "extensions" ["workmux-status.ts"] [
+        {
+          # Same asset `herdr integration install pi` writes, which fails on the read-only store dir.
+          name = "herdr-agent-state.ts";
+          path = "${inputs.herdr}/src/integration/assets/pi/herdr-agent-state.ts";
+        }
+      ];
+      ".pi/agent/skills".source = piDirectory "skills" ["worktree"] [];
     };
   };
 }
