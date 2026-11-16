@@ -12,7 +12,8 @@
  *   {
  *     "summaryModel": "github-copilot/claude-haiku-5.5", // "provider/id", bare id, or substring; default "haiku"
  *     "intervalSeconds": 30,
- *     "ignoreAuthors": ["some-bot[bot]"]
+ *     "ignoreAuthors": ["some-bot[bot]"],
+ *     "ignoreBodyPatterns": ["Terraform Plan:"] // regexes; matching comments are ignored
  *   }
  */
 
@@ -22,7 +23,12 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { CONFIG_DIR_NAME, getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import { matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 
-type WatchSettings = { summaryModel: string; intervalSeconds: number; ignoreAuthors: string[] };
+type WatchSettings = {
+  summaryModel: string;
+  intervalSeconds: number;
+  ignoreAuthors: string[];
+  ignoreBodyPatterns: string[];
+};
 
 type Check = { name: string; state: string; bucket: string; link: string; workflow?: string };
 
@@ -95,6 +101,13 @@ function loadConfig(ctx: ExtensionContext): Partial<WatchSettings> {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(`${path}: expected a JSON object`);
     merged = { ...merged, ...(parsed as Partial<WatchSettings>) };
   }
+  for (const pattern of Array.isArray(merged.ignoreBodyPatterns) ? merged.ignoreBodyPatterns : []) {
+    try {
+      new RegExp(String(pattern));
+    } catch (error) {
+      throw new Error(`invalid ignoreBodyPatterns entry ${JSON.stringify(pattern)}: ${(error as Error).message}`);
+    }
+  }
   return merged;
 }
 
@@ -110,6 +123,7 @@ function readSettings(ctx: ExtensionContext): WatchSettings {
     intervalSeconds:
       typeof raw.intervalSeconds === "number" && raw.intervalSeconds >= 5 ? raw.intervalSeconds : 30,
     ignoreAuthors: Array.isArray(raw.ignoreAuthors) ? raw.ignoreAuthors.map(String) : [],
+    ignoreBodyPatterns: Array.isArray(raw.ignoreBodyPatterns) ? raw.ignoreBodyPatterns.map(String) : [],
   };
 }
 
@@ -335,7 +349,15 @@ export default function (pi: ExtensionAPI) {
 
   async function poll(w: Watch) {
     const settings = readSettings(w.ctx);
-    const ignored = new Set(settings.ignoreAuthors);
+    const ignoredAuthors = new Set(settings.ignoreAuthors);
+    const ignoredBodies = settings.ignoreBodyPatterns.flatMap((p) => {
+      try {
+        return [new RegExp(p)];
+      } catch {
+        return [];
+      }
+    });
+    const isIgnored = (c: Comment) => ignoredAuthors.has(c.author) || ignoredBodies.some((re) => re.test(c.body));
 
     const [checks, comments] = await Promise.all([fetchChecks(w), fetchComments(w)]);
     if (watch !== w) return;
@@ -348,10 +370,10 @@ export default function (pi: ExtensionAPI) {
     // Comments: unresolved review threads with unseen comments, plus general
     // comments/reviews posted after the watch started.
     const newThreads = comments.threads.filter((t) =>
-      t.comments.some((c) => !w.seenComments.has(c.id) && !ignored.has(c.author)),
+      t.comments.some((c) => !w.seenComments.has(c.id) && !isIgnored(c)),
     );
     const newGeneral = comments.general.filter(
-      (c) => c.body && !w.seenComments.has(c.id) && !ignored.has(c.author) && c.createdAt >= w.startedAt,
+      (c) => c.body && !w.seenComments.has(c.id) && !isIgnored(c) && c.createdAt >= w.startedAt,
     );
 
     const failed = checks.filter((c) => c.bucket === "fail" && !w.seenChecks.has(`${c.name}|${c.link}`));

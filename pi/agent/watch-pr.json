@@ -1,0 +1,3 @@
+{
+  "ignoreBodyPatterns": ["Terraform Plan:"]
+}
