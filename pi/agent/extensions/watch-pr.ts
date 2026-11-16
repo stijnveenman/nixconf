@@ -4,6 +4,7 @@
  *
  * - Polls only while the agent is idle.
  * - Failing CI logs are summarised by a cheap model before prompting.
+ * - Stops after idleTimeoutMinutes (default 60) without activity (new failures/comments, pending checks, agent work).
  * - Any user prompt or Escape cancels the watch.
  * - While watching, bash commands that would post PR comments/reviews are blocked.
  *
@@ -12,6 +13,7 @@
  *   {
  *     "summaryModel": "github-copilot/claude-haiku-5.5", // "provider/id", bare id, or substring; default "haiku"
  *     "intervalSeconds": 30,
+ *     "idleTimeoutMinutes": 60, // stop watching after this long without activity
  *     "ignoreAuthors": ["some-bot[bot]"],
  *     "ignoreBodyPatterns": ["Terraform Plan:"] // regexes; matching comments are ignored
  *   }
@@ -26,6 +28,7 @@ import { matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 type WatchSettings = {
   summaryModel: string;
   intervalSeconds: number;
+  idleTimeoutMinutes: number;
   ignoreAuthors: string[];
   ignoreBodyPatterns: string[];
 };
@@ -56,6 +59,7 @@ type Watch = {
   fixing: boolean;
   error?: string;
   nextPollAt?: number;
+  lastActivityAt: number;
 };
 
 const SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -122,6 +126,8 @@ function readSettings(ctx: ExtensionContext): WatchSettings {
     summaryModel: typeof raw.summaryModel === "string" && raw.summaryModel ? raw.summaryModel : "haiku",
     intervalSeconds:
       typeof raw.intervalSeconds === "number" && raw.intervalSeconds >= 5 ? raw.intervalSeconds : 30,
+    idleTimeoutMinutes:
+      typeof raw.idleTimeoutMinutes === "number" && raw.idleTimeoutMinutes > 0 ? raw.idleTimeoutMinutes : 60,
     ignoreAuthors: Array.isArray(raw.ignoreAuthors) ? raw.ignoreAuthors.map(String) : [],
     ignoreBodyPatterns: Array.isArray(raw.ignoreBodyPatterns) ? raw.ignoreBodyPatterns.map(String) : [],
   };
@@ -379,6 +385,7 @@ export default function (pi: ExtensionAPI) {
     const failed = checks.filter((c) => c.bucket === "fail" && !w.seenChecks.has(`${c.name}|${c.link}`));
     w.checks = checks;
     w.unresolvedThreads = comments.threads.length;
+    if (checks.some((c) => c.bucket === "pending")) w.lastActivityAt = Date.now();
 
     if (failed.length === 0 && newThreads.length === 0 && newGeneral.length === 0) return;
 
@@ -392,6 +399,7 @@ export default function (pi: ExtensionAPI) {
     // Bail out if cancelled or the user started something meanwhile.
     if (watch !== w || !w.ctx.isIdle()) return;
 
+    w.lastActivityAt = Date.now();
     for (const c of failed) w.seenChecks.add(`${c.name}|${c.link}`);
     for (const t of comments.threads) for (const c of t.comments) w.seenComments.add(c.id);
     for (const c of comments.general) w.seenComments.add(c.id);
@@ -422,6 +430,12 @@ export default function (pi: ExtensionAPI) {
     w.nextPollAt = Date.now() + delayMs;
     w.timer = setTimeout(async () => {
       if (watch !== w) return;
+      if (!w.ctx.isIdle() || w.ctx.hasPendingMessages()) w.lastActivityAt = Date.now();
+      const timeoutMinutes = readSettings(w.ctx).idleTimeoutMinutes;
+      if (Date.now() - w.lastActivityAt >= timeoutMinutes * 60_000) {
+        stop(`no activity for ${formatDuration(timeoutMinutes * 60_000)}`);
+        return;
+      }
       if (w.ctx.isIdle() && !w.ctx.hasPendingMessages() && !w.polling) {
         w.polling = true;
         w.fixing = false;
@@ -479,6 +493,7 @@ export default function (pi: ExtensionAPI) {
         seenChecks: new Set(),
         unsubscribeInput: () => {},
         fixing: false,
+        lastActivityAt: Date.now(),
       };
       w.unsubscribeInput = ctx.ui.onTerminalInput((data) => {
         if (matchesKey(data, "escape")) stop("escape pressed");
