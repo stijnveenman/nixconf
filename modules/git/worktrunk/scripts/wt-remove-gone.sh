@@ -1,17 +1,20 @@
 set -euo pipefail
 
 usage() {
-  printf 'usage: wt remove-gone [--force] [--foreground]\n\n'
+  printf 'usage: wt remove-gone [--force] [--foreground] [--dry-run]\n\n'
   printf 'Remove worktrees whose upstream branch was merged and deleted (gone).\n\n'
   printf '  -f, --force   remove dirty worktrees and delete unmerged branches\n'
   printf '  --foreground  block until each removal completes\n'
+  printf '  -n, --dry-run list worktrees that would be removed\n'
 }
 
 opts=()
+dry_run=false
 for arg in "$@"; do
   case $arg in
     -f | --force) opts+=(--force --force-delete) ;;
     --foreground) opts+=(--foreground) ;;
+    -n | --dry-run) dry_run=true ;;
     -h | --help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
@@ -42,6 +45,10 @@ fi
 
 status=0
 for branch in "${gone[@]}"; do
+  if "$dry_run"; then
+    printf 'Would remove %s (upstream gone)\n' "$branch"
+    continue
+  fi
   printf 'Removing %s (upstream gone)\n' "$branch"
   "$wt" remove "${opts[@]}" "$branch" || status=1
 done
