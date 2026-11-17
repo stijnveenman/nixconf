@@ -368,6 +368,22 @@
         "type": "github"
       }
     },
+    "pi-web-access": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794550951,
+        "narHash": "sha256-kvxwqQzvUEvBU8URxTCe4hGbWiUa41TbsdtdiM6+GqE=",
+        "owner": "nicobailon",
+        "repo": "pi-web-access",
+        "rev": "896d75bec55e316726db287a870eb166c4e3f40c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nicobailon",
+        "repo": "pi-web-access",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "claude-desktop": "claude-desktop",
@@ -381,6 +397,7 @@
         "niri": "niri",
         "nixpkgs": "nixpkgs_3",
         "pi": "pi",
+        "pi-web-access": "pi-web-access",
         "smart-splits": "smart-splits"
       }
     },

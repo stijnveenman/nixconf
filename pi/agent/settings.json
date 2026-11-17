@@ -24,10 +24,5 @@
     "github-copilot/gpt-6-luna"
   ],
   "tuiMode": "fullscreen",
-  "packages": [
-    "npm:pi-web-access@0.47.0"
-  ],
-  "extensionChangelogVersions": {
-    "{\"source\":\"npm:pi-web-access@0.47.0\",\"scope\":\"user\"}": "0.47.0"
-  }
+  "packages": []
 }
