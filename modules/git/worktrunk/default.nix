@@ -9,12 +9,14 @@
     herdr = lib.getExe inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
     git = lib.getExe pkgs.git;
     jq = lib.getExe pkgs.jq;
+    gh = lib.getExe pkgs.gh;
 
     wtStart = pkgs.writeShellScript "wt-start" ''
       wt=${lib.escapeShellArg wt}
       herdr=${lib.escapeShellArg herdr}
       git=${lib.escapeShellArg git}
       jq=${lib.escapeShellArg jq}
+      gh=${lib.escapeShellArg gh}
       ${builtins.readFile ./scripts/wt-start.sh}
     '';
 

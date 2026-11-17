@@ -1,7 +1,7 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' 'Usage: wt start <branch> [--base <base>] [--model|-m <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
+  printf '%s\n' 'Usage: wt start (<branch> [--base <base>] | --pr <number> [--fix]) [--model|-m <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
 }
 
 fail() {
@@ -11,6 +11,8 @@ fail() {
 
 branch=
 base=
+pr=
+fix=false
 model=
 prompt=
 prompt_file=
@@ -21,6 +23,11 @@ while [ "$#" -gt 0 ]; do
     --base)
       [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--base requires a value'
       base=$2
+      shift 2
+      ;;
+    --pr)
+      [ "$#" -ge 2 ] && [[ $2 =~ ^[0-9]+$ ]] || fail '--pr requires a pull request number'
+      pr=$2
       shift 2
       ;;
     --model|-m)
@@ -42,6 +49,10 @@ while [ "$#" -gt 0 ]; do
       prompt_file=$2
       shift 2
       ;;
+    --fix)
+      fix=true
+      shift
+      ;;
     --focus)
       focus=true
       shift
@@ -58,6 +69,17 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+if "$fix"; then
+  [ -n "$pr" ] || fail '--fix requires --pr'
+  [ -z "$prompt_source" ] || fail '--fix cannot be combined with --prompt or --prompt-file'
+  prompt="fix the pr's failed ci checks, push to the upstream, and disable auto-merge if enabled"
+fi
+if [ -n "$pr" ]; then
+  [ -z "$branch" ] || fail '--pr cannot be combined with a branch name'
+  [ -z "$base" ] || fail '--pr cannot be combined with --base'
+  branch=$("$gh" pr view "$pr" --json headRefName --jq .headRefName) || fail "cannot look up PR #$pr"
+  [ -n "$branch" ] || fail "PR #$pr has no head branch"
+fi
 [ -n "$branch" ] || { usage >&2; exit 1; }
 if [ "$prompt_source" = file ]; then
   [ -f "$prompt_file" ] && [ -r "$prompt_file" ] || fail "cannot read prompt file: $prompt_file"
@@ -72,12 +94,16 @@ source_json=$("$herdr" worktree list --cwd "$PWD")
 repo_root=$(printf '%s\n' "$source_json" | "$jq" -er '.result.source.repo_root | select(type == "string" and length > 0)')
 
 args=(switch --no-cd --format=json)
-if ! "$git" show-ref --verify --quiet "refs/heads/$branch"; then
+target=$branch
+if [ -n "$pr" ]; then
+  # Worktrunk fetches the PR head (including forks) via the pr: shortcut.
+  target=pr:$pr
+elif ! "$git" show-ref --verify --quiet "refs/heads/$branch"; then
   args+=(--create)
 fi
 # Worktrunk resolves and validates bases, including shortcuts such as pr:123.
 [ -z "$base" ] || args+=(--base "$base")
-result=$("$wt" "${args[@]}" "$branch")
+result=$("$wt" "${args[@]}" "$target")
 checkout=$(printf '%s\n' "$result" | "$jq" -er '.path | select(type == "string" and length > 0)')
 
 # Opening via the primary checkout nests the workspace under the correct repo,
