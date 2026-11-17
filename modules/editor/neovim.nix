@@ -12,16 +12,12 @@ in {
     ...
   }: let
     isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-    repoPath = config.my.nixconf.liveRepoPath;
   in {
     imports = [flakeModules.homeManager.repo];
 
     home.sessionVariables.NVIM_APPNAME = "nvim-nixconf";
 
-    home.file.".config/nvim-nixconf".source =
-      if repoPath == null
-      then ../../nvim
-      else config.lib.file.mkOutOfStoreSymlink "${repoPath}/nvim";
+    home.file.".config/nvim-nixconf".source = config.lib.nixconf.source "nvim";
 
     programs.neovim = {
       enable = true;

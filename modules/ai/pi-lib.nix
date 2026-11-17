@@ -1,19 +1,17 @@
 # Home Manager helpers share the consuming host's config and package set.
-{...}: {
+{config, ...}: let
+  flakeModules = config.flake.modules;
+in {
   flake.modules.homeManager.pi-lib = {
     config,
     lib,
     pkgs,
     ...
   }: let
-    repoPath = config.my.nixconf.liveRepoPath;
     piAgent = ../../pi/agent;
 
     # A file under `pi/agent`: store copy, or a live symlink into the repo.
-    source = path:
-      if repoPath == null
-      then piAgent + "/${path}"
-      else config.lib.file.mkOutOfStoreSymlink "${repoPath}/pi/agent/${path}";
+    source = path: config.lib.nixconf.source "pi/agent/${path}";
 
     # Links every entry of `pi/agent/<directory>` (minus `excluded`) plus `extra`.
     directory = directory: excluded: extra:
@@ -84,6 +82,7 @@
       }/lib/node_modules/${manifest.name}";
     };
   in {
+    imports = [flakeModules.homeManager.repo];
     config.lib.pi = {inherit source directory package;};
   };
 }

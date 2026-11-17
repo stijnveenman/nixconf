@@ -1,13 +1,7 @@
 {config, ...}: let
   flakeModules = config.flake.modules;
 in {
-  flake.modules.homeManager.opencode = {config, ...}: let
-    repoPath = config.my.nixconf.liveRepoPath;
-    repoSource = path:
-      if repoPath == null
-      then ../.. + "/${path}"
-      else config.lib.file.mkOutOfStoreSymlink "${repoPath}/${path}";
-  in {
+  flake.modules.homeManager.opencode = {config, ...}: {
     imports = [flakeModules.homeManager.repo];
 
     programs.opencode = {
@@ -28,7 +22,7 @@ in {
       validateFiles.cli = true;
     };
 
-    home.file.".config/opencode/skill".source = repoSource "opencode/skill";
-    home.file.".config/opencode/command".source = repoSource "opencode/command";
+    home.file.".config/opencode/skill".source = config.lib.nixconf.source "opencode/skill";
+    home.file.".config/opencode/command".source = config.lib.nixconf.source "opencode/command";
   };
 }
