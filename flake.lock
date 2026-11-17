@@ -368,6 +368,22 @@
         "type": "github"
       }
     },
+    "pi-subagents": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778891556,
+        "narHash": "sha256-FL7VE60qill5Mdn1DV1RmRDoBeyHPGvIp9MeQ62q6kE=",
+        "owner": "gotgenes",
+        "repo": "pi-subagents",
+        "rev": "bc4faa30128e08dc9de451909347af927059cd37",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gotgenes",
+        "repo": "pi-subagents",
+        "type": "github"
+      }
+    },
     "pi-web-access": {
       "flake": false,
       "locked": {
@@ -397,6 +413,7 @@
         "niri": "niri",
         "nixpkgs": "nixpkgs_3",
         "pi": "pi",
+        "pi-subagents": "pi-subagents",
         "pi-web-access": "pi-web-access",
         "smart-splits": "smart-splits"
       }

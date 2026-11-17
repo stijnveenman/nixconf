@@ -32,6 +32,10 @@
       url = "github:nicobailon/pi-web-access";
       flake = false;
     };
+    pi-subagents = {
+      url = "github:gotgenes/pi-subagents";
+      flake = false;
+    };
     smart-splits = {
       url = "github:mrjones2014/smart-splits.nvim/0ab2e4928dc867dfea3ff1da186e69f289d8a532";
       flake = false;

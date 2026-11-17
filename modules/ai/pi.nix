@@ -16,21 +16,7 @@ in {
       if repoPath == null
       then ../../pi/agent + "/${path}"
       else config.lib.file.mkOutOfStoreSymlink "${repoPath}/pi/agent/${path}";
-    # Builds a Pi package from a non-flake input (`flake = false`) so a normal
-    # `nix flake update` bumps it. Runs the package's `build` script when
-    # present; runtime deps land in the package's own node_modules.
-    # `npmDepsHash` must be refreshed when the upstream package-lock changes.
-    piNpmPackage = {
-      name,
-      src,
-      npmDepsHash,
-      ...
-    } @ args:
-      pkgs.buildNpmPackage ({
-          pname = name;
-          version = "git-${src.shortRev or "unknown"}";
-        }
-        // builtins.removeAttrs args ["name"]);
+    piPackage = import ./_lib/pi-package.nix {inherit lib pkgs;};
     piDirectory = directory: excluded: extra:
       pkgs.linkFarm "pi-${directory}" (
         map (name: {
@@ -54,14 +40,11 @@ in {
       ".pi/agent/AGENTS.md".source = piSource "AGENTS.md";
       ".pi/agent/watch-pr.json".source = piSource "watch-pr.json";
       ".pi/agent/extensions".source = piDirectory "extensions" ["workmux-status.ts"] [
-        {
-          name = "pi-web-access";
-          path = "${piNpmPackage {
-            name = "pi-web-access";
-            src = inputs.pi-web-access;
-            npmDepsHash = "sha256-kmyoh7lvHssAhSBU2qKqk9ElGgm6Z5BZUtBjy1+hri4=";
-          }}/lib/node_modules/pi-web-access";
-        }
+        (piPackage {src = inputs.pi-web-access;})
+        (piPackage {
+          src = inputs.pi-subagents;
+          hash = "sha256-405Bq+e+p+eE0KLQmy7Wox5q5fwcmAAcmQG0MdWXyEE=";
+        })
         {
           # Same asset `herdr integration install pi` writes, which fails on the read-only store dir.
           name = "herdr-agent-state.ts";
