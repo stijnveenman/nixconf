@@ -39,7 +39,7 @@ in {
       ".pi/agent/keybindings.json".source = piSource "keybindings.json";
       ".pi/agent/AGENTS.md".source = piSource "AGENTS.md";
       ".pi/agent/watch-pr.json".source = piSource "watch-pr.json";
-      ".pi/agent/extensions".source = piDirectory "extensions" ["workmux-status.ts"] [
+      ".pi/agent/extensions".source = piDirectory "extensions" [] [
         (piPackage {src = inputs.pi-web-access;})
         (piPackage {
           src = inputs.pi-subagents;
