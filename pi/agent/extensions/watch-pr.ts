@@ -1,6 +1,7 @@
 /**
  * /watch-pr: watch the current branch's pull request for failing CI checks and
- * review comments, and prompt the agent to fix them.
+ * review comments, and prompt the agent to fix them. Also exposed to the agent
+ * as the `watch_pr` tool.
  *
  * - Polls only while the agent is idle.
  * - Failing CI logs are summarised by a cheap model before prompting.
@@ -23,6 +24,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME, getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 import { matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 
 type WatchSettings = {
@@ -458,54 +460,76 @@ export default function (pi: ExtensionAPI) {
     }, delayMs);
   }
 
+  async function start(ctx: ExtensionContext): Promise<{ ok: boolean; message: string; level: "info" | "warning" | "error" }> {
+    stop();
+    try {
+      loadConfig(ctx);
+    } catch (error) {
+      return { ok: false, level: "error", message: `watch-pr config error: ${(error as Error).message}` };
+    }
+    const res = await pi.exec("gh", ["pr", "view", "--json", "number,url,state"], { cwd: ctx.cwd, timeout: 30_000 });
+    if (res.code !== 0) {
+      return { ok: false, level: "error", message: `No PR for the current branch: ${res.stderr.trim()}` };
+    }
+    const pr = JSON.parse(res.stdout) as { number: number; url: string; state: string };
+    if (pr.state !== "OPEN") {
+      return { ok: false, level: "warning", message: `PR #${pr.number} is ${pr.state.toLowerCase()}` };
+    }
+    const [, owner, repo] = pr.url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\//) ?? [];
+    if (!owner || !repo) {
+      return { ok: false, level: "error", message: `Cannot parse PR url ${pr.url}` };
+    }
+
+    const w: Watch = {
+      number: pr.number,
+      owner,
+      repo,
+      url: pr.url,
+      startedAt: new Date().toISOString(),
+      ctx,
+      abort: new AbortController(),
+      polling: false,
+      seenComments: new Set(),
+      seenChecks: new Set(),
+      unsubscribeInput: () => {},
+      fixing: false,
+      lastActivityAt: Date.now(),
+    };
+    w.unsubscribeInput = ctx.ui.onTerminalInput((data) => {
+      if (matchesKey(data, "escape")) stop("escape pressed");
+      return undefined;
+    });
+    watch = w;
+    installWidget(w);
+    schedule(w, 0);
+    return { ok: true, level: "info", message: `Watching PR #${pr.number} (${pr.url})` };
+  }
+
   pi.registerCommand("watch-pr", {
     description: "Watch the current branch's PR and fix failing CI checks and review comments",
     handler: async (_args, ctx) => {
-      stop();
-      try {
-        loadConfig(ctx);
-      } catch (error) {
-        ctx.ui.notify(`watch-pr config error: ${(error as Error).message}`, "error");
-        return;
-      }
-      const res = await pi.exec("gh", ["pr", "view", "--json", "number,url,state"], { cwd: ctx.cwd, timeout: 30_000 });
-      if (res.code !== 0) {
-        ctx.ui.notify(`No PR for the current branch: ${res.stderr.trim()}`, "error");
-        return;
-      }
-      const pr = JSON.parse(res.stdout) as { number: number; url: string; state: string };
-      if (pr.state !== "OPEN") {
-        ctx.ui.notify(`PR #${pr.number} is ${pr.state.toLowerCase()}`, "warning");
-        return;
-      }
-      const [, owner, repo] = pr.url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\//) ?? [];
-      if (!owner || !repo) {
-        ctx.ui.notify(`Cannot parse PR url ${pr.url}`, "error");
-        return;
-      }
+      const result = await start(ctx);
+      if (!result.ok) ctx.ui.notify(result.message, result.level);
+    },
+  });
 
-      const w: Watch = {
-        number: pr.number,
-        owner,
-        repo,
-        url: pr.url,
-        startedAt: new Date().toISOString(),
-        ctx,
-        abort: new AbortController(),
-        polling: false,
-        seenComments: new Set(),
-        seenChecks: new Set(),
-        unsubscribeInput: () => {},
-        fixing: false,
-        lastActivityAt: Date.now(),
+  pi.registerTool({
+    name: "watch_pr",
+    label: "Watch PR",
+    description:
+      "Start watching the current branch's open pull request. While the agent is idle, failing CI checks and new review comments are polled and sent back as prompts to fix. Replaces any existing watch.",
+    promptSnippet: "Watch the current branch's PR for failing CI and review comments",
+    promptGuidelines: [
+      "Use watch_pr right after creating a pull request, or when the user asks to watch, monitor or babysit the PR.",
+    ],
+    parameters: Type.Object({}),
+    async execute(_id, _params, _signal, _onUpdate, ctx) {
+      const result = await start(ctx);
+      return {
+        content: [{ type: "text", text: result.message }],
+        details: { ok: result.ok },
+        isError: !result.ok,
       };
-      w.unsubscribeInput = ctx.ui.onTerminalInput((data) => {
-        if (matchesKey(data, "escape")) stop("escape pressed");
-        return undefined;
-      });
-      watch = w;
-      installWidget(w);
-      schedule(w, 0);
     },
   });
 
