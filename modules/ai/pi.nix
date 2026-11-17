@@ -4,6 +4,7 @@
   ...
 }: let
   flakeModules = config.flake.modules;
+  piLib = config.flake.lib.pi;
 in {
   flake.modules.homeManager.pi = {
     config,
@@ -11,21 +12,7 @@ in {
     pkgs,
     ...
   }: let
-    repoPath = config.my.nixconf.liveRepoPath;
-    piSource = path:
-      if repoPath == null
-      then ../../pi/agent + "/${path}"
-      else config.lib.file.mkOutOfStoreSymlink "${repoPath}/pi/agent/${path}";
-    piPackage = import ./_lib/pi-package.nix {inherit lib pkgs;};
-    piDirectory = directory: excluded: extra:
-      pkgs.linkFarm "pi-${directory}" (
-        map (name: {
-          inherit name;
-          path = piSource "${directory}/${name}";
-        }) (lib.filter (name: !(builtins.elem name excluded))
-          (builtins.attrNames (builtins.readDir (../../pi/agent + "/${directory}"))))
-        ++ extra
-      );
+    pi = piLib.mkHelpers {inherit config lib pkgs;};
   in {
     imports = [flakeModules.homeManager.repo];
 
@@ -35,13 +22,13 @@ in {
     # Keep mutable Pi state in the home directory, separate from configuration.
     # In live mode, adding or removing entries still requires a rebuild.
     home.file = {
-      ".pi/agent/settings.json".source = piSource "settings.json";
-      ".pi/agent/keybindings.json".source = piSource "keybindings.json";
-      ".pi/agent/AGENTS.md".source = piSource "AGENTS.md";
-      ".pi/agent/watch-pr.json".source = piSource "watch-pr.json";
-      ".pi/agent/extensions".source = piDirectory "extensions" [] [
-        (piPackage {src = inputs.pi-web-access;})
-        (piPackage {
+      ".pi/agent/settings.json".source = pi.source "settings.json";
+      ".pi/agent/keybindings.json".source = pi.source "keybindings.json";
+      ".pi/agent/AGENTS.md".source = pi.source "AGENTS.md";
+      ".pi/agent/watch-pr.json".source = pi.source "watch-pr.json";
+      ".pi/agent/extensions".source = pi.directory "extensions" [] [
+        (pi.package {src = inputs.pi-web-access;})
+        (pi.package {
           src = inputs.pi-subagents;
           hash = "sha256-405Bq+e+p+eE0KLQmy7Wox5q5fwcmAAcmQG0MdWXyEE=";
         })
@@ -51,7 +38,7 @@ in {
           path = "${inputs.herdr}/src/integration/assets/pi/herdr-agent-state.ts";
         }
       ];
-      ".pi/agent/skills".source = piDirectory "skills" ["worktree"] [];
+      ".pi/agent/skills".source = pi.directory "skills" ["worktree"] [];
     };
   };
 }
