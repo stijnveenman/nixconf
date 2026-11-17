@@ -405,21 +405,25 @@ export default function (pi: ExtensionAPI) {
     for (const c of comments.general) w.seenComments.add(c.id);
 
     const parts = [`PR #${w.number} (${w.url}) needs attention.`];
-    if (ciSummary) parts.push(`## Failing CI checks\n\n${ciSummary}`);
-    if (newThreads.length > 0) {
+    if (ciSummary) {
+      parts.push(`## Failing CI checks\n\n${ciSummary}\n\nFix the failing checks.`);
+    }
+    if (newThreads.length > 0 || newGeneral.length > 0) {
+      const sections: string[] = [];
+      if (newThreads.length > 0) {
+        sections.push(
+          `### Unresolved review threads\n\n` +
+            newThreads
+              .map((t) => `#### ${t.path ?? "(file)"}${t.line ? `:${t.line}` : ""}\n\n${t.comments.map(formatComment).join("\n\n")}`)
+              .join("\n\n"),
+        );
+      }
+      if (newGeneral.length > 0) sections.push(`### New PR comments\n\n${newGeneral.map(formatComment).join("\n\n")}`);
       parts.push(
-        `## Unresolved review threads\n\n` +
-          newThreads
-            .map((t) => `### ${t.path ?? "(file)"}${t.line ? `:${t.line}` : ""}\n\n${t.comments.map(formatComment).join("\n\n")}`)
-            .join("\n\n"),
+        `## Review feedback\n\n${sections.join("\n\n")}\n\nAddress the review feedback items above where they are valid.`,
       );
     }
-    if (newGeneral.length > 0) parts.push(`## New PR comments\n\n${newGeneral.map(formatComment).join("\n\n")}`);
-    parts.push(
-      "Fix the failing checks and address the review feedback where it is valid. " +
-        "Then commit and push so CI re-runs.",
-      NO_REPLY_NOTE,
-    );
+    parts.push("Then commit and push.", NO_REPLY_NOTE);
 
     w.fixing = true;
     pi.sendUserMessage(parts.join("\n\n"));
