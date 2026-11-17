@@ -47,6 +47,14 @@ in {
             width = popupSize;
             height = popupSize;
           }
+          {
+            key = "ctrl+/";
+            type = "popup";
+            command = lib.getExe pkgs.zsh;
+            description = "temp shell";
+            width = popupSize;
+            height = popupSize;
+          }
         ];
       };
       theme.name = "catppuccin";
