@@ -4,7 +4,6 @@
   ...
 }: let
   flakeModules = config.flake.modules;
-  piLib = config.flake.lib.pi;
 in {
   flake.modules.homeManager.pi = {
     config,
@@ -12,9 +11,12 @@ in {
     pkgs,
     ...
   }: let
-    pi = piLib.mkHelpers {inherit config lib pkgs;};
+    pi = config.lib.pi;
   in {
-    imports = [flakeModules.homeManager.repo];
+    imports = [
+      flakeModules.homeManager.repo
+      flakeModules.homeManager.pi-lib
+    ];
 
     # Pi comes from Nix, so its self-update notice is not actionable.
     home.sessionVariables.PI_SKIP_VERSION_CHECK = "1";

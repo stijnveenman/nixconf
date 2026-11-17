@@ -1,10 +1,10 @@
-# Helpers for wiring Pi configuration and extensions, published as
-# `flake.lib.pi` and consumed by `pi.nix` (and any other module that needs them).
+# Home Manager helpers share the consuming host's config and package set.
 {...}: {
-  flake.lib.pi.mkHelpers = {
+  flake.modules.homeManager.pi-lib = {
     config,
     lib,
     pkgs,
+    ...
   }: let
     repoPath = config.my.nixconf.liveRepoPath;
     piAgent = ../../pi/agent;
@@ -84,6 +84,6 @@
       }/lib/node_modules/${manifest.name}";
     };
   in {
-    inherit source directory package;
+    config.lib.pi = {inherit source directory package;};
   };
 }
