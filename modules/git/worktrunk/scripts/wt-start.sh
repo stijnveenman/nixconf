@@ -71,8 +71,10 @@ while [ "$#" -gt 0 ]; do
 done
 if "$fix"; then
   [ -n "$pr" ] || fail '--fix requires --pr'
-  [ -z "$prompt_source" ] || fail '--fix cannot be combined with --prompt or --prompt-file'
-  prompt="fix the pr's failed ci checks, push to the upstream, and disable auto-merge if enabled"
+  [ "$prompt_source" != file ] || fail '--fix cannot be combined with --prompt-file'
+  fix_prompt="fix the pr's failed ci checks, push to the upstream, and disable auto-merge if enabled"
+  # --prompt adds steering after the fixed instructions.
+  prompt=$fix_prompt${prompt:+$'\n\n'$prompt}
 fi
 if [ -n "$pr" ]; then
   [ -z "$branch" ] || fail '--pr cannot be combined with a branch name'
