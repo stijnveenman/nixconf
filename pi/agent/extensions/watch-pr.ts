@@ -25,7 +25,7 @@ import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME, getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
+import { hyperlink, matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 
 type WatchSettings = {
   summaryModel: string;
@@ -259,7 +259,7 @@ export default function (pi: ExtensionAPI) {
           const approval = approvalRow();
           const lines = [
             theme.fg("accent", "● ") +
-              theme.fg("accent", theme.bold(`Watching PR #${w.number}`)) +
+              theme.fg("accent", theme.bold("Watching PR ")) + hyperlink(theme.fg("accent", theme.bold(`#${w.number}`)), w.url) +
               " " + theme.fg("dim", `${w.owner}/${w.repo}`) + sep + theme.fg("muted", elapsed),
             `${tree("├─")} ${checks.icon} ${theme.bold("Checks")}   ${checks.text}`,
             ...checks.sub.map((s) => `${tree("│")}     ${tree("⎿")} ${theme.fg("muted", s)}`),
