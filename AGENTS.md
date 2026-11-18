@@ -31,10 +31,10 @@ never switch to a configuration that has not built successfully.**
    the current worktree without activating it. A non-zero exit code, Nix
    evaluation error, or build failure means validation **failed**. If the build
    succeeds, trust it; do not inspect generated `/nix/store` output.
-3. **Switch:** after a successful build, switching is allowed in the main
-   worktree. In another worktree, switch only when the user requests it. Use
-   `nhs .`; do not add force flags or use lower-level activation
-   commands.
+3. **Switch:** after a successful build, switch in the main worktree by
+   default, without waiting to be asked. In another worktree, switch only when
+   the user requests it. Use `nhs .`; do not add force flags or use lower-level
+   activation commands.
 
 If the build fails:
 
