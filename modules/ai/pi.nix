@@ -12,6 +12,25 @@ in {
     ...
   }: let
     pi = config.lib.pi;
+
+    # The extension reads `config.json` from, and logs into, its own directory,
+    # which is in the store: add the config and a symlink to a writable logs dir.
+    permissionSystemPackage = pi.package {
+      src = inputs.pi-packages;
+      subdir = "packages/pi-permission-system";
+      hash = "sha256-M0isiVhotrrs3yBuS5RWZIoh+OOieCgz5LrL7RMLMoY=";
+    };
+    permissionSystem = {
+      inherit (permissionSystemPackage) name;
+      path = pkgs.runCommand "pi-permission-system" {} ''
+        mkdir $out
+        for entry in ${permissionSystemPackage.path}/* ${permissionSystemPackage.path}/.[!.]*; do
+          [ -e "$entry" ] && ln -s "$entry" $out/
+        done
+        ln -s ${../../pi/agent/pi-permission-system.json} $out/config.json
+        ln -s ${config.home.homeDirectory}/.pi/agent/logs/pi-permission-system $out/logs
+      '';
+    };
   in {
     imports = [
       flakeModules.homeManager.repo
@@ -27,21 +46,17 @@ in {
       ".pi/agent/settings.json".source = pi.source "settings.json";
       ".pi/agent/keybindings.json".source = pi.source "keybindings.json";
       ".pi/agent/AGENTS.md".source = pi.source "AGENTS.md";
-      ".pi/agent/pi-permissions.jsonc".source = pi.source "pi-permissions.jsonc";
+      # The extension writes logs under its own (read-only) directory; point them here.
+      ".pi/agent/logs/pi-permission-system/.keep".text = "";
       ".pi/agent/watch-pr.json".source = pi.source "watch-pr.json";
       ".pi/agent/extensions".source = pi.directory "extensions" [] [
         (pi.package {src = inputs.pi-web-access;})
         (pi.package {
-          src = inputs.pi-subagents;
-          hash = "sha256-405Bq+e+p+eE0KLQmy7Wox5q5fwcmAAcmQG0MdWXyEE=";
+          src = inputs.pi-packages;
+          subdir = "packages/pi-subagents";
+          hash = "sha256-g19jdpuToV/Mf/QvlPKTEXtz939s16X2ewXWrkhaRuI=";
         })
-        (pi.package {
-          src = inputs.pi-permission-system;
-          nodeModules.jsonc-parser = pkgs.fetchzip {
-            url = "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.3.1.tgz";
-            hash = "sha256-eZb4Epz0UsTTaSstqBl46Sy/KRyKaJ+vBUJ92/6wsZY=";
-          };
-        })
+        permissionSystem
         {
           name = "herdr-agent-state.ts";
           path = "${inputs.herdr}/src/integration/assets/pi/herdr-agent-state.ts";

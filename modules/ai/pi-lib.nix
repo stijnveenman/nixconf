@@ -35,15 +35,21 @@ in {
     package = {
       src,
       hash ? null,
+      # Package directory inside a monorepo `src` (pnpm workspace).
+      subdir ? null,
       # For sources whose lockfile cannot be used (e.g. no `resolved` URLs):
       # `{name = path;}` dependencies linked into `node_modules`, no install step.
       nodeModules ? null,
     }: let
-      manifest = lib.importJSON "${src}/package.json";
+      pkgDir =
+        if subdir == null
+        then "${src}"
+        else "${src}/${subdir}";
+      manifest = lib.importJSON "${pkgDir}/package.json";
       # `@scope/name` -> `name`: extension directory names cannot contain a slash.
       name = lib.last (lib.splitString "/" manifest.name);
       version = "${manifest.version}-${src.shortRev or "dirty"}";
-      needsBuild = lib.any (entry: !builtins.pathExists "${src}/${entry}") (manifest.pi.extensions or []);
+      needsBuild = lib.any (entry: !builtins.pathExists "${pkgDir}/${entry}") (manifest.pi.extensions or []);
       isPnpm = builtins.pathExists "${src}/pnpm-lock.yaml";
 
       npmPackage = pkgs.buildNpmPackage {
@@ -62,10 +68,16 @@ in {
           inherit (finalAttrs) pname version src;
           inherit hash;
           fetcherVersion = 5;
+          pnpmWorkspaces = lib.optional (subdir != null) manifest.name;
         };
+        pnpmWorkspaces = lib.optional (subdir != null) manifest.name;
         buildPhase = ''
           runHook preBuild
-          ${lib.optionalString needsBuild "pnpm run build"}
+          ${lib.optionalString needsBuild (
+            if subdir == null
+            then "pnpm run build"
+            else "pnpm --filter ${manifest.name} run build"
+          )}
           pnpm prune --prod
           runHook postBuild
         '';
@@ -97,7 +109,7 @@ in {
         else if isPnpm
         then pnpmPackage
         else npmPackage
-      }/lib/node_modules/${manifest.name}";
+      }/lib/node_modules/${manifest.name}${lib.optionalString (subdir != null) "/${subdir}"}";
     };
   in {
     imports = [flakeModules.homeManager.repo];

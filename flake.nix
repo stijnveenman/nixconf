@@ -32,12 +32,8 @@
       url = "github:nicobailon/pi-web-access";
       flake = false;
     };
-    pi-subagents = {
-      url = "github:gotgenes/pi-subagents";
-      flake = false;
-    };
-    pi-permission-system = {
-      url = "github:MasuRii/pi-permission-system";
+    pi-packages = {
+      url = "github:gotgenes/pi-packages";
       flake = false;
     };
     smart-splits = {

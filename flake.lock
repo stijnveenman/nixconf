@@ -368,35 +368,19 @@
         "type": "github"
       }
     },
-    "pi-permission-system": {
+    "pi-packages": {
       "flake": false,
       "locked": {
-        "lastModified": 1783047983,
-        "narHash": "sha256-PGxGD7uRbkKrsCpJsviQL987DyQkONIa9YFJ+jM9dSg=",
-        "owner": "MasuRii",
-        "repo": "pi-permission-system",
-        "rev": "9affcc9d1b52cd79b8bb7da2bebb761ac7e5b1d8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "MasuRii",
-        "repo": "pi-permission-system",
-        "type": "github"
-      }
-    },
-    "pi-subagents": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1778891556,
-        "narHash": "sha256-FL7VE60qill5Mdn1DV1RmRDoBeyHPGvIp9MeQ62q6kE=",
+        "lastModified": 1794985339,
+        "narHash": "sha256-4FGMRE4LQUsk9b0WJ4Eb+17Odn33PuHOJK2Y1w4YgjY=",
         "owner": "gotgenes",
-        "repo": "pi-subagents",
-        "rev": "bc4faa30128e08dc9de451909347af927059cd37",
+        "repo": "pi-packages",
+        "rev": "434c2c5f7f20a2d66236c8a9714cb5848f916dd5",
         "type": "github"
       },
       "original": {
         "owner": "gotgenes",
-        "repo": "pi-subagents",
+        "repo": "pi-packages",
         "type": "github"
       }
     },
@@ -429,8 +413,7 @@
         "niri": "niri",
         "nixpkgs": "nixpkgs_3",
         "pi": "pi",
-        "pi-permission-system": "pi-permission-system",
-        "pi-subagents": "pi-subagents",
+        "pi-packages": "pi-packages",
         "pi-web-access": "pi-web-access",
         "smart-splits": "smart-splits"
       }
