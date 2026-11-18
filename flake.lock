@@ -368,6 +368,22 @@
         "type": "github"
       }
     },
+    "pi-permission-system": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783047983,
+        "narHash": "sha256-PGxGD7uRbkKrsCpJsviQL987DyQkONIa9YFJ+jM9dSg=",
+        "owner": "MasuRii",
+        "repo": "pi-permission-system",
+        "rev": "9affcc9d1b52cd79b8bb7da2bebb761ac7e5b1d8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "MasuRii",
+        "repo": "pi-permission-system",
+        "type": "github"
+      }
+    },
     "pi-subagents": {
       "flake": false,
       "locked": {
@@ -413,6 +429,7 @@
         "niri": "niri",
         "nixpkgs": "nixpkgs_3",
         "pi": "pi",
+        "pi-permission-system": "pi-permission-system",
         "pi-subagents": "pi-subagents",
         "pi-web-access": "pi-web-access",
         "smart-splits": "smart-splits"

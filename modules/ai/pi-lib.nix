@@ -35,6 +35,9 @@ in {
     package = {
       src,
       hash ? null,
+      # For sources whose lockfile cannot be used (e.g. no `resolved` URLs):
+      # `{name = path;}` dependencies linked into `node_modules`, no install step.
+      nodeModules ? null,
     }: let
       manifest = lib.importJSON "${src}/package.json";
       # `@scope/name` -> `name`: extension directory names cannot contain a slash.
@@ -73,10 +76,25 @@ in {
           runHook postInstall
         '';
       });
+
+      linkedPackage = pkgs.runCommand "${name}-${version}" {} ''
+        dest=$out/lib/node_modules/${manifest.name}
+        mkdir -p $dest
+        cp -r ${src}/. $dest
+        chmod -R u+w $dest
+        mkdir -p $dest/node_modules
+        ${lib.concatStringsSep "\n" (lib.mapAttrsToList (dep: depPath: ''
+            mkdir -p $dest/node_modules/$(dirname ${dep})
+            cp -r ${depPath} $dest/node_modules/${dep}
+          '')
+          (lib.optionalAttrs (nodeModules != null) nodeModules))}
+      '';
     in {
       inherit name;
       path = "${
-        if isPnpm
+        if nodeModules != null
+        then linkedPackage
+        else if isPnpm
         then pnpmPackage
         else npmPackage
       }/lib/node_modules/${manifest.name}";

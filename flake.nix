@@ -36,6 +36,10 @@
       url = "github:gotgenes/pi-subagents";
       flake = false;
     };
+    pi-permission-system = {
+      url = "github:MasuRii/pi-permission-system";
+      flake = false;
+    };
     smart-splits = {
       url = "github:mrjones2014/smart-splits.nvim/0ab2e4928dc867dfea3ff1da186e69f289d8a532";
       flake = false;
