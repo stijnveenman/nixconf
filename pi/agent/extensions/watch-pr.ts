@@ -57,6 +57,7 @@ type Watch = {
   // Widget state
   checks?: Check[];
   unresolvedThreads?: number;
+  approval?: { decision: string | null; approvers: string[]; changeRequesters: string[] };
   activity?: string;
   fixing: boolean;
   error?: string;
@@ -230,12 +231,32 @@ export default function (pi: ExtensionAPI) {
         return { icon: theme.fg("warning", "●"), text: theme.fg("warning", `${n} unresolved thread${n === 1 ? "" : "s"}`) };
       }
 
+      function approvalRow(): { icon: string; text: string } {
+        const a = w.approval;
+        if (!a) return { icon: spin(), text: theme.fg("muted", "loading…") };
+        const names = (list: string[]) => theme.fg("dim", ` (${list.map((n) => `@${n}`).join(", ")})`);
+        if (a.decision === "APPROVED") {
+          return { icon: theme.fg("success", "✓"), text: theme.fg("success", "approved") + names(a.approvers) };
+        }
+        if (a.decision === "CHANGES_REQUESTED") {
+          return { icon: theme.fg("error", "✗"), text: theme.fg("error", "changes requested") + names(a.changeRequesters) };
+        }
+        if (a.decision === "REVIEW_REQUIRED") {
+          return { icon: theme.fg("warning", "●"), text: theme.fg("warning", "waiting for approval") + (a.approvers.length ? names(a.approvers) : "") };
+        }
+        if (a.approvers.length > 0) {
+          return { icon: theme.fg("success", "✓"), text: theme.fg("success", "approved") + names(a.approvers) };
+        }
+        return { icon: theme.fg("dim", "·"), text: theme.fg("muted", "no approval required") };
+      }
+
       return {
         render(width: number) {
           const tree = (s: string) => theme.fg("dim", s);
           const elapsed = formatDuration(Date.now() - Date.parse(w.startedAt));
           const checks = checksRow();
           const comments = commentsRow();
+          const approval = approvalRow();
           const lines = [
             theme.fg("accent", "● ") +
               theme.fg("accent", theme.bold(`Watching PR #${w.number}`)) +
@@ -243,6 +264,7 @@ export default function (pi: ExtensionAPI) {
             `${tree("├─")} ${checks.icon} ${theme.bold("Checks")}   ${checks.text}`,
             ...checks.sub.map((s) => `${tree("│")}     ${tree("⎿")} ${theme.fg("muted", s)}`),
             `${tree("├─")} ${comments.icon} ${theme.bold("Comments")} ${comments.text}`,
+            `${tree("├─")} ${approval.icon} ${theme.bold("Approval")} ${approval.text}`,
             `${tree("└─")} ${busy() ? spin() : theme.fg("dim", "◦")} ${theme.fg("muted", status())}`,
           ];
           if (w.error) lines.push(`     ${tree("⎿")} ${theme.fg("error", w.error)}`);
@@ -282,6 +304,8 @@ export default function (pi: ExtensionAPI) {
     const query = `query($owner:String!,$repo:String!,$number:Int!){
       repository(owner:$owner,name:$repo){ pullRequest(number:$number){
         state
+        reviewDecision
+        latestOpinionatedReviews(first:30){ nodes{ state author{login} } }
         comments(last:50){ nodes{ id author{login} body url createdAt } }
         reviews(last:50){ nodes{ id author{login} body url createdAt: submittedAt } }
         reviewThreads(last:100){ nodes{ isResolved path line
@@ -302,6 +326,11 @@ export default function (pi: ExtensionAPI) {
     });
     return {
       state: pr.state as string,
+      approval: {
+        decision: (pr.reviewDecision ?? null) as string | null,
+        approvers: (pr.latestOpinionatedReviews.nodes as any[]).filter((n) => n.state === "APPROVED").map((n) => n.author?.login ?? "ghost"),
+        changeRequesters: (pr.latestOpinionatedReviews.nodes as any[]).filter((n) => n.state === "CHANGES_REQUESTED").map((n) => n.author?.login ?? "ghost"),
+      },
       general: [...pr.comments.nodes, ...pr.reviews.nodes].map(toComment),
       threads: (pr.reviewThreads.nodes as any[])
         .filter((t) => !t.isResolved)
@@ -387,6 +416,7 @@ export default function (pi: ExtensionAPI) {
     const failed = checks.filter((c) => c.bucket === "fail" && !w.seenChecks.has(`${c.name}|${c.link}`));
     w.checks = checks;
     w.unresolvedThreads = comments.threads.length;
+    w.approval = comments.approval;
     if (checks.some((c) => c.bucket === "pending")) w.lastActivityAt = Date.now();
 
     if (failed.length === 0 && newThreads.length === 0 && newGeneral.length === 0) return;
