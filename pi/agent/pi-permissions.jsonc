@@ -1,0 +1,11 @@
+{
+  // Main agent: allow everything. Subagents get their own rules via
+  // agents/<name>.md frontmatter.
+  "defaultPolicy": {
+    "tools": "allow",
+    "bash": "allow",
+    "mcp": "allow",
+    "skills": "allow",
+    "special": "allow"
+  }
+}
