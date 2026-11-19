@@ -12,7 +12,7 @@ in {
         confirmQuit = false;
         keybindings.prs = [
           {
-            key = "r";
+            key = "O";
             name = "review in tuicr";
             # tuicr comes from the tuicr module (patched build), so use PATH.
             command = "tuicr pr {{.RepoName}}#{{.PrNumber}}";
