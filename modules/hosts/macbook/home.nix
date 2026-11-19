@@ -20,7 +20,6 @@ in {
       hm.ghostty
       hm.opencode
       hm.pi
-      hm.raycast
       hm.herdr
       hm.worktrunk
       hm.zsh
