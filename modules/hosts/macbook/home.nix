@@ -25,6 +25,7 @@ in {
       hm.zsh
       hm.lazygit
       hm.gh-dash
+      hm.tailscale-hosts
     ];
 
     my.nh.subcommand = "home";
