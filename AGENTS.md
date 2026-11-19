@@ -58,6 +58,14 @@ this VM. Only mention updating it when the user explicitly asks for changes to
 this machine. See `modules/hosts/herdr-remote/README.md` for update and install commands;
 NixOS Anywhere's default install flow erases the configured disk.
 
+## Claude cloud sessions
+
+GitHub tarball and API downloads are blocked there (git fetches work), so
+`github:` inputs fail to fetch. The environment's setup script runs
+`scripts/prefetch-github-inputs.sh`; rerun it after `flake.lock` changes. Build
+with `nh home build . -c stiixxy` (no `nhb`/`nhs`, never switch); derivations
+that fetch GitHub tarballs and are not in `cache.nixos.org` still fail.
+
 ## Reload notes
 
 `nh` does not have a separate daemon reload step; use the normal build and
