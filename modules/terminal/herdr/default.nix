@@ -15,6 +15,10 @@ in {
     plugins = [inputs.herdr-worktrunk.outPath inputs.smart-splits.outPath];
     toml = pkgs.formats.toml {};
     popupSize = "80%";
+    git = lib.getExe pkgs.git;
+    jq = lib.getExe pkgs.jq;
+    lazygit = lib.getExe pkgs.lazygit;
+    cksum = lib.getExe' pkgs.coreutils "cksum";
 
     inherit (config.lib.herdr) pluginEntry action;
 
@@ -42,8 +46,8 @@ in {
           {
             key = "ctrl+g";
             type = "popup";
-            command = lib.getExe pkgs.lazygit;
-            description = "lazygit";
+            command = "${lazygitSession}";
+            description = "lazygit (nested session per worktree)";
             width = popupSize;
             height = popupSize;
           }
@@ -58,7 +62,33 @@ in {
         ];
       };
       theme.name = "catppuccin";
+      # Lets the lazygit popup attach a nested session.
+      experimental.allow_nested = true;
     };
+
+    # Config for the nested lazygit sessions: no sidebar, and no bindings that
+    # would shadow lazygit keys (ctrl+j/k move commits) or reopen the popup.
+    nestedSettings = {
+      inherit (settings) onboarding theme experimental;
+      ui =
+        settings.ui
+        // {
+          sidebar_start_collapsed = true;
+          sidebar_collapsed_mode = "hidden";
+        };
+      keys = {inherit (settings.keys) prefix;};
+    };
+    nestedConfig = toml.generate "herdr-nested-config.toml" nestedSettings;
+
+    lazygitSession = pkgs.writeShellScript "herdr-lazygit-session" ''
+      herdr=${lib.escapeShellArg (lib.getExe herdr)}
+      git=${lib.escapeShellArg git}
+      jq=${lib.escapeShellArg jq}
+      lazygit=${lib.escapeShellArg lazygit}
+      cksum=${lib.escapeShellArg cksum}
+      nested_config=${lib.escapeShellArg nestedConfig}
+      ${builtins.readFile ./scripts/lazygit-session.sh}
+    '';
   in {
     imports = [flakeModules.homeManager.herdr-lib];
 
