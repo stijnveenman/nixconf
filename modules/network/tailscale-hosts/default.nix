@@ -34,8 +34,8 @@
         RunAtLoad = true;
         StartCalendarInterval = [
           {
-            Hour = 9;
-            Minute = 7;
+            Hour = 12;
+            Minute = 0;
           }
         ];
         StandardOutPath = logFile;
