@@ -29,6 +29,8 @@ in {
         navigate_workspace_down = ["j" "down"];
         navigate_pane_up = "ctrl+k";
         navigate_pane_down = "ctrl+j";
+        # Built-in default; frees prefix+minus for the gh-dash popup.
+        split_horizontal = "";
         command = [
           (action "prefix+shift+g" "worktrunk.open" "Worktree: switch or create from default branch")
           (action "prefix+shift+c" "worktrunk.open-current" "Worktree: switch or create from current branch")
@@ -44,6 +46,14 @@ in {
             type = "popup";
             command = lib.getExe pkgs.lazygit;
             description = "lazygit";
+            width = popupSize;
+            height = popupSize;
+          }
+          {
+            key = "prefix+minus";
+            type = "popup";
+            command = lib.getExe pkgs.gh-dash;
+            description = "gh dash";
             width = popupSize;
             height = popupSize;
           }
