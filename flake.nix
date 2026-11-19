@@ -16,6 +16,9 @@
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
+    catppuccin.url = "github:catppuccin/nix";
+    catppuccin.inputs.nixpkgs.follows = "nixpkgs";
+
     niri.url = "github:sodiboo/niri-flake";
 
     claude-desktop.url = "github:heytcass/claude-desktop-linux-flake";

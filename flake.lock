@@ -415,7 +415,8 @@
         "pi": "pi",
         "pi-packages": "pi-packages",
         "pi-web-access": "pi-web-access",
-        "smart-splits": "smart-splits"
+        "smart-splits": "smart-splits",
+        "catppuccin": "catppuccin"
       }
     },
     "rust-overlay": {
@@ -501,6 +502,26 @@
       "original": {
         "owner": "Supreeeme",
         "repo": "xwayland-satellite",
+        "type": "github"
+      }
+    },
+    "catppuccin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794788055,
+        "narHash": "sha256-ne61lharrApQ3QVpm6sjd6k5AgD0xandc69h4QbopIY=",
+        "owner": "catppuccin",
+        "repo": "nix",
+        "rev": "aa70e775fdb4e998314dd64fb4cf66aeaa87f6dd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "catppuccin",
+        "repo": "nix",
         "type": "github"
       }
     }
