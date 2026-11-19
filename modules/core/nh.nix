@@ -33,9 +33,27 @@
         enable = true;
         inherit (cfg) homeFlake;
         clean = {
-          enable = true;
+          enable = !pkgs.stdenv.isDarwin;
           dates = "weekly";
           extraArgs = "--keep=10";
+        };
+      };
+
+      # home-manager only accepts keyword schedules on Darwin, so define our own.
+      launchd.agents.nh-clean = lib.mkIf (cfg.homeFlake != null && pkgs.stdenv.isDarwin) {
+        enable = true;
+        config = {
+          ProgramArguments = [
+            "/bin/sh"
+            "-c"
+            "/bin/wait4path /nix/store && ${nh} clean user --keep-since 7d; ${pkgs.nix}/bin/nix-collect-garbage --delete-older-than 7d"
+          ];
+          StartCalendarInterval = [
+            {
+              Hour = 16;
+              Minute = 30;
+            }
+          ];
         };
       };
     };
