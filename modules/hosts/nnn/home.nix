@@ -22,6 +22,7 @@ in {
       hm.worktrunk
       hm.zsh
       hm.lazygit
+      hm.gh-dash
       hm.askpass
       hm.nnn-niri
       hm.nnn-noctalia

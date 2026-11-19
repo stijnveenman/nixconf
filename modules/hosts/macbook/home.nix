@@ -24,6 +24,7 @@ in {
       hm.worktrunk
       hm.zsh
       hm.lazygit
+      hm.gh-dash
     ];
 
     my.nh.subcommand = "home";

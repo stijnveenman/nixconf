@@ -19,6 +19,7 @@ in {
       hm.neovim
       hm.pi
       hm.tuicr
+      hm.gh-dash
     ];
 
     my.nh.subcommand = "os";
