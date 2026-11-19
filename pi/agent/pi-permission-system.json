@@ -1,9 +1,0 @@
-{
-  // Main agent: allow everything. Subagents get their own rules via
-  // agents/<name>.md frontmatter.
-  "permission": {
-    "*": "allow",
-    // Explicit, so the permissive "*" doesn't trigger the bash warning.
-    "bash": { "*": "allow" }
-  }
-}

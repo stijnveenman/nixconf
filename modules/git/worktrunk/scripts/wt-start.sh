@@ -1,7 +1,7 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' 'Usage: wt start (<branch> [--base <base>] | --pr <number> [--fix]) [--model|-m <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--focus]'
+  printf '%s\n' 'Usage: wt start (<branch> [--base <base>] | --pr <number> [--fix]) [--model|-m <model>] [--prompt|-p <prompt> | --prompt-file <file>] [--working-dir|-w <dir>] [--focus]'
 }
 
 fail() {
@@ -18,6 +18,7 @@ prompt=
 prompt_file=
 prompt_source=
 focus=false
+working_dir=
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --base)
@@ -49,6 +50,11 @@ while [ "$#" -gt 0 ]; do
       prompt_file=$2
       shift 2
       ;;
+    --working-dir|-w)
+      [ "$#" -ge 2 ] && [ -n "$2" ] || fail "$1 requires a directory"
+      working_dir=$2
+      shift 2
+      ;;
     --fix)
       fix=true
       shift
@@ -69,6 +75,14 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+if [ -n "$working_dir" ]; then
+  [ -d "$working_dir" ] || fail "working directory does not exist: $working_dir"
+  # Resolve a relative prompt file before changing directory.
+  if [ "$prompt_source" = file ]; then
+    case $prompt_file in /*) ;; *) prompt_file=$PWD/$prompt_file ;; esac
+  fi
+  cd "$working_dir"
+fi
 if "$fix"; then
   [ -n "$pr" ] || fail '--fix requires --pr'
   [ "$prompt_source" != file ] || fail '--fix cannot be combined with --prompt-file'
