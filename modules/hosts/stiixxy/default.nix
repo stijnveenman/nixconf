@@ -13,6 +13,7 @@ in {
       hm.neovim
       hm.opencode
       hm.nh
+      hm.attic-cache
     ];
   };
 }

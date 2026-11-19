@@ -1,0 +1,81 @@
+# Build every host on each push to main and push the results to the Attic cache
+# (modules/core/attic-cache.nix), so no machine has to build them locally.
+#
+# Secrets:
+#   ATTIC_TOKEN         push+pull token for `mycache` (atticadm make-token --sub ci ...)
+#   TS_OAUTH_CLIENT_ID  Tailscale OAuth client with the `auth_keys` scope that may
+#   TS_OAUTH_SECRET     tag nodes `tag:ci`, so the runners can reach the cache
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ATTIC_SERVER: http://atticd.mermaid-pomfret.ts.net:8080
+  ATTIC_CACHE: mycache
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+            targets: >-
+              .#nixosConfigurations.nnn.config.system.build.toplevel
+              .#nixosConfigurations.herdr-remote.config.system.build.toplevel
+              .#homeConfigurations.stiixxy.activationPackage
+          - name: darwin
+            os: macos-latest # aarch64-darwin
+            targets: >-
+              .#homeConfigurations.sv.activationPackage
+    steps:
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            connect-timeout = 5
+
+      - name: Join the tailnet
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Set up Attic
+        env:
+          ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+        run: |
+          nix profile install --inputs-from . nixpkgs#attic-client
+          attic login home "$ATTIC_SERVER" "$ATTIC_TOKEN"
+          # Pull from the cache too, so unchanged outputs aren't rebuilt.
+          attic use "$ATTIC_CACHE"
+
+      - name: Build
+        run: |
+          # Push paths as they are built, so a failing job still caches the rest.
+          attic watch-store "$ATTIC_CACHE" &
+          echo "WATCH_PID=$!" >> "$GITHUB_ENV"
+          nix build --print-build-logs --keep-going ${{ matrix.targets }}
+
+      - name: Push results
+        run: |
+          kill "$WATCH_PID" || true
+          attic push "$ATTIC_CACHE" result*
