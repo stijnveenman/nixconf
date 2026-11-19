@@ -40,9 +40,6 @@ in {
       # For sources whose lockfile cannot be used (e.g. no `resolved` URLs):
       # `{name = path;}` dependencies linked into `node_modules`, no install step.
       nodeModules ? null,
-      # Patches applied to the source before building (pnpm packages only; the
-      # dependency fetch uses the unpatched source, so `hash` is unaffected).
-      patches ? [],
     }: let
       pkgDir =
         if subdir == null
@@ -65,7 +62,7 @@ in {
 
       pnpmPackage = pkgs.stdenv.mkDerivation (finalAttrs: {
         pname = name;
-        inherit version src patches;
+        inherit version src;
         nativeBuildInputs = [pkgs.nodejs pkgs.pnpm pkgs.pnpmConfigHook];
         pnpmDeps = pkgs.fetchPnpmDeps {
           inherit (finalAttrs) pname version src;
