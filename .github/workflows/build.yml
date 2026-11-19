@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ATTIC_SERVER: http://atticd.mermaid-pomfret.ts.net:8080
+  ATTIC_SERVER: https://atticd.mermaid-pomfret.ts.net
   ATTIC_CACHE: mycache
 
 jobs:

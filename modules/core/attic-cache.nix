@@ -1,8 +1,8 @@
-# Private Attic binary cache, reachable only over Tailscale. CI pushes every
+# Private Attic binary cache, reachable only over Tailscale (TLS via Tailscale Serve). CI pushes every
 # host's build to it (.github/workflows/build.yml); every host pulls from
 # it without a token.
 let
-  url = "http://atticd.mermaid-pomfret.ts.net:8080/mycache";
+  url = "https://atticd.mermaid-pomfret.ts.net/mycache";
   # From `attic cache info mycache`. Until it is set, hosts skip the cache:
   # Nix rejects paths it can't verify.
   publicKey = null;
