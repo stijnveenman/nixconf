@@ -3,8 +3,9 @@
 #
 # Secrets:
 #   ATTIC_TOKEN         push+pull token for `mycache` (atticadm make-token --sub ci ...)
-#   TS_OAUTH_CLIENT_ID  Tailscale OAuth client with the `auth_keys` scope that may
-#   TS_OAUTH_SECRET     tag nodes `tag:ci`, so the runners can reach the cache
+#   TS_AUTHKEY          Tailscale auth key (reusable, ephemeral, tagged `tag:ci`),
+#                       so the runners can reach the cache. Expires: renew it
+#                       in the Tailscale admin console before then.
 name: build
 
 on:
@@ -55,9 +56,7 @@ jobs:
       - name: Join the tailnet
         uses: tailscale/github-action@v3
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
+          authkey: ${{ secrets.TS_AUTHKEY }}
 
       - name: Set up Attic
         env:
