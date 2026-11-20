@@ -33,14 +33,14 @@
         enable = true;
         inherit (cfg) homeFlake;
         clean = {
-          enable = !pkgs.stdenv.isDarwin;
+          enable = !pkgs.stdenv.hostPlatform.isDarwin;
           dates = "weekly";
           extraArgs = "--keep=10";
         };
       };
 
       # home-manager only accepts keyword schedules on Darwin, so define our own.
-      launchd.agents.nh-clean = lib.mkIf (cfg.homeFlake != null && pkgs.stdenv.isDarwin) {
+      launchd.agents.nh-clean = lib.mkIf (cfg.homeFlake != null && pkgs.stdenv.hostPlatform.isDarwin) {
         enable = true;
         config = {
           ProgramArguments = [

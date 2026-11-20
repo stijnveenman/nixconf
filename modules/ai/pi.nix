@@ -41,7 +41,6 @@ in {
         }
       ];
       ".pi/agent/agents".source = pi.directory "agents" [".gitkeep"] [];
-      ".pi/agent/skills".source = pi.directory "skills" ["worktree"] [];
     };
   };
 }

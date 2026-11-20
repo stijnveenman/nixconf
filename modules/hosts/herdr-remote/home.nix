@@ -18,6 +18,7 @@ in {
       hm.worktrunk
       hm.neovim
       hm.pi
+      hm.agent-skills
       hm.tuicr
       hm.gh-dash
     ];

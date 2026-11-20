@@ -20,6 +20,7 @@ in {
       hm.ghostty
       hm.opencode
       hm.pi
+      hm.agent-skills
       hm.herdr
       hm.worktrunk
       hm.zsh
