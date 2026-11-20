@@ -59,34 +59,60 @@ nix store diff-closures \
   <new-home-manager-generation-store-path>
 ```
 
-Use `home-manager generations` again after switching to locate the new generation. Group the output into:
+Use `home-manager generations` again after switching to locate the new generation.
 
-- **Direct/user-facing tools**: packages explicitly used in the configuration or clearly present as commands the user operates, such as Pi, OpenCode, Neovim, workmux, sesh, Todoist CLI, GitHub CLI, tuicr, Atuin, and nix-output-monitor.
-- **Transitive/runtime dependencies**: libraries, compilers, Node/Go/Python runtimes, codecs, parsers, TLS libraries, and other closure-only updates.
-- **Rebuild-only changes**: entries with no meaningful version change or only a store/package rebuild.
+### Explicit vs. implicit packages
+
+Split every changed package into two groups. Decide by what the repository references, not by how important a package seems:
+
+- **Explicit packages**: packages the configuration itself names. Find them by searching the repo (`modules/`), for example:
+  - entries in `home.packages` / `environment.systemPackages` (`pkgs.<name>`, `with pkgs; [ ... ]`);
+  - programs and services the config turns on (`programs.<name>.enable`, `services.<name>.enable`, `programs.<name>.package`);
+  - packages taken from flake inputs (`inputs.<name>.packages...`, such as Pi, herdr, niri, claude-desktop) and inputs the config builds itself (Pi extensions, Neovim plugins).
+
+  When unsure whether a changed closure entry is explicit, grep the repo for its name. If it is not referenced, it is implicit.
+- **Implicit packages**: everything else in the diff — libraries, runtimes, compilers, codecs, fonts pulled in by other packages, and dependencies of explicit packages.
+
+Drop **rebuild-only** entries (no version or commit change) from both groups; mention only their count.
 
 Include old and new versions or commits exactly as reported. For nightly/git packages, report the old and new commit abbreviations rather than inventing semantic versions.
 
 ## Changelog research and response
 
-The changelog should be more than a list of version numbers. For each important direct/user-facing package that changed:
+### Explicit packages: detailed changelog
+
+For **every** explicit package that changed, research and write a detailed entry:
 
 1. Locate the authoritative upstream release notes or comparison page. Prefer, in order:
-   - upstream GitHub release notes for version-to-version updates;
+   - upstream GitHub release notes for every release between the old and new version (not only the latest one);
    - GitHub compare pages for pinned commit updates;
    - the package's upstream changelog when releases are not available.
 2. Use `fetch_content` for these pages when network access is available. Do not use a search snippet as the sole source.
-3. Summarize several concrete additions and improvements, prioritizing **new features**, then behavior changes, compatibility changes, and important fixes. Mention breaking changes or migration notes when relevant.
-4. Keep the direct-package entries reasonably detailed—typically 2–5 bullets each—while avoiding an exhaustive dump of every upstream commit.
-5. For a rolling nixpkgs update, explain that nixpkgs has no single package changelog. List the notable closure changes and group low-level dependencies rather than writing a fake feature summary for libraries.
-6. Link each researched upstream changelog or comparison page.
+3. Write 3–8 bullets per package covering, in this order: **new features**, behavior and default changes, **breaking changes and migration notes** (call out anything that affects this configuration), and notable fixes.
+4. Link each researched upstream changelog or comparison page.
+5. If no changelog can be found, say so and summarize the commit range instead of guessing.
 
-A good final report contains:
+### Implicit packages: compact changelog
+
+Do not research upstream changelogs for implicit packages. List them compactly, one line each, grouped by kind (e.g. libraries, runtimes/toolchains, other):
+
+```
+- openssl 3.5.1 → 3.5.2
+- nodejs 22.17.0 → 22.18.0
+```
+
+Add a short note to a line only for a major-version bump or a known security fix. Collapse long runs of related packages (e.g. many Python or Perl modules) into a single line with a count.
+
+For a rolling nixpkgs update, explain that nixpkgs has no single package changelog; the per-package lists above replace it.
+
+### Final report
+
+A good final report contains, in this order:
 
 - the update/switch result;
 - the input or configuration changes made;
-- a feature-focused changelog for meaningful direct package updates;
-- a concise grouped list of transitive dependency changes;
+- the detailed changelog for explicit packages;
+- the compact list of implicit package changes, and the count of rebuild-only entries;
 - warnings that did not block activation, if any;
 - commit hash and message if a commit was requested.
 
