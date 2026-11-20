@@ -3,15 +3,21 @@
 #
 # Secrets:
 #   ATTIC_TOKEN         push+pull token for `mycache` (atticadm make-token --sub ci ...)
-#   TS_AUTHKEY          Tailscale auth key (reusable, ephemeral, tagged `tag:ci`),
-#                       so the runners can reach the cache. Expires: renew it
-#                       in the Tailscale admin console before then.
+#   TS_OAUTH_CLIENT_ID  Tailscale workload identity (OpenID Connect) trust
+#   TS_AUDIENCE         credential for this repo's main branch, with the
+#                       `auth_keys` write scope and tag `tag:ci`, so the
+#                       runners can reach the cache. Nothing to rotate.
 name: build
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+# id-token lets the Tailscale action get a GitHub OIDC token for the tailnet.
+permissions:
+  contents: read
+  id-token: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -54,9 +60,11 @@ jobs:
             connect-timeout = 5
 
       - name: Join the tailnet
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@v4
         with:
-          authkey: ${{ secrets.TS_AUTHKEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
 
       - name: Set up Attic
         env:
