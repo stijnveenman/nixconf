@@ -74,17 +74,15 @@ jobs:
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
 
-      # On macOS the action points all DNS at MagicDNS, which can't resolve
-      # public hosts on the runner. Restore the runner's own DNS and reach the
-      # cache through /etc/hosts instead.
+      # On macOS the action points the Ethernet service's DNS at MagicDNS only,
+      # which can't resolve public hosts, and has no option to skip that
+      # (https://github.com/tailscale/github-action/issues/315). Undo it and
+      # reach the cache through /etc/hosts instead.
       - name: Restore DNS on macOS
         if: runner.os == 'macOS'
         run: |
-          networksetup -listallnetworkservices | tail -n +2 | sed 's/^\*//' |
-            while read -r svc; do
-              sudo networksetup -setdnsservers "$svc" Empty
-              sudo networksetup -setsearchdomains "$svc" Empty
-            done
+          sudo networksetup -setdnsservers Ethernet Empty
+          sudo networksetup -setsearchdomains Ethernet Empty
           host=${ATTIC_SERVER#https://}
           echo "$(tailscale ip -4 "$host") $host" | sudo tee -a /etc/hosts
           sudo dscacheutil -flushcache
