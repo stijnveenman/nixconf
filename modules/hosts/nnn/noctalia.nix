@@ -8,6 +8,25 @@
     xdg.configFile."noctalia/config.toml".source = (pkgs.formats.toml {}).generate "noctalia-config.toml" {
       accessibility.ui_scale = 0.85;
       shell.font_family = "JetBrainsMono NFM";
+      shell.lang = "en-GB";
+      shell.launcher = {
+        fetch_exchange_rates = false;
+        show_navigation_labels = false;
+        width = 700;
+        panels.ignored = ["polkit" "setup-wizard" "test" "launcher" "wallpaper"];
+        providers.emoji = {
+          global = false;
+          prefix = "emo";
+        };
+      };
+      control_center.hidden_tabs = ["weather" "calendar" "screen-time"];
+      desktop_widgets.enabled = false;
+      lockscreen_widgets.enabled = false;
+      theme.templates = {
+        enable_builtin_templates = false;
+        enable_community_templates = false;
+      };
+      widget.clock.actions.left = "panel-toggle control-center home";
       # Reboot/shut down with --no-wall: plain `systemctl reboot` re-enables
       # logind wall messages ("Broadcast message from ...") on every call, which
       # then flash on the console as the session closes. Listing actions
