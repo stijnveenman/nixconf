@@ -59,6 +59,6 @@
       linger = true;
     };
 
-    environment.systemPackages = [pkgs.git];
+    environment.systemPackages = [pkgs.git pkgs.dix];
   };
 }
