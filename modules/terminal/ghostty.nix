@@ -31,6 +31,9 @@
         # Ignore OSC 9;4 progress sequences (pi's working bar).
         progress-style = false;
 
+        # No "Copied to clipboard" toast (e.g. on every nvim yank via OSC 52).
+        app-notifications = "no-clipboard-copy";
+
         # Fully quit Ghostty when the last window closes so reopening starts a
         # fresh process.
         quit-after-last-window-closed = true;
