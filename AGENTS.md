@@ -62,9 +62,14 @@ NixOS Anywhere's default install flow erases the configured disk.
 
 GitHub tarball and API downloads are blocked there (git fetches work), so
 `github:` inputs fail to fetch. The environment's setup script runs
-`scripts/prefetch-github-inputs.sh`; rerun it after `flake.lock` changes. Build
-with `nh os build . -H nnn` (no `nhb`/`nhs`, never switch); derivations
-that fetch GitHub tarballs and are not in `cache.nixos.org` still fail.
+`scripts/prefetch-github-inputs.sh`; rerun it after `flake.lock` changes. `nh`
+refuses to run as root, so build with `nix build --no-link
+.#nixosConfigurations.nnn.config.system.build.toplevel` (never switch a real
+host); derivations that download from blocked hosts still fail.
+
+The setup script also activates host `claude` (`modules/hosts/claude`, user
+`root`) from `main` via `scripts/activate-claude-host.sh`; keep it minimal, as it
+is built on every fresh container.
 
 ## Reload notes
 
