@@ -26,7 +26,11 @@
     boot.loader.efi.canTouchEfiVariables = false;
 
     services.qemuGuest.enable = true;
-    services.tailscale.enable = true;
+    services.tailscale = {
+      enable = true;
+      # Let herdr-remote run `tailscale` commands (e.g. `tailscale serve`) without sudo.
+      extraSetFlags = ["--operator=herdr-remote"];
+    };
     services.openssh = {
       enable = true;
       settings = {
