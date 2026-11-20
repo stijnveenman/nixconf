@@ -3,9 +3,8 @@
 # (.github/workflows/build.yml); every host pulls from it without a token.
 let
   url = "https://atticd.mermaid-pomfret.ts.net/mycache";
-  # From `attic cache info mycache`. Until it is set, hosts skip the cache:
-  # Nix rejects paths it can't verify.
-  publicKey = null;
+  # From `attic cache info mycache`. Set to null to disable the cache.
+  publicKey = "mycache:+HYAd5jlos2i1qZwfaj0qEYbkbfqcwULY5WJ0FhL9D0=";
 
   enabled = publicKey != null;
   # Off the tailnet the host doesn't resolve; give up quickly instead of
