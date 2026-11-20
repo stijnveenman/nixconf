@@ -88,11 +88,6 @@ jobs:
           sudo dscacheutil -flushcache
           sudo killall -HUP mDNSResponder || true
 
-      - name: Check the cache and the internet are reachable
-        run: |
-          curl -fsS -o /dev/null https://cache.nixos.org/nix-cache-info
-          curl -fsS -o /dev/null "$ATTIC_SERVER/$ATTIC_CACHE/nix-cache-info"
-
       - name: Set up Attic
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
