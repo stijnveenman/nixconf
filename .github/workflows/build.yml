@@ -74,11 +74,32 @@ jobs:
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
 
+      # On macOS the action points all DNS at MagicDNS, which can't resolve
+      # public hosts on the runner. Restore the runner's own DNS and reach the
+      # cache through /etc/hosts instead.
+      - name: Restore DNS on macOS
+        if: runner.os == 'macOS'
+        run: |
+          networksetup -listallnetworkservices | tail -n +2 | sed 's/^\*//' |
+            while read -r svc; do
+              sudo networksetup -setdnsservers "$svc" Empty
+              sudo networksetup -setsearchdomains "$svc" Empty
+            done
+          host=${ATTIC_SERVER#https://}
+          echo "$(tailscale ip -4 "$host") $host" | sudo tee -a /etc/hosts
+          sudo dscacheutil -flushcache
+          sudo killall -HUP mDNSResponder || true
+
+      - name: Check the cache and the internet are reachable
+        run: |
+          curl -fsS -o /dev/null https://cache.nixos.org/nix-cache-info
+          curl -fsS -o /dev/null "$ATTIC_SERVER/$ATTIC_CACHE/nix-cache-info"
+
       - name: Set up Attic
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
         run: |
-          nix profile install --inputs-from . nixpkgs#attic-client
+          nix profile add --inputs-from . nixpkgs#attic-client
           attic login home "$ATTIC_SERVER" "$ATTIC_TOKEN"
           # Pull from the cache too, so unchanged outputs aren't rebuilt.
           attic use "$ATTIC_CACHE"
