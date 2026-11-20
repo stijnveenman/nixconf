@@ -114,7 +114,19 @@ A good final report contains, in this order:
 - the detailed changelog for explicit packages;
 - the compact list of implicit package changes, and the count of rebuild-only entries;
 - warnings that did not block activation, if any;
-- commit hash and message if a commit was requested.
+- commit hash and message if a commit was requested;
+- last, a numbered "Deeper dive?" list offering a more detailed changelog for
+  individual packages.
+
+The deeper-dive list has one line per changed package worth a closer look: every
+explicit package, plus implicit packages with a minor or major version bump
+(e.g. pi 1.5.2 → 1.6.0, appstream 1.1.3 → 1.2.3). Leave out patch-only implicit
+bumps and rebuild-only entries. Show the version change on each line, and ask
+the user to reply with the numbers they want. When they pick packages, read the
+full upstream notes for every release in the range: complete release notes, the
+compare page or commit list, linked PRs for notable changes. Then report all
+features, changes, fixes and migration steps, and how they affect this
+configuration.
 
 Do not imply that a package changed merely because it was rebuilt. Do not call a switch successful if activation returned a failure.
 
