@@ -46,7 +46,7 @@
         label_source = "name";
         hide_when_empty = true;
       };
-      wallpaper.default.path = "${pkgs.nixos-artwork.wallpapers.simple-dark-gray.gnomeFilePath}";
+      wallpaper.default.path = "${pkgs.nixos-artwork.wallpapers.nineish-catppuccin-mocha-alt.gnomeFilePath}";
     };
   };
 }
