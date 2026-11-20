@@ -43,6 +43,8 @@ When called without a mention of a specific input, assume the user wants to upda
 
    If the build fails, do not fix it on your own. Report the error, say whether it looks like an upstream breaking change and what the fix would be, and ask the user whether to fix it. Leave the worktree for inspection.
 
+   Whenever you finish with the worktree still present (failed build, a fix waiting for the user's answer), say so clearly in the final report: its path, what is waiting there, and how to remove it (`git worktree remove <path>`). Check `git worktree list` before reporting.
+
    If the build passes, commit only `flake.lock` (message `nix flake update`) in the worktree and push it: `git push origin HEAD:main`. Then fast-forward the main checkout: `git -C <main checkout> pull --ff-only origin main`. Git refuses this only when uncommitted changes there touch `flake.lock`; then leave the checkout alone and report it. Remove the worktree with `git worktree remove "$wt"`.
 
 3. Switch in the main checkout (after the fast-forward). If it has uncommitted changes, they are part of what gets activated, so tell the user and ask first:
