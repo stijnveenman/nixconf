@@ -32,6 +32,11 @@ in {
     home.homeDirectory = "/home/herdr-remote";
     home.stateVersion = "26.05";
 
+    my.claudeRemoteControl.directories = {
+      nixconf = "${config.home.homeDirectory}/nixconf";
+      factory-flow = "${config.home.homeDirectory}/factory-flow";
+    };
+
     # live checkout so nvim/pi config dirs are writable symlinks, not store paths
     my.nixconf.liveRepoPath = "${config.home.homeDirectory}/nixconf";
 
