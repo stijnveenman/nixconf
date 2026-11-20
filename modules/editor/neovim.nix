@@ -49,6 +49,7 @@ in {
       go
       alejandra
       ripgrep
+      tree-sitter
       nodejs_22
     ];
   };
