@@ -113,6 +113,6 @@ jobs:
           JOB: ${{ matrix.name }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          jq -n --arg content "❌ nixconf build failed on **$JOB** (${GITHUB_SHA::7}). Check whether ATTIC_TOKEN expired: $RUN_URL" \
-            '{content: $content}' |
+          jq -n --arg job "$JOB" --arg sha "${GITHUB_SHA::7}" --arg url "$RUN_URL" \
+            '{content: "❌ nixconf build failed on **\($job)** (\($sha))\n\($url)"}' |
             curl -fsS -H 'Content-Type: application/json' -d @- "$DISCORD_WEBHOOK"
