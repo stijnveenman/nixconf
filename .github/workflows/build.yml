@@ -17,7 +17,7 @@ on:
   # Weekly rebuild of main: everything is pulled from the cache again, which
   # counts as an access and keeps the current build past the retention period.
   schedule:
-    - cron: "17 3 * * 0" # Sundays 03:17 UTC
+    - cron: "0 0 * * 0" # Sundays 00:00 UTC
 
 # id-token lets the Tailscale action get a GitHub OIDC token for the tailnet.
 permissions:
