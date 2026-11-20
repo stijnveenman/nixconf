@@ -27,15 +27,25 @@ When called without a mention of a specific input, assume the user wants to upda
 
    For the current host, the latest generation before the update is normally the first entry and its `/nix/store/...-home-manager-generation` path.
 
-2. Update and build the flake:
+2. Update and build the flake in a temporary git worktree, so uncommitted
+   changes in the main checkout neither block the update nor get built or
+   committed with it. Plain `git worktree` works whether or not the Claude Code
+   session itself runs in a worktree.
 
    ```sh
-   nh home build --update
+   git fetch origin main
+   wt=$(mktemp -d /tmp/nixconf-update.XXXXXX)
+   git worktree add --detach "$wt" origin/main
+   cd "$wt" && nix flake update && alejandra . && nhb .
    ```
 
-   If the user asks for one input only, use the narrow update command supported by the installed Nix version, such as `nh home build --update-input <name>`. If a package should follow a rolling stable channel rather than a fixed release tag, inspect the upstream flake first and use its documented stable branch/tag (for Pi, `github:earendil-works/pi/stable`).
+   If the user asks for one input only, update just that input (`nix flake update <name>`). If a package should follow a rolling stable channel rather than a fixed release tag, inspect the upstream flake first and use its documented stable branch/tag (for Pi, `github:earendil-works/pi/stable`).
 
-3. After a successful build, switch in the main worktree:
+   If the build fails, do not fix it on your own. Report the error, say whether it looks like an upstream breaking change and what the fix would be, and ask the user whether to fix it. Leave the worktree for inspection.
+
+   If the build passes, commit only `flake.lock` (message `nix flake update`) in the worktree and push it: `git push origin HEAD:main`. Then fast-forward the main checkout: `git -C <main checkout> pull --ff-only origin main`. Git refuses this only when uncommitted changes there touch `flake.lock`; then leave the checkout alone and report it. Remove the worktree with `git worktree remove "$wt"`.
+
+3. Switch in the main checkout (after the fast-forward). If it has uncommitted changes, they are part of what gets activated, so tell the user and ask first:
 
    ```sh
    nh home switch .
@@ -132,4 +142,6 @@ Do not imply that a package changed merely because it was rebuilt. Do not call a
 
 ## Commit workflow
 
-Only commit when the switch was applied successfully. Create a commit with the message `nix flake update` including only the lock changes and changes that were required for a switch. Then push the changes
+Commit and push from the update worktree (step 2): only `flake.lock`, with the message `nix flake update`, never changes from the main checkout. If the update needs configuration fixes for breaking changes, ask the user first; with their approval, make the fixes in the worktree, rebuild, and include them in the same commit.
+
+If the changelog shows a breaking change that affects this configuration even though the build passed, flag it at the top of the final report and ask whether to fix it.
