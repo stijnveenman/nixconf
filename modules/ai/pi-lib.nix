@@ -78,7 +78,14 @@ in {
             then "pnpm run build"
             else "pnpm --filter ${manifest.name} run build"
           )}
-          pnpm prune --prod
+          # `pnpm prune --prod` checks the lockfile against the registry, which
+          # the build sandbox cannot reach. Reinstall only the runtime
+          # dependencies from the offline store instead, as nixpkgs does.
+          find . -name node_modules -type d -prune -exec rm -rf {} +
+          pnpm install --offline --prod --ignore-scripts --frozen-lockfile \
+            ${lib.optionalString (subdir != null) "--filter=${manifest.name}"}
+          # These pnpm state files contain timestamps and break reproducibility.
+          rm -f node_modules/.modules.yaml node_modules/.pnpm-workspace-state-v1.json
           runHook postBuild
         '';
         installPhase = ''
