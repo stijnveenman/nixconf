@@ -19,6 +19,7 @@ in {
       hm.neovim
       hm.pi
       hm.agent-skills
+      hm.claude-remote-control
       hm.tuicr
       hm.gh-dash
     ];
@@ -48,7 +49,6 @@ in {
     home.sessionPath = ["$HOME/.local/bin"];
     home.packages = [
       inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default
-      pkgs.claude-code
       pkgs.alejandra
       pkgs.openssh
       pkgs.xclip

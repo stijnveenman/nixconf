@@ -54,6 +54,8 @@
       shell = pkgs.zsh;
       description = "Herdr Remote";
       openssh.authorizedKeys.keys = [bootstrapKey];
+      # Start user services (claude remote-control) at boot, without a login.
+      linger = true;
     };
 
     environment.systemPackages = [pkgs.git];
