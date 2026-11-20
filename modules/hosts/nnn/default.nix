@@ -12,6 +12,7 @@ in {
       nixos.nnn
       nixos.plymouth
       nixos.greeter
+      nixos.attic-cache
       inputs.niri.nixosModules.niri
       inputs.home-manager.nixosModules.home-manager
       nixos.home-manager

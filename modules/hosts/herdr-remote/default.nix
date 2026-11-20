@@ -13,6 +13,7 @@ in {
       inputs.home-manager.nixosModules.home-manager
       nixos.herdr-remote
       nixos.herdr-remote-disk
+      nixos.attic-cache
       nixos.home-manager
       {home-manager.users.herdr-remote = config.flake.modules.homeManager.herdr-remote;}
     ];

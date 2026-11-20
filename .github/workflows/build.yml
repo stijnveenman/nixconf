@@ -1,0 +1,102 @@
+# Build every host on each push to main and push the results to the Attic cache
+# (modules/core/attic-cache.nix), so no machine has to build them locally.
+#
+# Secrets:
+#   ATTIC_TOKEN         push+pull token for `mycache` (atticadm make-token --sub ci ...)
+#   TS_OAUTH_CLIENT_ID  Tailscale workload identity (OpenID Connect) trust
+#   TS_AUDIENCE         credential for this repo's main branch, with the
+#                       `auth_keys` write scope and tag `tag:ci`, so the
+#                       runners can reach the cache. Nothing to rotate.
+#   DISCORD_WEBHOOK     Discord channel webhook URL; failed runs post there
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # Weekly rebuild of main: everything is pulled from the cache again, which
+  # counts as an access and keeps the current build past the retention period.
+  schedule:
+    - cron: "0 0 * * 0" # Sundays 00:00 UTC
+
+# id-token lets the Tailscale action get a GitHub OIDC token for the tailnet.
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ATTIC_SERVER: https://atticd.mermaid-pomfret.ts.net
+  ATTIC_CACHE: mycache
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+            targets: >-
+              .#nixosConfigurations.nnn.config.system.build.toplevel
+              .#nixosConfigurations.herdr-remote.config.system.build.toplevel
+              .#homeConfigurations.stiixxy.activationPackage
+          - name: darwin
+            os: macos-latest # aarch64-darwin
+            targets: >-
+              .#homeConfigurations.sv.activationPackage
+    steps:
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            connect-timeout = 5
+
+      - name: Join the tailnet
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+
+      - name: Set up Attic
+        env:
+          ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+        run: |
+          nix profile install --inputs-from . nixpkgs#attic-client
+          attic login home "$ATTIC_SERVER" "$ATTIC_TOKEN"
+          # Pull from the cache too, so unchanged outputs aren't rebuilt.
+          attic use "$ATTIC_CACHE"
+
+      - name: Build
+        run: |
+          # Push paths as they are built, so a failing job still caches the rest.
+          # The runner stops it when the job ends.
+          attic watch-store "$ATTIC_CACHE" &
+          nix build --print-build-logs --keep-going ${{ matrix.targets }}
+
+      - name: Push results
+        run: attic push "$ATTIC_CACHE" result*
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          JOB: ${{ matrix.name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -n --arg content "❌ nixconf build failed on **$JOB** (${GITHUB_SHA::7}). Check whether ATTIC_TOKEN expired: $RUN_URL" \
+            '{content: $content}' |
+            curl -fsS -H 'Content-Type: application/json' -d @- "$DISCORD_WEBHOOK"

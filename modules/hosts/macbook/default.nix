@@ -11,6 +11,7 @@ in {
     modules = [
       hm.macbook
       hm.neovim
+      hm.attic-cache
     ];
   };
 }
