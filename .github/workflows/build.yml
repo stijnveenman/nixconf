@@ -99,12 +99,21 @@ jobs:
       - name: Build
         run: |
           # Push paths as they are built, so a failing job still caches the rest.
-          # The runner stops it when the job ends.
           attic watch-store "$ATTIC_CACHE" &
+          echo "WATCH_PID=$!" >> "$GITHUB_ENV"
           nix build --print-build-logs --keep-going ${{ matrix.targets }}
 
       - name: Push results
-        run: attic push "$ATTIC_CACHE" result*
+        run: |
+          # Stop the background uploader first: two uploads of the same path at
+          # once make atticd answer one of them with an internal server error.
+          kill "$WATCH_PID" 2>/dev/null || true
+          for attempt in 1 2 3; do
+            attic push "$ATTIC_CACHE" result* && exit 0
+            echo "Push attempt $attempt failed; retrying in 30s"
+            sleep 30
+          done
+          exit 1
 
       - name: Notify Discord on failure
         if: failure()
