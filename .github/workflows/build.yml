@@ -7,6 +7,7 @@
 #   TS_AUDIENCE         credential for this repo's main branch, with the
 #                       `auth_keys` write scope and tag `tag:ci`, so the
 #                       runners can reach the cache. Nothing to rotate.
+#   DISCORD_WEBHOOK     Discord channel webhook URL; failed runs post there
 name: build
 
 on:
@@ -86,3 +87,14 @@ jobs:
         run: |
           kill "$WATCH_PID" || true
           attic push "$ATTIC_CACHE" result*
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          JOB: ${{ matrix.name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -n --arg content "❌ nixconf build failed on **$JOB** (${GITHUB_SHA::7}). Check whether ATTIC_TOKEN expired: $RUN_URL" \
+            '{content: $content}' |
+            curl -fsS -H 'Content-Type: application/json' -d @- "$DISCORD_WEBHOOK"
