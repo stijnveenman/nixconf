@@ -74,6 +74,10 @@ in {
 
     home.packages = [herdr];
 
+    # Every new Ghostty window/tab starts in (or attaches to) the herdr session
+    # instead of a bare shell. Absolute path: macOS Ghostty may lack nix PATH.
+    programs.ghostty.settings.command = "${herdr}/bin/herdr";
+
     programs.zoxide = {
       enable = true;
       enableZshIntegration = lib.mkIf config.programs.zsh.enable true;
