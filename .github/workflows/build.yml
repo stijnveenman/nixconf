@@ -83,14 +83,12 @@ jobs:
       - name: Build
         run: |
           # Push paths as they are built, so a failing job still caches the rest.
+          # The runner stops it when the job ends.
           attic watch-store "$ATTIC_CACHE" &
-          echo "WATCH_PID=$!" >> "$GITHUB_ENV"
           nix build --print-build-logs --keep-going ${{ matrix.targets }}
 
       - name: Push results
-        run: |
-          kill "$WATCH_PID" || true
-          attic push "$ATTIC_CACHE" result*
+        run: attic push "$ATTIC_CACHE" result*
 
       - name: Notify Discord on failure
         if: failure()
