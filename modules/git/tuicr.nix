@@ -5,6 +5,10 @@
     tuicr = pkgs.tuicr.overrideAttrs (old: {
       buildInputs = (old.buildInputs or []) ++ [pkgs.libgit2 pkgs.oniguruma];
       nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.pkg-config];
+      # Timing-sensitive test ("expected ~450ms") that fails on loaded CI runners.
+      checkFlags =
+        (old.checkFlags or [])
+        ++ ["--skip=forge::pr_open::tests::should_fetch_diff_commits_and_review_metadata_concurrently"];
     });
   in {
     home.packages = [tuicr];
