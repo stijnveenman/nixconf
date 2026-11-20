@@ -19,7 +19,7 @@ Use `nhb` (build) and `nhs` (switch) on every host. They are installed by `modul
   store paths. When restructuring, compare `drvPath`s before and after.
 
 - Host `sv` (macOS, `aarch64-darwin`) lives at `~/Documents/nixconf`.
-- Host `stiixxy` (Linux) lives at `~/nixconf`.
+- Host `nnn` (NixOS, user `stiixxy`) lives at `~/nixconf`.
 
 ## Build and switch workflow (important)
 
@@ -63,7 +63,7 @@ NixOS Anywhere's default install flow erases the configured disk.
 GitHub tarball and API downloads are blocked there (git fetches work), so
 `github:` inputs fail to fetch. The environment's setup script runs
 `scripts/prefetch-github-inputs.sh`; rerun it after `flake.lock` changes. Build
-with `nh home build . -c stiixxy` (no `nhb`/`nhs`, never switch); derivations
+with `nh os build . -H nnn` (no `nhb`/`nhs`, never switch); derivations
 that fetch GitHub tarballs and are not in `cache.nixos.org` still fail.
 
 ## Reload notes

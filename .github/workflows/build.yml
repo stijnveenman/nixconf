@@ -45,7 +45,6 @@ jobs:
             targets: >-
               .#nixosConfigurations.nnn.config.system.build.toplevel
               .#nixosConfigurations.herdr-remote.config.system.build.toplevel
-              .#homeConfigurations.stiixxy.activationPackage
           - name: darwin
             os: macos-latest # aarch64-darwin
             targets: >-
