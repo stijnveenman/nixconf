@@ -1,4 +1,6 @@
-{
+{config, ...}: let
+  flakeModules = config.flake.modules;
+in {
   flake.modules.homeManager.ghostty = {
     config,
     pkgs,
@@ -9,6 +11,10 @@
     useZsh = config.programs.zsh.enable;
     useBash = config.programs.bash.enable;
   in {
+    imports = [flakeModules.homeManager.catppuccin];
+
+    catppuccin.ghostty.enable = true;
+
     programs.ghostty = {
       enable = true;
 
@@ -21,8 +27,6 @@
       enableBashIntegration = lib.mkIf useBash true;
 
       settings = {
-        theme = "Catppuccin Mocha";
-
         font-family = "JetBrainsMono Nerd Font Mono";
         font-size = 12;
         # Disable programming ligatures (e.g. != stays as two glyphs).
