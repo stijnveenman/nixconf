@@ -78,6 +78,8 @@ created=$("$herdr" tab create --workspace "$workspace" --cwd "$repo_root" --labe
 tuicr_pane=$(printf '%s\n' "$created" | "$jq" -er '.result.root_pane.pane_id')
 split=$("$herdr" pane split "$tuicr_pane" --direction right --cwd "$repo_root" --no-focus)
 pi_pane=$(printf '%s\n' "$split" | "$jq" -er '.result.pane.pane_id')
+# Shown as `$pr` in the Herdr Agents sidebar (see modules/terminal/herdr.nix).
+"$herdr" pane report-metadata "$pi_pane" --source pr-review --token "pr=PR #$pr" >/dev/null
 
 name="pr-$pr-${repo##*/}"
 name=${name,,}
