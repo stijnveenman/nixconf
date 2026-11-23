@@ -28,11 +28,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794626552,
-        "narHash": "sha256-ce0SQ3P7+/2yjl4w6fGJIOemG3HUCi+ulJMNicTG0+E=",
+        "lastModified": 1795303496,
+        "narHash": "sha256-6MZPQyO/REJlKc49vT3iIylhdU012Qc5eFsaY8878sc=",
         "owner": "heytcass",
         "repo": "claude-desktop-linux-flake",
-        "rev": "670b2652b787fb44691a8f55763c0b218f278243",
+        "rev": "ede9fe1af7c213be67284c218264c2136e03372c",
         "type": "github"
       },
       "original": {
@@ -166,11 +166,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794963576,
-        "narHash": "sha256-+CPrP74GDJ63f7bgEFC9Av4hbxc7K9WUNv1ZVRifRe8=",
+        "lastModified": 1795366757,
+        "narHash": "sha256-Tp4Kh4R7ID1f2mMCDlb2PiFQ/DZZsnXB2u2juWN+TT4=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "2b13c9cb3aa20653e6f8ee0b7f8331a53ea9b0a9",
+        "rev": "3b8140d21fa0a70b1b38c2ed29853dfe686234a6",
         "type": "github"
       },
       "original": {
@@ -201,11 +201,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1795132945,
-        "narHash": "sha256-SlAtSmtqZpWWQduEely2kcr44sa3wSV/qhGx+/7ekSQ=",
+        "lastModified": 1795392150,
+        "narHash": "sha256-NRbgWucyVXEZpnzMsGK6m7WVe48fhCDpyfEa3xiiWmk=",
         "owner": "nix-community",
         "repo": "neovim-nightly-overlay",
-        "rev": "28534684d592b1bd7f82399607ca3588ee4a8c48",
+        "rev": "9fcabaae7131664ea49194f78234183922429c63",
         "type": "github"
       },
       "original": {
@@ -217,11 +217,11 @@
     "neovim-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1795082216,
-        "narHash": "sha256-v7S8jpoZ6u9LZMaCHYqBnK+m8aNbsx+HHGWpKJ0p9iY=",
+        "lastModified": 1795365653,
+        "narHash": "sha256-0yq/HlaAykXlf1PsNSnYlYqnjB+oxVSH9IoJBDclQEk=",
         "owner": "neovim",
         "repo": "neovim",
-        "rev": "2843068c7a9c78c206189c37b53cdb6f464e57ae",
+        "rev": "219316f588e064c112a6ea469b64e56665e7a82a",
         "type": "github"
       },
       "original": {
@@ -288,11 +288,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1794840529,
-        "narHash": "sha256-ySrWnmZB5UsZTYGHHnBjllT05O5iFjElCRS+mabtfP0=",
+        "lastModified": 1795249095,
+        "narHash": "sha256-8JDgyVvWUZg5m9hNlL8Ge9aT647ng3Ukc8NPMiKNTPQ=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e21fec321d73511849707a7585e4ea155ee4bf40",
+        "rev": "93a9ed0a866099a230ed5146a5bb7d16fd5c9b14",
         "type": "github"
       },
       "original": {
@@ -352,11 +352,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1795085501,
-        "narHash": "sha256-S5keGWzaKpuXo9MNoIC2FfTIuTyTnx8P4NhYJMEsTLI=",
+        "lastModified": 1795234589,
+        "narHash": "sha256-f/VVvxf5RsQgWVhUtefoca5ktVg0DA2bnkMOcmSnozo=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "0bb8272318b4ca41bf0edc6224df3e3e3046b70d",
+        "rev": "2786a2a72088ecf32aea5b3ec52099e6a7cff78f",
         "type": "github"
       },
       "original": {
@@ -391,11 +391,11 @@
     "pi-packages": {
       "flake": false,
       "locked": {
-        "lastModified": 1795069676,
-        "narHash": "sha256-eWEKyTx8RF/vE8KS2/t4e5eiBkyjCjnlpntO2WQtjZI=",
+        "lastModified": 1795408452,
+        "narHash": "sha256-0wu8uAq5rcJitX0pM6Xmh9ggYSJSZe1wQkTVs5NGHY8=",
         "owner": "gotgenes",
         "repo": "pi-packages",
-        "rev": "87ea4b9cacccc3f6cd0c79ea98b8aeb6155003f3",
+        "rev": "826d68bf06e51bf3bca4c3890b3b07588b15487a",
         "type": "github"
       },
       "original": {
@@ -407,11 +407,11 @@
     "pi-web-access": {
       "flake": false,
       "locked": {
-        "lastModified": 1795066440,
-        "narHash": "sha256-toUZGgyZQ9pbAl2aPFlYo3xH8m/42ptVzkY99DuZE1Y=",
+        "lastModified": 1795289202,
+        "narHash": "sha256-n6/CtO20p42yxKHazXOh0lcI0SjcCdpRmDtwS8f3qCY=",
         "owner": "nicobailon",
         "repo": "pi-web-access",
-        "rev": "438e58be6307efb7cd539af3806757abe303aa0c",
+        "rev": "f5a745af5bf7c81fa55d47bf86c4afa25ac870e8",
         "type": "github"
       },
       "original": {

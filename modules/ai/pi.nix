@@ -33,7 +33,7 @@ in {
         (pi.package {
           src = inputs.pi-packages;
           subdir = "packages/pi-subagents";
-          hash = "sha256-g19jdpuToV/Mf/QvlPKTEXtz939s16X2ewXWrkhaRuI=";
+          hash = "sha256-7apiyaAmbr5D2US6mZc+A9xIksP8TdKwwlJi4WIaSEs=";
         })
         {
           name = "herdr-agent-state.ts";
