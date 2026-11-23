@@ -18,9 +18,38 @@ in {
 
     inherit (config.lib.herdr) pluginEntry action;
 
+    # PR review tabs (modules/ai/pr-review) show their tab name at the end of
+    # the second row instead of the first; other tabs keep the default layout.
+    isPrReview = {starts_with = "PR Review";};
+
     settings = {
       onboarding = false;
       ui.prompt_new_tab_name = false;
+      ui.sidebar.agents.rows = [
+        [
+          "state_icon"
+          "machine"
+          "workspace"
+          {
+            token = "tab";
+            rules = [(isPrReview // {hide = true;})];
+          }
+        ]
+        [
+          "agent"
+          {
+            token = "tab";
+            rules = [
+              (isPrReview // {bold = true;})
+              # An empty `contains` matches any value: hide every other tab.
+              {
+                contains = "";
+                hide = true;
+              }
+            ];
+          }
+        ]
+      ];
       keys = {
         prefix = "ctrl+a";
         goto = "prefix+g";
