@@ -8,3 +8,5 @@ Commits should be:
 If a branch already has an upstream branch, push after committing
 
 For Jira tickets (e.g. schiphol.atlassian.net links), use `acli jira workitem view <KEY>`; web fetch cannot read them.
+
+Always use `rg` over `grep`

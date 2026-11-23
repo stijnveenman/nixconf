@@ -29,6 +29,7 @@ in {
     config = lib.mkIf enabled {
       nix.package = lib.mkDefault pkgs.nix;
       nix.settings = {
+        experimental-features = ["nix-command" "flakes"];
         extra-substituters = [url];
         extra-trusted-public-keys = [publicKey];
         connect-timeout = connectTimeout;
