@@ -21,14 +21,18 @@ in {
     settings = {
       onboarding = false;
       ui.prompt_new_tab_name = false;
-      # `$pr` is reported on PR review panes by modules/ai/pr-review.
+      # PR review panes report "PR #N" as their agent name (modules/ai/pr-review).
       ui.sidebar.agents.rows = [
         ["state_icon" "workspace"]
         [
-          "agent"
           {
-            token = "$pr";
-            dim = true;
+            token = "agent";
+            rules = [
+              {
+                starts_with = "PR #";
+                dim = true;
+              }
+            ];
           }
         ]
       ];
