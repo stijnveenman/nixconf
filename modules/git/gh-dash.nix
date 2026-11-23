@@ -13,6 +13,10 @@ in {
         # Show all PRs/issues, not only those of the repo dash starts in.
         smartFilteringAtLaunch = false;
         defaults.prApproveComment = "";
+        repoPaths = {
+          "schiphol-ac/airport-control" = "~/Documents/airport-control";
+          "stijnveenman/nixconf" = "~/Documents/nixconf";
+        };
         prSections = [
           {
             title = "My Pull Requests";
@@ -40,6 +44,11 @@ in {
             }
           ];
           prs = [
+            {
+              key = "c";
+              name = "checkout with wt start";
+              command = "cd {{.RepoPath}} && wt start --pr {{.PrNumber}}";
+            }
             {
               key = "d";
               name = "diff in tuicr";
