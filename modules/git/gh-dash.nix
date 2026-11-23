@@ -29,7 +29,7 @@ in {
           }
           {
             title = "Dependency Updates";
-            filters = "is:open archived:false (author:app/dependabot OR author:app/renovate)";
+            filters = "is:open archived:false label:dependencies";
           }
           {
             title = "Involved";
