@@ -23,7 +23,7 @@ in {
       ui.prompt_new_tab_name = false;
       # `$pr` is reported on PR review panes by modules/ai/pr-review.
       ui.sidebar.agents.rows = [
-        ["state_icon" "machine" "workspace"]
+        ["state_icon" "workspace"]
         [
           "agent"
           {
