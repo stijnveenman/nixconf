@@ -26,6 +26,7 @@ in {
       hm.zsh
       hm.lazygit
       hm.gh-dash
+      hm.pr-review
       hm.tailscale-hosts
     ];
 

@@ -22,6 +22,7 @@ in {
       hm.claude-remote-control
       hm.tuicr
       hm.gh-dash
+      hm.pr-review
     ];
 
     my.nh.subcommand = "os";

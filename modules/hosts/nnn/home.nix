@@ -24,6 +24,7 @@ in {
       hm.zsh
       hm.lazygit
       hm.gh-dash
+      hm.pr-review
       hm.askpass
       hm.nnn-niri
       hm.nnn-noctalia
