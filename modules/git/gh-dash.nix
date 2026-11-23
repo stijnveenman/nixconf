@@ -29,7 +29,7 @@ in {
           }
           {
             title = "Dependency Updates";
-            filters = "is:open archived:false label:dependencies";
+            filters = "is:open repo:schiphol-ac/airport-control label:dependencies";
           }
           {
             title = "Involved";
