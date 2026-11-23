@@ -41,7 +41,9 @@ When called without a mention of a specific input, assume the user wants to upda
 
    If the user asks for one input only, update just that input (`nix flake update <name>`). If a package should follow a rolling stable channel rather than a fixed release tag, inspect the upstream flake first and use its documented stable branch/tag (for Pi, `github:earendil-works/pi/stable`).
 
-   If the build fails, do not fix it on your own. Report the error, say whether it looks like an upstream breaking change and what the fix would be, and ask the user whether to fix it. Leave the worktree for inspection.
+   Exception: a stale fixed-output hash in this repo (a `hash = "sha256-..."` for dependencies of a package built from an updated input, e.g. `pnpmDeps` in `modules/ai/pi.nix`, failing with a hash mismatch or `ERR_PNPM_NO_OFFLINE_TARBALL`) is expected after an update. Fix it without asking: set that hash to `""`, build, copy the `got: sha256-...` value in, rebuild, and commit the file with `flake.lock`. Mention it in the report.
+
+   For any other failure, do not fix it on your own. Report the error, say whether it looks like an upstream breaking change and what the fix would be, and ask the user whether to fix it. Leave the worktree for inspection.
 
    Whenever you finish with the worktree still present (failed build, a fix waiting for the user's answer), say so clearly in the final report: its path, what is waiting there, and how to remove it (`git worktree remove <path>`). Check `git worktree list` before reporting.
 
@@ -144,6 +146,6 @@ Do not imply that a package changed merely because it was rebuilt. Do not call a
 
 ## Commit workflow
 
-Commit and push from the update worktree (step 2): only `flake.lock`, with the message `nix flake update`, never changes from the main checkout. If the update needs configuration fixes for breaking changes, ask the user first; with their approval, make the fixes in the worktree, rebuild, and include them in the same commit.
+Commit and push from the update worktree (step 2): only `flake.lock` (plus any refreshed fixed-output hashes), with the message `nix flake update`, never changes from the main checkout. If the update needs configuration fixes for breaking changes, ask the user first; with their approval, make the fixes in the worktree, rebuild, and include them in the same commit.
 
 If the changelog shows a breaking change that affects this configuration even though the build passed, flag it at the top of the final report and ask whether to fix it.
