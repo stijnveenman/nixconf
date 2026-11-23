@@ -10,6 +10,8 @@ in {
       enable = true;
       settings = {
         confirmQuit = false;
+        # Show all PRs/issues, not only those of the repo dash starts in.
+        smartFilteringAtLaunch = false;
         keybindings = {
           # o reviews in tuicr; opening in the browser moves to O. In the
           # repo view O would shadow create PR, so that moves to o.
