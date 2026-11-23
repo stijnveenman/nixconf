@@ -28,13 +28,6 @@
       q_quits = true
       diff_watch_interval_ms = 1000
 
-      comment_types = [
-        { id = "question", label = "question", definition = "ask for clarification", color = "yellow" },
-        { id = "issue", definition = "problems to fix", color = "red" },
-        { id = "praise", definition = "positive feedback", color = "green" },
-        { id = "nit", label = "nitpick", definition = "small optional tweaks", color = "blue" },
-      ]
-
       [forge]
       comment_type_prefix = false
 

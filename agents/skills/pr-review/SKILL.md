@@ -39,8 +39,8 @@ Only findings worth the author's time, focused on:
   logic without tests.
 
 No nitpicks: no style, formatting, naming taste, typos in code, optional
-refactors or praise. If unsure whether something is a real problem, ask a
-`question` instead of asserting an `issue`.
+refactors or praise. If unsure whether something is a real problem, phrase
+the comment as a question instead of asserting it.
 
 ## Write comments to tuicr
 
@@ -51,12 +51,12 @@ Add each comment with JSON input:
 
 ```bash
 tuicr review add --session <slug> --input - <<'JSON'
-{"type": "issue", "author": "pi-review", "file": "src/x.rs", "line": 42, "side": "new",
+{"author": "pi-review", "file": "src/x.rs", "line": 42, "side": "new",
  "content": "`parse` returns early on an empty list, so `total` stays stale."}
 JSON
 ```
 
-- `type` is `issue` or `question`.
+- Leave out `type`: comments stay untyped.
 - Anchor to lines inside the diff hunks: `side: "new"` with the line number in
   the PR head file (check it against `git show FETCH_HEAD:<path> | nl -ba`), or
   `side: "old"` for removed lines. Use `start_line`/`end_line` for a range and
@@ -74,7 +74,6 @@ Keep it short; the details live in tuicr:
 - **Jira**: per ticket, whether the requirements are met (only when a ticket is linked).
 - **Risk**: low, medium or high, with one sentence on why.
 - **Recommendation**: approve, approve after the comments, or request changes, with one sentence.
-- **Comments**: one line per tuicr comment (`path:line`: gist), or "none".
 
 ## Follow-ups
 
