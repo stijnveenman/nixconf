@@ -45,7 +45,12 @@ in {
           ];
           prs = [
             {
-              key = "c";
+              key = "C";
+              name = "checkout with wt start";
+              command = "cd {{.RepoPath}} && wt start --pr {{.PrNumber}}";
+            }
+            {
+              key = "space";
               name = "checkout with wt start";
               command = "cd {{.RepoPath}} && wt start --pr {{.PrNumber}}";
             }
