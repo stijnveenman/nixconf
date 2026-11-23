@@ -25,6 +25,7 @@ in {
     # In live mode, adding or removing entries still requires a rebuild.
     home.file = {
       ".pi/agent/settings.json".source = pi.source "settings.json";
+      ".pi/agent/models.json".source = pi.source "models.json";
       ".pi/agent/keybindings.json".source = pi.source "keybindings.json";
       ".pi/agent/AGENTS.md".source = pi.source "AGENTS.md";
       ".pi/agent/watch-pr.json".source = pi.source "watch-pr.json";

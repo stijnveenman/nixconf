@@ -1,0 +1,15 @@
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "github-copilot": {
+      "modelOverrides": {
+        "claude-opus-5.5": { "compat": { "supportsStrictTools": false } },
+        "claude-sonnet-5.5": { "compat": { "supportsStrictTools": false } },
+        "claude-haiku-5.5": { "compat": { "supportsStrictTools": false } },
+        "gpt-6.1-sol": { "compat": { "supportsStrictMode": false } },
+        "gpt-6.1-terra": { "compat": { "supportsStrictMode": false } },
+        "gpt-6-luna": { "compat": { "supportsStrictMode": false } }
+      }
+    }
+  }
+}
