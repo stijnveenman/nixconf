@@ -8,10 +8,10 @@ in {
     pkgs,
     ...
   }: let
-    piAgent = ../../pi/agent;
+    piAgent = ../../programs/pi/agent;
 
     # A file under `pi/agent`: store copy, or a live symlink into the repo.
-    source = path: config.lib.nixconf.source "pi/agent/${path}";
+    source = path: config.lib.nixconf.source "programs/pi/agent/${path}";
 
     # Links every entry of `pi/agent/<directory>` (minus `excluded`) plus `extra`.
     directory = directory: excluded: extra:

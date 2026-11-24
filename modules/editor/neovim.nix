@@ -17,7 +17,7 @@ in {
 
     home.sessionVariables.NVIM_APPNAME = "nvim-nixconf";
 
-    home.file.".config/nvim-nixconf".source = config.lib.nixconf.source "nvim";
+    home.file.".config/nvim-nixconf".source = config.lib.nixconf.source "programs/nvim";
 
     programs.neovim = {
       enable = true;

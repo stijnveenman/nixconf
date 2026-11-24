@@ -1,7 +1,7 @@
 # Pi configuration
 
 `modules/ai/pi.nix` links the hand-maintained parts of Pi's global configuration
-from `pi/agent` into `~/.pi/agent`. Pi's mutable state remains outside the
+from `programs/pi/agent` into `~/.pi/agent`. Pi's mutable state remains outside the
 repository: authentication, sessions, model cache, and its npm environment are
 not configuration and should not be committed.
 
@@ -25,7 +25,7 @@ Other options, from least to most reproducible:
 3. **A flake input** — add the extension repository as a flake input and expose
    its files through a Nix module. This gives reproducible source revisions but
    requires an `nh` build/switch to update and is less suitable for live editing.
-4. **`git subtree`** — vendor a remote repository into `pi/agent/extensions`.
+4. **`git subtree`** — vendor a remote repository into `programs/pi/agent/extensions`.
    It avoids submodule UX and keeps one checkout, but updates are explicit
    subtree pulls and the vendored code becomes part of this repository.
 

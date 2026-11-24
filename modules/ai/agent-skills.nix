@@ -14,11 +14,11 @@ in {
     excluded = ["worktree"];
     names =
       lib.filter (name: !(builtins.elem name excluded))
-      (builtins.attrNames (builtins.readDir ../../agents/skills));
+      (builtins.attrNames (builtins.readDir ../../programs/agents/skills));
     links = dir:
       lib.listToAttrs (map (name: {
           name = "${dir}/${name}";
-          value.source = config.lib.nixconf.source "agents/skills/${name}";
+          value.source = config.lib.nixconf.source "programs/agents/skills/${name}";
         })
         names);
   in {
