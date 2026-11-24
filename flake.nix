@@ -27,10 +27,6 @@
     herdr.url = "github:herdrdev/herdr/v0.9.5";
     herdr.inputs.nixpkgs.follows = "nixpkgs";
 
-    herdr-worktrunk = {
-      url = "github:devashish2203/herdr-worktrunk/f9df9ba700b8a4f4d97ddfe3ea3eb345e80b880b";
-      flake = false;
-    };
     pi-web-access = {
       url = "github:nicobailon/pi-web-access";
       flake = false;

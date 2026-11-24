@@ -142,23 +142,6 @@
         "type": "github"
       }
     },
-    "herdr-worktrunk": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1791287192,
-        "narHash": "sha256-puZWyvtBt2svov0NIVJTzdfHzm/k1EglbXsTGsm8N7I=",
-        "owner": "devashish2203",
-        "repo": "herdr-worktrunk",
-        "rev": "f9df9ba700b8a4f4d97ddfe3ea3eb345e80b880b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "devashish2203",
-        "repo": "herdr-worktrunk",
-        "rev": "f9df9ba700b8a4f4d97ddfe3ea3eb345e80b880b",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -427,7 +410,6 @@
         "disko": "disko",
         "flake-parts": "flake-parts",
         "herdr": "herdr",
-        "herdr-worktrunk": "herdr-worktrunk",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
