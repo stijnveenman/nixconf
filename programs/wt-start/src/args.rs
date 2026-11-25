@@ -57,6 +57,11 @@ pub struct Options {
     pub auto_branch: bool,
 }
 
+/// Branch names cannot contain whitespace: runs of it become a single `-`.
+pub fn normalize_branch(name: &str) -> String {
+    name.split_whitespace().collect::<Vec<_>>().join("-")
+}
+
 fn non_empty(s: &str) -> Result<String, String> {
     if s.is_empty() {
         Err("must not be empty".into())

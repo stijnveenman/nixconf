@@ -57,6 +57,8 @@ type Watch = {
   // Widget state
   checks?: Check[];
   unresolvedThreads?: number;
+  conflicting?: boolean;
+  conflictNotified?: boolean;
   approval?: { decision: string | null; approvers: string[]; changeRequesters: string[] };
   activity?: string;
   fixing: boolean;
@@ -265,6 +267,7 @@ export default function (pi: ExtensionAPI) {
             ...checks.sub.map((s) => `${tree("│")}     ${tree("⎿")} ${theme.fg("muted", s)}`),
             `${tree("├─")} ${comments.icon} ${theme.bold("Comments")} ${comments.text}`,
             `${tree("├─")} ${approval.icon} ${theme.bold("Approval")} ${approval.text}`,
+            ...(w.conflicting ? [`${tree("├─")} ${theme.fg("error", "✗")} ${theme.bold("Conflicts")} ${theme.fg("error", "merge conflicts")}`] : []),
             `${tree("└─")} ${busy() ? spin() : theme.fg("dim", "◦")} ${theme.fg("muted", status())}`,
           ];
           if (w.error) lines.push(`     ${tree("⎿")} ${theme.fg("error", w.error)}`);
@@ -304,6 +307,7 @@ export default function (pi: ExtensionAPI) {
     const query = `query($owner:String!,$repo:String!,$number:Int!){
       repository(owner:$owner,name:$repo){ pullRequest(number:$number){
         state
+        mergeable
         reviewDecision
         latestOpinionatedReviews(first:30){ nodes{ state author{login} } }
         comments(last:50){ nodes{ id author{login} body url createdAt } }
@@ -326,6 +330,7 @@ export default function (pi: ExtensionAPI) {
     });
     return {
       state: pr.state as string,
+      conflicting: pr.mergeable === "CONFLICTING",
       approval: {
         decision: (pr.reviewDecision ?? null) as string | null,
         approvers: (pr.latestOpinionatedReviews.nodes as any[]).filter((n) => n.state === "APPROVED").map((n) => n.author?.login ?? "ghost"),
@@ -417,9 +422,12 @@ export default function (pi: ExtensionAPI) {
     w.checks = checks;
     w.unresolvedThreads = comments.threads.length;
     w.approval = comments.approval;
+    w.conflicting = comments.conflicting;
+    const newConflict = comments.conflicting && !w.conflictNotified;
+    if (!comments.conflicting) w.conflictNotified = false;
     if (checks.some((c) => c.bucket === "pending")) w.lastActivityAt = Date.now();
 
-    if (failed.length === 0 && newThreads.length === 0 && newGeneral.length === 0) return;
+    if (failed.length === 0 && newThreads.length === 0 && newGeneral.length === 0 && !newConflict) return;
 
     if (failed.length > 0) w.activity = "fetching failed logs…";
     let ciSummary: string | undefined;
@@ -432,6 +440,7 @@ export default function (pi: ExtensionAPI) {
     if (watch !== w || !w.ctx.isIdle()) return;
 
     w.lastActivityAt = Date.now();
+    if (newConflict) w.conflictNotified = true;
     for (const c of failed) w.seenChecks.add(`${c.name}|${c.link}`);
     for (const t of comments.threads) for (const c of t.comments) w.seenComments.add(c.id);
     for (const c of comments.general) w.seenComments.add(c.id);
@@ -454,6 +463,9 @@ export default function (pi: ExtensionAPI) {
       parts.push(
         `## Review feedback\n\n${sections.join("\n\n")}\n\nAddress the review feedback items above where they are valid.`,
       );
+    }
+    if (newConflict) {
+      parts.push("## Merge conflicts\n\nThe PR has merge conflicts with its base branch. Merge or rebase the base branch, resolve the conflicts, and push.");
     }
     parts.push("Then commit and push.", NO_REPLY_NOTE);
 

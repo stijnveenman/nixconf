@@ -1,4 +1,4 @@
-use crate::args::{Options, EFFORTS};
+use crate::args::{normalize_branch, Options, EFFORTS};
 use crate::pi::pi_settings;
 use ratatui::backend::CrosstermBackend;
 use ratatui::crossterm::event::{
@@ -427,7 +427,7 @@ impl App {
                                 match field {
                                     Field::Base if value.is_empty() => self.base = self.base_default.clone(),
                                     Field::Base => self.base = value,
-                                    Field::Branch => self.branch = value,
+                                    Field::Branch => self.branch = normalize_branch(&value),
                                     Field::Dir => {
                                         value = tilde(&untilde(&value).to_string_lossy());
                                         self.dir = value;

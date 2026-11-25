@@ -25,6 +25,7 @@
         wrapProgram $out/bin/wt-start \
           --prefix PATH : ${lib.makeBinPath [
           pkgs.git
+          pkgs.git-crypt
           pkgs.gh
           pkgs.worktrunk
           inputs'.herdr.packages.default

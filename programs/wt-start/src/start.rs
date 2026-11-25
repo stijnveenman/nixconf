@@ -1,4 +1,4 @@
-use crate::args::{Options, Res};
+use crate::args::{normalize_branch, Options, Res};
 use crate::pi::generate_branch_name;
 use serde_json::Value;
 use std::process::{Command, Stdio};
@@ -81,7 +81,7 @@ pub fn start(o: Options) -> Res<()> {
             }
             branch
         }
-        None => o.branch.clone().unwrap_or_default(),
+        None => o.branch.as_deref().map(normalize_branch).unwrap_or_default(),
     };
     if let Some(file) = &prompt_file {
         prompt = fs::read_to_string(file)
