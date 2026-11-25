@@ -25,6 +25,57 @@ fn run(cmd: &str, args: &[&str], pass_stderr: bool) -> Res<Out> {
     })
 }
 
+/// The user's login shell from the account database, not `$SHELL`, which depends on
+/// whatever launched us (e.g. macOS bash 3.2 inside a herdr popup).
+fn user_shell() -> String {
+    let user = env::var("USER").unwrap_or_default();
+    let lookup = |cmd: &str, args: &[&str], parse: fn(&str) -> Option<String>| {
+        Command::new(cmd)
+            .args(args)
+            .output()
+            .ok()
+            .and_then(|o| parse(&String::from_utf8_lossy(&o.stdout)))
+    };
+    let found = if cfg!(target_os = "macos") {
+        lookup("dscl", &[".", "-read", &format!("/Users/{user}"), "UserShell"], |s| {
+            s.split_whitespace().nth(1).map(String::from)
+        })
+    } else {
+        lookup("getent", &["passwd", &user], |s| s.trim().rsplit(':').next().map(String::from))
+    };
+    found
+        .filter(|s| !s.is_empty() && std::path::Path::new(s).exists())
+        .or_else(|| env::var("SHELL").ok().filter(|s| !s.is_empty()))
+        .unwrap_or_else(|| "/bin/sh".into())
+}
+
+/// Runs `wt` through the user's interactive shell in the current (selected)
+/// directory, so it sees the same environment as a normal shell (profile and rc files:
+/// nix, direnv, git-crypt for git clean/smudge filters, ...). Rc files may print noise,
+/// so wt's stdout goes to a temp file instead of through the shell's stdout.
+fn wt_in_shell(args: &[&str]) -> Res<String> {
+    let shell = user_shell();
+    let dir = env::current_dir().map_err(|e| e.to_string())?;
+    let out_file = env::temp_dir().join(format!("wt-start-{}.json", std::process::id()));
+    let status = Command::new(&shell)
+        .args(["-i", "-c", "exec wt \"$@\" >\"$WT_START_OUT\"", "wt"])
+        .args(args)
+        .current_dir(&dir)
+        .env("WT_START_OUT", &out_file)
+        .env("BASH_SILENCE_DEPRECATION_WARNING", "1")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::inherit())
+        .status()
+        .map_err(|e| format!("cannot run {shell}: {e}"));
+    let text = fs::read_to_string(&out_file).unwrap_or_default();
+    let _ = fs::remove_file(&out_file);
+    if !status?.success() {
+        return Err(format!("wt {} failed", args.iter().take(2).copied().collect::<Vec<_>>().join(" ")));
+    }
+    Ok(text)
+}
+
 fn ok(cmd: &str, args: &[&str], pass_stderr: bool) -> Res<String> {
     let r = run(cmd, args, pass_stderr)?;
     if !r.ok {
@@ -131,7 +182,7 @@ pub fn start(o: Options) -> Res<()> {
     }
     args.push(target);
     let refs: Vec<&str> = args.iter().map(String::as_str).collect();
-    let checkout = need(&ok("wt", &refs, true)?, "worktree path", &["path"])?;
+    let checkout = need(&wt_in_shell(&refs)?, "worktree path", &["path"])?;
 
     // Opening via the primary checkout nests the workspace under the correct repo,
     // including when this command was invoked inside another linked worktree.
