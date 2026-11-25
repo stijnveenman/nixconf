@@ -87,6 +87,10 @@
         settings.general = {
           lock_cmd = lib.getExe lock;
           before_sleep_cmd = lib.getExe lock;
+          # Hold the sleep inhibitor until hyprlock has locked the session;
+          # "auto" doesn't recognise our wrapper and releases it at once, so
+          # the unlocked desktop flashed on resume.
+          inhibit_sleep = 3;
         };
       };
     };
