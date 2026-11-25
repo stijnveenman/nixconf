@@ -13,6 +13,7 @@ in {
       nixos.plymouth
       nixos.greeter
       nixos.attic-cache
+      nixos.steam
       inputs.niri.nixosModules.niri
       inputs.home-manager.nixosModules.home-manager
       nixos.home-manager
