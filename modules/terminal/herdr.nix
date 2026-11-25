@@ -16,15 +16,10 @@ in {
     toml = pkgs.formats.toml {};
     popupSize = "80%";
 
-    wtStart = pkgs.callPackage ../../../programs/wt-start/package.nix {inherit herdr;};
-    # Herdr (and so its popups) may start without the nix profile on PATH, which wt-start needs for pi.
-    wtStartPopup = pkgs.writeShellScript "wt-start-popup" ''
-      export PATH=${lib.escapeShellArg "${config.home.profileDirectory}/bin"}:"$PATH"
-      herdr=${lib.escapeShellArg (lib.getExe herdr)}
-      jq=${lib.escapeShellArg (lib.getExe pkgs.jq)}
-      wt_start=${lib.escapeShellArg (lib.getExe wtStart)}
-      ${builtins.readFile ./scripts/wt-start-popup.sh}
-    '';
+    wtStart = pkgs.callPackage ../../programs/wt-start/package.nix {
+      inherit herdr;
+      pi = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    };
 
     inherit (config.lib.herdr) pluginEntry action;
 
@@ -70,7 +65,7 @@ in {
           {
             key = "prefix+shift+g";
             type = "popup";
-            command = toString wtStartPopup;
+            command = lib.getExe wtStart;
             description = "wt start";
             width = "60%";
             height = "50%";

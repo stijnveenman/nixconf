@@ -6,6 +6,7 @@
   gh,
   worktrunk,
   herdr,
+  pi,
 }:
 rustPlatform.buildRustPackage {
   pname = "wt-start";
@@ -24,7 +25,7 @@ rustPlatform.buildRustPackage {
 
   postInstall = ''
     wrapProgram $out/bin/wt-start \
-      --prefix PATH : ${lib.makeBinPath [git gh worktrunk herdr]}
+      --prefix PATH : ${lib.makeBinPath [git gh worktrunk herdr pi]}
   '';
 
   meta.mainProgram = "wt-start";

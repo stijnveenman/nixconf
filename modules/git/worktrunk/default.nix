@@ -11,7 +11,10 @@
     git = lib.getExe pkgs.git;
     jq = lib.getExe pkgs.jq;
 
-    wtStart = pkgs.callPackage ../../../programs/wt-start/package.nix {herdr = herdrPackage;};
+    wtStart = pkgs.callPackage ../../../programs/wt-start/package.nix {
+      herdr = herdrPackage;
+      pi = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    };
 
     wtRemove = pkgs.writeShellScript "wt-remove-herdr" ''
       herdr=${lib.escapeShellArg herdr}

@@ -5,12 +5,15 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     herdr.url = "github:herdrdev/herdr/v0.9.5";
     herdr.inputs.nixpkgs.follows = "nixpkgs";
+    pi.url = "github:earendil-works/pi/stable";
+    pi.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
     self,
     nixpkgs,
     herdr,
+    pi,
   }: let
     systems = ["aarch64-darwin" "x86_64-darwin" "aarch64-linux" "x86_64-linux"];
     forAll = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
@@ -18,6 +21,7 @@
     packages = forAll (pkgs: rec {
       wt-start = pkgs.callPackage ./package.nix {
         herdr = herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
+        pi = pi.packages.${pkgs.stdenv.hostPlatform.system}.default;
       };
       default = wt-start;
     });
