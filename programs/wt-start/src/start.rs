@@ -1,4 +1,5 @@
 use crate::args::{Options, Res};
+use crate::pi::generate_branch_name;
 use serde_json::Value;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
@@ -67,7 +68,7 @@ pub fn start(o: Options) -> Res<()> {
         // --prompt adds steering after the fixed instructions.
         prompt = if prompt.is_empty() { fix.into() } else { format!("{fix}\n\n{prompt}") };
     }
-    let branch = match o.pr {
+    let mut branch = match o.pr {
         Some(pr) => {
             let pr = pr.to_string();
             let r = run("gh", &["pr", "view", &pr, "--json", "headRefName", "--jq", ".headRefName"], false)?;
@@ -88,6 +89,21 @@ pub fn start(o: Options) -> Res<()> {
         if prompt.is_empty() {
             return Err(format!("prompt file is empty: {}", file.display()));
         }
+    }
+    if branch.is_empty() && o.auto_branch {
+        if prompt.is_empty() {
+            return Err("an automatic branch name needs a prompt".into());
+        }
+        let name = generate_branch_name(&prompt)?;
+        // Never reuse an existing branch: wt would switch to it instead of creating one.
+        let exists = |b: &str| run("git", &["show-ref", "--verify", "--quiet", &format!("refs/heads/{b}")], false).map(|r| r.ok);
+        branch = name.clone();
+        let mut n = 2;
+        while exists(&branch)? {
+            branch = format!("{name}-{n}");
+            n += 1;
+        }
+        info(&format!("Using branch {branch}."));
     }
     ok("git", &["check-ref-format", "--branch", &branch], false)?;
 

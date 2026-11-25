@@ -1,4 +1,5 @@
 use crate::args::{Options, EFFORTS};
+use crate::pi::pi_settings;
 use ratatui::backend::CrosstermBackend;
 use ratatui::crossterm::event::{
     self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, KeyboardEnhancementFlags,
@@ -14,7 +15,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::{Frame, Terminal, TerminalOptions, Viewport};
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
-use std::{env, fs, io, path::PathBuf, process::Command, thread};
+use std::{env, io, path::PathBuf, process::Command, thread};
 use unicode_width::UnicodeWidthChar;
 
 // Catppuccin Mocha.
@@ -183,15 +184,6 @@ impl TextBuf {
 }
 
 // ------------------------------------------------------------------- settings
-
-fn pi_settings() -> serde_json::Value {
-    let dir = env::var_os("PI_CODING_AGENT_DIR")
-        .map(PathBuf::from)
-        .or_else(|| env::var_os("HOME").map(|h| PathBuf::from(h).join(".pi/agent")));
-    dir.and_then(|d| fs::read_to_string(d.join("settings.json")).ok())
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or(serde_json::Value::Null)
-}
 
 fn default_model(settings: &serde_json::Value) -> String {
     match (settings["defaultProvider"].as_str(), settings["defaultModel"].as_str()) {
@@ -430,7 +422,6 @@ impl App {
                     KeyCode::Enter => {
                         let mut value = buf.text().trim().to_string();
                         match field {
-                            Field::Branch if value.is_empty() => error = Some("branch must not be empty".into()),
                             Field::Dir if !untilde(&value).is_dir() => error = Some("not a directory".into()),
                             _ => {
                                 match field {
@@ -516,6 +507,8 @@ impl App {
         let some = |s: &str| (!s.trim().is_empty()).then(|| s.trim().to_string());
         Options {
             branch: some(&self.branch),
+            // An empty branch means: generate a name from the prompt.
+            auto_branch: self.branch.trim().is_empty(),
             base: (self.base != self.base_default).then(|| self.base.clone()),
             pr: None,
             fix: false,
@@ -587,9 +580,10 @@ fn draw(f: &mut Frame, app: &App) {
     let label = |text: &str, on: bool| if on { accent(text) } else { dim(text) };
     let sep = || dim(" · ");
     // Give the directory whatever width the other settings leave, trimming its start.
+    let branch_label = if app.branch.is_empty() { "*auto".to_string() } else { app.branch.clone() };
     let others = 1 + app.effort.chars().count()
         + " · base: ".chars().count() + app.base.chars().count()
-        + " · branch: ".chars().count() + app.branch.chars().count()
+        + " · branch: ".chars().count() + branch_label.chars().count()
         + " · dir: ".chars().count()
         + " · focus: ".chars().count() + app.focus.to_string().chars().count();
     // Drop the provider prefix when the line would not fit otherwise.
@@ -616,7 +610,7 @@ fn draw(f: &mut Frame, app: &App) {
         val(app.base.clone()),
         sep(),
         label("branch: ", editing == Some(Field::Branch)),
-        val(app.branch.clone()),
+        val(branch_label.clone()),
         sep(),
         label("dir: ", editing == Some(Field::Dir)),
         val(dir),
@@ -662,6 +656,7 @@ fn draw_panel(f: &mut Frame, app: &App, area: Rect, cursor: &mut Option<Position
             };
             let suffix = match error {
                 Some(e) => Span::styled(format!("  {e}"), Style::new().fg(RED)),
+                None if *field == Field::Branch => dim("  enter confirm · esc cancel · empty = *auto"),
                 None => dim("  enter confirm · esc cancel"),
             };
             *cursor = Some(draw_field(f, header, name, buf, Some(suffix)));
@@ -731,7 +726,7 @@ pub fn prompt_line() -> io::Result<Option<Options>> {
         effort,
         base: base_default.clone(),
         base_default,
-        branch: "auto".into(),
+        branch: String::new(),
         dir,
         focus: false,
         panel: Panel::None,

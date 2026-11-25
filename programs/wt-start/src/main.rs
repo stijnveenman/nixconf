@@ -1,4 +1,5 @@
 mod args;
+mod pi;
 mod start;
 mod tui;
 

@@ -51,6 +51,10 @@ pub struct Options {
     /// Focus the new agent
     #[arg(long)]
     pub focus: bool,
+
+    /// Generate the branch name from the prompt (set by the interactive form)
+    #[arg(skip)]
+    pub auto_branch: bool,
 }
 
 fn non_empty(s: &str) -> Result<String, String> {
