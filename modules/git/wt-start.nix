@@ -1,9 +1,9 @@
 # `wt start`: the Rust program in programs/wt-start, exposed as `packages.<system>.wt-start`.
-{inputs, ...}: {
+{
   perSystem = {
+    inputs',
     lib,
     pkgs,
-    system,
     ...
   }: {
     packages.wt-start = pkgs.rustPlatform.buildRustPackage {
@@ -27,8 +27,8 @@
           pkgs.git
           pkgs.gh
           pkgs.worktrunk
-          inputs.herdr.packages.${system}.default
-          inputs.pi.packages.${system}.default
+          inputs'.herdr.packages.default
+          inputs'.pi.packages.default
         ]}
       '';
 

@@ -24,7 +24,7 @@ else
   track=
 fi
 
-opts=(--foreground)
+opts=()
 if [ -n "$("$git" status --porcelain --untracked-files=all)" ]; then
   "$git" status --short
   if ! "$gum" confirm "Worktree has uncommitted changes. Remove with --force?"; then
@@ -35,7 +35,7 @@ fi
 
 # Leave the checkout before it is deleted.
 cd "$common/.."
-"$wt" -C "$OLDPWD" remove "${opts[@]}"
+"$wt" -C "$OLDPWD" remove ${opts[@]+"${opts[@]}"}
 
 if [ -n "$branch" ] && [ "$track" = "[gone]" ]; then
   "$git" --git-dir="$common" branch -D "$branch"
