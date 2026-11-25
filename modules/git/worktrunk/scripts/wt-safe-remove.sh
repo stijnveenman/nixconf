@@ -1,7 +1,6 @@
 set -euo pipefail
 
 # Remove the current worktree. Ask (gum) before forcing when it has changes.
-# Delete the local branch afterwards if its upstream is gone (merged).
 
 pause() {
   printf '\nPress enter to close...'
@@ -16,13 +15,6 @@ fi
 
 # Main repository: stays valid after the worktree is deleted.
 common=$("$git" rev-parse --path-format=absolute --git-common-dir)
-branch=$("$git" branch --show-current)
-
-if [ -n "$branch" ]; then
-  track=$("$git" fetch --prune --quiet 2>/dev/null; "$git" for-each-ref --format='%(upstream:track)' "refs/heads/$branch")
-else
-  track=
-fi
 
 opts=()
 if [ -n "$("$git" status --porcelain --untracked-files=all)" ]; then
@@ -36,7 +28,3 @@ fi
 # Leave the checkout before it is deleted.
 cd "$common/.."
 "$wt" -C "$OLDPWD" remove ${opts[@]+"${opts[@]}"}
-
-if [ -n "$branch" ] && [ "$track" = "[gone]" ]; then
-  "$git" --git-dir="$common" branch -D "$branch"
-fi
