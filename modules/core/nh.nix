@@ -13,6 +13,11 @@
         type = lib.types.enum ["os" "home" "darwin"];
         description = "The nh subcommand that manages this host.";
       };
+      privilegedSwitch = lib.mkEnableOption ''
+        `nhs` that builds as the user and activates through the passwordless
+        `nixos-switch` sudo rule (NixOS module `nixos-switch`), so agents can
+        switch without a prompt
+      '';
       homeFlake = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
@@ -26,7 +31,17 @@
     config = {
       home.packages = [
         (pkgs.writeShellScriptBin "nhb" ''exec ${nh} ${cfg.subcommand} build "$@"'')
-        (pkgs.writeShellScriptBin "nhs" ''exec ${nh} ${cfg.subcommand} switch "$@"'')
+        (pkgs.writeShellScriptBin "nhs" (
+          if cfg.privilegedSwitch
+          then ''
+            set -euo pipefail
+            out=$(mktemp -d)
+            trap 'rm -rf "$out"' EXIT
+            ${nh} os build --out-link "$out/result" "$@"
+            /run/wrappers/bin/sudo -n /run/current-system/sw/bin/nixos-switch "$out/result"
+          ''
+          else ''exec ${nh} ${cfg.subcommand} switch "$@"''
+        ))
       ];
 
       programs.nh = lib.mkIf (cfg.homeFlake != null) {

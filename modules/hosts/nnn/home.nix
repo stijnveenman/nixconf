@@ -33,6 +33,7 @@ in {
 
     my.nh.subcommand = "os";
     my.nh.homeFlake = "/home/stiixxy/nixconf";
+    my.nh.privilegedSwitch = true;
     my.git.userEmail = "veenman.stijn@gmail.com";
     my.git.sshSigningPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPQN61R7viARkAAIZF8JWmvXfs49/3l1BL4ozDMTadt2";
     my.nixconf.liveRepoPath = "/home/stiixxy/nixconf";

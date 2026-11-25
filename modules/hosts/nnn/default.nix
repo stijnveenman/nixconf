@@ -14,6 +14,7 @@ in {
       nixos.greeter
       nixos.attic-cache
       nixos.steam
+      nixos.nixos-switch
       inputs.niri.nixosModules.niri
       inputs.home-manager.nixosModules.home-manager
       nixos.home-manager
