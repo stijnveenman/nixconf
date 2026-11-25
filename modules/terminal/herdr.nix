@@ -16,10 +16,7 @@ in {
     toml = pkgs.formats.toml {};
     popupSize = "80%";
 
-    wtStart = pkgs.callPackage ../../programs/wt-start/package.nix {
-      inherit herdr;
-      pi = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    };
+    wtStart = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.wt-start;
 
     inherit (config.lib.herdr) pluginEntry action;
 
@@ -67,6 +64,14 @@ in {
             type = "popup";
             command = lib.getExe wtStart;
             description = "wt start";
+            width = "60%";
+            height = "50%";
+          }
+          {
+            key = "prefix+shift+d";
+            type = "popup";
+            command = "${config.my.worktrunk.safeRemove}";
+            description = "wt remove";
             width = "60%";
             height = "50%";
           }

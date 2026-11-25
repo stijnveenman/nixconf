@@ -10,16 +10,21 @@
     herdr = lib.getExe herdrPackage;
     git = lib.getExe pkgs.git;
     jq = lib.getExe pkgs.jq;
+    gum = lib.getExe pkgs.gum;
 
-    wtStart = pkgs.callPackage ../../../programs/wt-start/package.nix {
-      herdr = herdrPackage;
-      pi = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    };
+    wtStart = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.wt-start;
 
     wtRemove = pkgs.writeShellScript "wt-remove-herdr" ''
       herdr=${lib.escapeShellArg herdr}
       jq=${lib.escapeShellArg jq}
       ${builtins.readFile ./scripts/wt-remove.sh}
+    '';
+
+    wtSafeRemove = pkgs.writeShellScript "wt-safe-remove" ''
+      wt=${lib.escapeShellArg wt}
+      git=${lib.escapeShellArg git}
+      gum=${lib.escapeShellArg gum}
+      ${builtins.readFile ./scripts/wt-safe-remove.sh}
     '';
 
     wtRemoveGone = pkgs.writeShellScript "wt-remove-gone" ''
@@ -33,6 +38,13 @@
       type = lib.types.str;
       default = "~/.local/share/worktrees/{{ repo }}/{{ branch | sanitize_hash }}";
       description = "Worktrunk worktree path template.";
+    };
+
+    options.my.worktrunk.safeRemove = lib.mkOption {
+      type = lib.types.path;
+      readOnly = true;
+      default = wtSafeRemove;
+      description = "Script removing the current worktree, confirming before forcing.";
     };
 
     config = {
