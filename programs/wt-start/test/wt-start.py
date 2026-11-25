@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts/wt-start.sh"
+SCRIPT = Path(__file__).resolve().parents[1] / "target/release/wt-start"
 MOCK = '''#!/usr/bin/env python3
 import json, os, sys
 from pathlib import Path
@@ -61,19 +61,20 @@ else:
 with tempfile.TemporaryDirectory(prefix="wt-start-test-") as temp:
     root = Path(temp)
     calls = root / "calls.jsonl"
-    env = dict(os.environ, CALLS=str(calls), jq=shutil.which("jq"))
-    for name in ("wt", "herdr", "git"):
-        mock = root / name
+    bindir = root / "bin"
+    bindir.mkdir()
+    env = dict(os.environ, CALLS=str(calls), PATH=f"{bindir}:{os.environ['PATH']}")
+    for name in ("wt", "herdr", "git", "gh"):
+        mock = bindir / name
         mock.write_text(MOCK)
         mock.chmod(0o755)
-        env[name] = str(mock)
 
     def run(args, **overrides):
         calls.write_text("")
         (root / "calls.jsonl.get-count").unlink(missing_ok=True)
         (root / "calls.jsonl.start-count").unlink(missing_ok=True)
         result = subprocess.run(
-            [shutil.which("bash"), str(SCRIPT), *args],
+            [str(SCRIPT), *args],
             env=dict(env, **overrides), capture_output=True, text=True,
         )
         return result, [json.loads(line) for line in calls.read_text().splitlines()]

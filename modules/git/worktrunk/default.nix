@@ -6,19 +6,12 @@
     ...
   }: let
     wt = lib.getExe pkgs.worktrunk;
-    herdr = lib.getExe inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    herdrPackage = inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    herdr = lib.getExe herdrPackage;
     git = lib.getExe pkgs.git;
     jq = lib.getExe pkgs.jq;
-    gh = lib.getExe pkgs.gh;
 
-    wtStart = pkgs.writeShellScript "wt-start" ''
-      wt=${lib.escapeShellArg wt}
-      herdr=${lib.escapeShellArg herdr}
-      git=${lib.escapeShellArg git}
-      jq=${lib.escapeShellArg jq}
-      gh=${lib.escapeShellArg gh}
-      ${builtins.readFile ./scripts/wt-start.sh}
-    '';
+    wtStart = pkgs.callPackage ../../../programs/wt-start/package.nix {herdr = herdrPackage;};
 
     wtRemove = pkgs.writeShellScript "wt-remove-herdr" ''
       herdr=${lib.escapeShellArg herdr}
@@ -46,7 +39,7 @@
         pkgs.fzf
         pkgs.git
         pkgs.jq
-        (pkgs.runCommand "wt-start" {} "install -Dm755 ${wtStart} $out/bin/wt-start")
+        wtStart
       ];
 
       xdg.configFile."worktrunk/config.toml".source = (pkgs.formats.toml {}).generate "worktrunk-config.toml" {
