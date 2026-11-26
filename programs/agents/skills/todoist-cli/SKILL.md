@@ -102,7 +102,7 @@ Resolution order: `--user <ref>` > `TD_USER` > `user.defaultUser` from config > 
 - Collaboration: `td comment ...`, `td notification ...`, `td reminder ...`
 - Templates and files: `td template ...`, `td attachment view <file-url>`, `td backup ...`
 - Help Center: `td hc locales/search/view`
-- Account and tooling: `td stats`, `td settings ...`, `td config view`, `td accounts ...`, `td completion ...`, `td view <todoist-url>`, `td doctor`, `td update`, `td changelog`
+- Account and tooling: `td stats`, `td settings ...`, `td status ...`, `td config view`, `td accounts ...`, `td completion ...`, `td view <todoist-url>`, `td doctor`, `td update`, `td changelog`
 - Extensions: `td extension create/install/list/upgrade/remove/exec` (alias: `td ext`)
 - Developer apps: `td apps list/view` (requires `td auth login --additional-scopes=app-management`)
 - Backups: `td backup list/download` (requires `td auth login --additional-scopes=backups`)
@@ -427,6 +427,7 @@ Two rules matter when calling one:
 An extension is not reviewed or endorsed by Todoist, and runs with the user's own permissions.
 
 ### Settings, Stats, And Utilities
+`td status` shows, sets or clears your shared status (apps that read it, such as Comms, show it too). The message is 1 to 80 characters. `--until` takes YYYY-MM-DD, YYYY-MM-DDTHH:MM (local time) or a full ISO 8601 timestamp; `--for` takes 30m, 2h, 1d or 1h30m, and the two conflict. `--pause-notifications` is stored on the status but only takes effect in apps that read it (Comms today, not Todoist yet). `--pause-activity` is separate: it stops your Karma changing and protects your streaks while the status is active, and does not silence notifications. `status set` replaces the fields this CLI supports: omitted emoji, expiration and pause flags clear those values, while other fields and effects are preserved. The command `status set --dry-run --json` prints a preview without setting anything.
 ```bash
 td stats
 td stats goals --daily 10 --weekly 50
@@ -438,6 +439,14 @@ td settings view
 td settings update --timezone "America/New_York" --time-format 24 --date-format intl
 td settings update --timezone UTC --dry-run
 td settings themes
+
+td status
+td status --json
+td status --ndjson
+td status set "Deep work" --emoji 🎯 --for 2h --pause-notifications
+td status set "On holiday" --emoji 🏝️ --until 2026-10-20T09:00 --pause-activity
+td status set "Away" --for 1d --dry-run
+td status clear
 
 td config view
 td config view --json
