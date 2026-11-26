@@ -122,7 +122,7 @@ background() {
     sleep 0.5
   done
   # The Herdr Agents sidebar shows "PR #N" instead of "pi" for this pane until
-  # pi exits (dimmed by modules/terminal/herdr.nix).
+  # pi exits (dimmed by modules/terminal/herdr/default.nix).
   "$herdr" pane report-metadata "$pi_pane" --source pr-review --agent pi \
     --display-agent "PR #$pr" >/dev/null || :
 

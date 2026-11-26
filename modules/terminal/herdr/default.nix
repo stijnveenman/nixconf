@@ -16,6 +16,11 @@ in {
     toml = pkgs.formats.toml {};
     popupSize = "80%";
 
+    bottomPane = pkgs.writeShellScript "herdr-bottom-pane" ''
+      export PATH=${lib.makeBinPath [herdr pkgs.jq]}:$PATH
+      ${builtins.readFile ./scripts/bottom-pane.sh}
+    '';
+
     wtStart = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.wt-start;
 
     inherit (config.lib.herdr) pluginEntry action;
@@ -61,19 +66,15 @@ in {
           }
           {
             key = "prefix+shift+g";
-            type = "popup";
-            command = lib.getExe wtStart;
+            type = "shell";
+            command = "${bottomPane} ${lib.getExe wtStart}";
             description = "wt start";
-            width = "60%";
-            height = "50%";
           }
           {
             key = "prefix+shift+d";
-            type = "popup";
-            command = "${config.my.worktrunk.safeRemove}";
+            type = "shell";
+            command = "${bottomPane} ${config.my.worktrunk.safeRemove}";
             description = "wt remove";
-            width = "60%";
-            height = "50%";
           }
           {
             key = "ctrl+minus";
