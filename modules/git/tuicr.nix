@@ -26,6 +26,7 @@
       scroll_offset = 5
       ignore_whitespace = true
       q_quits = true
+      no_update_check = true
       diff_watch_interval_ms = 1000
 
       [forge]
