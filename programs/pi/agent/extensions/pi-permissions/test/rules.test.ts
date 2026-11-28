@@ -91,3 +91,14 @@ test("tool calls become checks", () => {
   assert.equal(checksFor("codemode", {}, cwd)[0].action, "execute");
   assert.equal(checksFor("mcp__docs__search", {}, cwd)[0].action, "mcp__docs__search");
 });
+
+test("reading a skill's files is a skill check", () => {
+  const cwd = "/home/u/proj";
+  const skills = [{ name: "deploy", baseDir: "/home/u/.pi/agent/skills/deploy" }];
+  const read = checksFor("read", { path: "/home/u/.pi/agent/skills/deploy/SKILL.md" }, cwd, skills);
+  assert.deepEqual(read[0], { action: "skill", resources: [{ value: "deploy" }], patterns: ["deploy"] });
+  const sh = checksFor("bash", { command: "cat /home/u/.pi/agent/skills/deploy/refs.md | head" }, cwd, skills);
+  assert.ok(sh.some((c) => c.action === "skill" && c.resources[0].value === "deploy"));
+  assert.ok(!checksFor("read", { path: "src/a.ts" }, cwd, skills).some((c) => c.action === "skill"));
+});
+

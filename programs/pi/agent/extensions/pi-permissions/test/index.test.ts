@@ -21,6 +21,7 @@ writeFileSync(
       { action: "shell", resource: "rm *", effect: "deny" },
       { action: "subagent", resource: "*", effect: "deny" },
       { action: "subagent", resource: "scout", effect: "allow" },
+      { action: "skill", resource: "deploy", effect: "deny" },
     ],
     agents: { scout: { permissions: [{ action: "edit", resource: "*", effect: "deny" }] } },
   }),
@@ -100,7 +101,7 @@ test("child: own agent rules, asks forwarded to the parent", { skip: !mod }, asy
 
   const child = fakeSession("child-1", false);
   await child.fire("session_start", {});
-  const opts = { selectedTools: ["read", "bash", "edit", "write"] };
+  const opts = { selectedTools: ["read", "bash", "edit", "write"], skills: [] };
   await child.fire("before_agent_start", { systemPrompt: '<active_agent name="scout"/>\n\nhi', systemPromptOptions: opts });
   assert.deepEqual(opts.selectedTools, ["read", "bash"]); // edit/write fully denied for scout
 
@@ -120,3 +121,20 @@ test("no UI and no parent: asks are blocked", { skip: !mod }, async () => {
   await lone.fire("session_start", {});
   assert.match((await lone.fire("tool_call", { toolName: "bash", input: { command: "make" } })).reason, /no interactive UI/);
 });
+
+test("denied skills are hidden, unreadable and cannot be invoked", { skip: !mod }, async () => {
+  const s = fakeSession("skills-1", true);
+  await s.fire("session_start", {});
+  const skills = [
+    { name: "deploy", description: "", filePath: "/sk/deploy/SKILL.md", baseDir: "/sk/deploy" },
+    { name: "notes", description: "", filePath: "/sk/notes/SKILL.md", baseDir: "/sk/notes" },
+  ];
+  const opts = { selectedTools: ["read"], skills };
+  await s.fire("before_agent_start", { systemPrompt: "", systemPromptOptions: opts });
+  assert.deepEqual(opts.skills.map((k) => k.name), ["notes"]);
+  assert.match((await s.fire("tool_call", { toolName: "read", input: { path: "/sk/deploy/SKILL.md" } })).reason, /skill `deploy` is denied/);
+  assert.equal(await s.fire("tool_call", { toolName: "read", input: { path: "/sk/notes/SKILL.md" } }), undefined);
+  assert.deepEqual(await s.fire("input", { text: "/skill:deploy now" }), { action: "handled" });
+  assert.deepEqual(await s.fire("input", { text: "/skill:notes" }), { action: "continue" });
+});
+

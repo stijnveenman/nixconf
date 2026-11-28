@@ -3,6 +3,7 @@ import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { alwaysPattern } from "./arity.ts";
 import { normalizeAction, type Resource } from "./rules.ts";
 import { scan } from "./shell/scan.ts";
+import { type SkillRef, skillAt } from "./skills.ts";
 
 export type Check = {
   action: string;
@@ -14,11 +15,14 @@ export type Check = {
 type Input = Record<string, unknown>;
 type PathInfo = { value: string; absolute: string; outside: boolean };
 
-export function checksFor(toolName: string, input: Input, cwd: string): Check[] {
+export function checksFor(toolName: string, input: Input, cwd: string, skills: SkillRef[] = []): Check[] {
   switch (toolName) {
     case "bash":
-      return shellChecks(str(input.command) ?? "", cwd);
-    case "read":
+      return shellChecks(str(input.command) ?? "", cwd, skills);
+    case "read": {
+      const path = str(input.path);
+      return [...skillChecks(path ? [path] : [], cwd, skills), ...fileChecks("read", path, cwd)];
+    }
     case "write":
     case "edit":
       return fileChecks(normalizeAction(toolName), str(input.path) ?? str(input.file_path), cwd);
@@ -36,7 +40,7 @@ export function checksFor(toolName: string, input: Input, cwd: string): Check[] 
   }
 }
 
-function shellChecks(command: string, cwd: string): Check[] {
+function shellChecks(command: string, cwd: string, skills: SkillRef[]): Check[] {
   const result = scan(command);
   const cdTargets = result.cdTargets.filter((target) => !/[$`]/.test(target)).map((target) => pathInfo(cwd, target));
   const commands = uniqueBy(result.commands, (c) => `${c.opaque}:${c.text}`);
@@ -45,7 +49,15 @@ function shellChecks(command: string, cwd: string): Check[] {
     resources: commands.map((c) => ({ value: c.text, opaque: c.opaque, reason: c.reason })),
     patterns: commands.map((c) => (c.opaque && c.words.length <= 1 ? c.text : alwaysPattern(c.words))),
   };
-  return [...externalChecks(cdTargets.filter((p) => p.outside).map((p) => p.absolute)), shell];
+  const paths = commands.flatMap((c) => c.words.filter((word) => word.includes("/")));
+  return [...externalChecks(cdTargets.filter((p) => p.outside).map((p) => p.absolute)), ...skillChecks(paths, cwd, skills), shell];
+}
+
+/** Reading a skill's files, by tool or in a shell command, is checked as using the skill. */
+function skillChecks(paths: string[], cwd: string, skills: SkillRef[]): Check[] {
+  const names = [...new Set(paths.map((path) => skillAt(pathInfo(cwd, path).absolute, skills)?.name).filter((n) => n !== undefined))];
+  if (!names.length) return [];
+  return [{ action: "skill", resources: names.map((value) => ({ value })), patterns: names }];
 }
 
 function fileChecks(action: string, path: string | undefined, cwd: string): Check[] {

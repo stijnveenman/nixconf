@@ -24,6 +24,15 @@ export default function piPermissions(pi: ExtensionAPI) {
     node.agentName = agentFromSystemPrompt(event.systemPrompt) ?? node.agentName;
     session.reload(ctx);
     session.hideDeniedTools(ctx, event.systemPromptOptions.selectedTools);
+    session.hideDeniedSkills(ctx, event.systemPromptOptions.skills);
+  });
+
+  pi.on("input", (event, ctx) => {
+    session.register(ctx);
+    const skill = session.deniedSkillCommand(ctx, event.text);
+    if (!skill) return { action: "continue" as const };
+    if (ctx.hasUI) ctx.ui.notify(`${TAG} skill ${skill} is denied by your permissions`, "warning");
+    return { action: "handled" as const };
   });
 
   pi.on("tool_call", (event, ctx) => {

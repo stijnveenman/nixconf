@@ -4,7 +4,8 @@ import { type Check, checksFor } from "./checks.ts";
 import { type LoadedConfig, loadConfig } from "./config.ts";
 import { promptQueue, showPrompt } from "./prompt.ts";
 import { type AskAnswer, type PermissionNode, prompterFor, registry, rootOf } from "./registry.ts";
-import { type Decision, decide, isFullyDenied, normalizeAction, type Resource, type Rule } from "./rules.ts";
+import { type Decision, decide, findRule, isFullyDenied, normalizeAction, type Resource, type Rule } from "./rules.ts";
+import { type SkillRef, skillCommand } from "./skills.ts";
 
 export const TAG = "[pi-permissions]";
 const ROOT_AGENT = "main";
@@ -18,6 +19,7 @@ export class PermissionSession {
   private ui: ExtensionContext["ui"] | undefined;
   private config: LoadedConfig | undefined;
   private reportedErrors = "";
+  private readonly skills = new Map<string, SkillRef>();
   private readonly prompt = promptQueue((request) =>
     this.ui ? showPrompt(this.ui, request) : Promise.resolve<AskAnswer>({ kind: "deny", reason: "no interactive UI is available" }),
   );
@@ -95,8 +97,25 @@ export class PermissionSession {
     selectedTools.splice(0, selectedTools.length, ...keep);
   }
 
+  isSkillDenied(ctx: ExtensionContext, name: string): boolean {
+    return findRule(this.rules(ctx), "skill", name)?.effect === "deny";
+  }
+
+  /** Removes denied skills from the system prompt, remembering every skill so reading its files can be checked. */
+  hideDeniedSkills(ctx: ExtensionContext, skills: SkillRef[]): void {
+    for (const skill of skills) this.skills.set(skill.name, { name: skill.name, baseDir: skill.baseDir });
+    const keep = skills.filter((skill) => !this.isSkillDenied(ctx, skill.name));
+    skills.splice(0, skills.length, ...keep);
+  }
+
+  /** A denied `/skill:name` typed by the user; other answers count as the user's own approval. */
+  deniedSkillCommand(ctx: ExtensionContext, text: string): string | undefined {
+    const name = skillCommand(text);
+    return name && this.isSkillDenied(ctx, name) ? name : undefined;
+  }
+
   async checkToolCall(toolName: string, input: Record<string, unknown>, ctx: ExtensionContext): Promise<Block | undefined> {
-    for (const check of checksFor(toolName, input, ctx.cwd)) {
+    for (const check of checksFor(toolName, input, ctx.cwd, [...this.skills.values()])) {
       const block = await this.enforce(check, ctx);
       if (block) return block;
     }

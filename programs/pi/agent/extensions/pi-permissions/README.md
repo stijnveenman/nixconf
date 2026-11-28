@@ -73,6 +73,7 @@ also matches the directory itself. A leading `~` or `$HOME` is expanded for
 | `list` (alias `ls`) | `ls` | path |
 | `external_directory` | file tools, `cd` in `bash` | absolute directory outside the working directory |
 | `subagent` (alias `task`) | `subagent` | the agent type |
+| `skill` | reading a skill's files (`read`, or a path in `bash`), `/skill:name` | the skill name |
 | `execute` (alias `codemode`) | `codemode` | `*`; tools a script calls are checked one by one |
 | any other tool name | that tool (MCP tools, web tools, …) | `*` |
 
@@ -118,6 +119,20 @@ Commands the scanner cannot see into are **opaque**: a command name or
 no rule) does not allow an opaque command; it asks instead. A specific rule
 such as `python3 *` still applies. Scripts (`./deploy.sh`, `make`,
 `python x.py`) are judged by their command line only, as in opencode.
+
+## Skills
+
+A skill that `skill` rules deny is removed from the skills listed in the
+system prompt, so the agent never sees it. Reading any file in its directory
+is blocked, whether through `read` or a path in a `bash` command. Typing
+`/skill:name` for it does nothing except show a warning. If a skill is set to
+`ask`, it stays listed and the agent's first read of it prompts. A
+`/skill:name` you type yourself counts as your approval.
+
+```json
+{ "action": "skill", "resource": "*", "effect": "deny" },
+{ "action": "skill", "resource": "todoist", "effect": "allow" }
+```
 
 ## Subagents
 
