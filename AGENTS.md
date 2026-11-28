@@ -93,6 +93,11 @@ before building to keep formatting consistent.
 Never add package patches to implement behavior that requires upstream code
 changes. Explain the limitation and leave upstream behavior unchanged.
 
+## Comments
+
+Do not add code comments unless they explain a specific edge case or
+non-obvious behaviour.
+
 ## Script conventions
 
 - Keep scripts close to the module that uses them: `<module>/scripts/*.sh`.
