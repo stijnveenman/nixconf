@@ -79,17 +79,18 @@ also matches the directory itself. A leading `~` or `$HOME` is expanded for
 ## How a call is decided
 
 As in opencode: if any resource is denied by the configured rules, the call is
-blocked, and saved approvals are never consulted for that, so they can never
+blocked, and approvals are never consulted for that, so they can never
 override a deny. Otherwise approvals are appended and any resource that still
 asks prompts. A tool whose action is denied for every resource is hidden from
 the model.
 
 The prompt offers *Allow once*, *Always allow this session* (the whole session
-tree, subagents included), *Always allow in this project* (saved in
-`~/.pi/agent/pi-permissions/approvals.json`), *Deny* and *Deny with feedback*.
+tree, subagents included), *Deny* and *Deny with feedback*. Approvals are kept
+in memory only and never written to disk; put lasting rules in
+`permissions.json`.
 "Always" saves a prefix: `git status --short` saves `shell git status *`, using
 an arity table like opencode's. `/permissions` lists the rules in effect;
-`/permissions clear` forgets the approvals for the current project.
+`/permissions clear` forgets this session's approvals.
 
 Without a UI (print or JSON mode, and no parent session), an ask is blocked.
 

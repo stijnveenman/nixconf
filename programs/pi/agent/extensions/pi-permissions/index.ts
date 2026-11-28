@@ -32,7 +32,7 @@ export default function piPermissions(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("permissions", {
-    description: "Show the permission rules in effect; `/permissions clear` forgets approvals",
+    description: "Show the permission rules in effect; `/permissions clear` forgets this session's approvals",
     handler: async (args, ctx) => showPermissions(session, args.trim(), ctx),
   });
 }
@@ -41,13 +41,12 @@ function showPermissions(session: PermissionSession, args: string, ctx: Extensio
   session.register(ctx);
   session.reload(ctx);
   if (args === "clear") {
-    const { session: cleared, saved } = session.clearApprovals(ctx);
-    ctx.ui.notify(`${TAG} cleared ${cleared} session and ${saved} saved approvals for ${ctx.cwd}`, "info");
+    ctx.ui.notify(`${TAG} cleared ${session.clearApprovals()} session approvals`, "info");
     return;
   }
   const format = (r: { action: string; resource: string; effect: string; source?: string }) =>
     `  ${r.action} ${r.resource} → ${r.effect}  (${r.source ?? "?"})`;
-  const approvals = session.approvals(ctx);
+  const approvals = session.approvals();
   const errors = session.configErrors;
   const lines = [
     `${TAG} agent: ${session.agentName ?? "(unknown)"}, last matching rule wins`,

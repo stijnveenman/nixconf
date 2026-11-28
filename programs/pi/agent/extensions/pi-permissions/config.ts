@@ -100,7 +100,7 @@ function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
-export function readJson(path: string, errors: string[]): Record<string, unknown> | undefined {
+function readJson(path: string, errors: string[]): Record<string, unknown> | undefined {
   if (!existsSync(path)) return undefined;
   try {
     const value = JSON.parse(readFileSync(path, "utf8"));

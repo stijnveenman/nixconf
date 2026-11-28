@@ -7,7 +7,6 @@ export async function showPrompt(ui: ExtensionUIContext, request: AskRequest): P
   const answers: [string, () => Promise<AskAnswer> | AskAnswer][] = [
     ["Allow once", () => ({ kind: "once" })],
     [`Always allow this session: ${patterns}`, () => ({ kind: "session" })],
-    [`Always allow in this project: ${patterns}`, () => ({ kind: "project" })],
     ["Deny", () => ({ kind: "deny" })],
     ["Deny with feedback…", () => askFeedback(ui)],
   ];

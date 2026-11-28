@@ -1,6 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME, getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
-import { clearProjectApprovals, loadProjectApprovals, saveProjectApprovals } from "./approvals.ts";
 import { type Check, checksFor } from "./checks.ts";
 import { type LoadedConfig, loadConfig } from "./config.ts";
 import { promptQueue, showPrompt } from "./prompt.ts";
@@ -14,7 +13,7 @@ type Block = { block: true; reason: string };
 
 /** This extension's state for one pi session: its node in the session tree and its rules. */
 export class PermissionSession {
-  readonly agentDir = getAgentDir();
+  private readonly agentDir = getAgentDir();
   node: PermissionNode | undefined;
   private ui: ExtensionContext["ui"] | undefined;
   private config: LoadedConfig | undefined;
@@ -77,16 +76,16 @@ export class PermissionSession {
     return this.config!.rulesFor(this.agentName);
   }
 
-  approvals(ctx: ExtensionContext): Rule[] {
-    const session = this.node ? rootOf(this.node).sessionApprovals : [];
-    return [...session, ...loadProjectApprovals(this.agentDir, ctx.cwd)];
+  /** "Always allow" answers, kept in memory for the session tree only. */
+  approvals(): Rule[] {
+    return this.node ? rootOf(this.node).sessionApprovals : [];
   }
 
-  clearApprovals(ctx: ExtensionContext): { session: number; saved: number } {
+  clearApprovals(): number {
     const root = this.node ? rootOf(this.node) : undefined;
-    const session = root?.sessionApprovals.length ?? 0;
+    const count = root?.sessionApprovals.length ?? 0;
     if (root) root.sessionApprovals = [];
-    return { session, saved: clearProjectApprovals(this.agentDir, ctx.cwd) };
+    return count;
   }
 
   /** Tools whose action every rule denies, so the model is not offered them. */
@@ -105,7 +104,7 @@ export class PermissionSession {
   }
 
   private decide(check: Check, ctx: ExtensionContext): Decision {
-    return decide(check.action, check.resources, this.rules(ctx), this.approvals(ctx));
+    return decide(check.action, check.resources, this.rules(ctx), this.approvals());
   }
 
   private async enforce(check: Check, ctx: ExtensionContext): Promise<Block | undefined> {
@@ -130,7 +129,7 @@ export class PermissionSession {
       const why = answer.reason ? `: ${answer.reason}` : answer.feedback ? `. User feedback: ${answer.feedback}` : "";
       return block(`The user denied ${check.action} ${lines.join(", ")}${why}`);
     }
-    this.remember(answer.kind, check.action, patterns, ctx);
+    if (answer.kind === "session") this.remember(check.action, patterns);
     return undefined;
   }
 
@@ -141,12 +140,10 @@ export class PermissionSession {
     return block(`${check.action} ${value} is denied for ${this.who}${from}. Do not try to work around this; ask the user if it is needed.`);
   }
 
-  private remember(kind: "once" | "session" | "project", action: string, patterns: string[], ctx: ExtensionContext): void {
-    if (kind === "once") return;
-    const source = kind === "project" ? "saved approval" : "session approval";
-    const rules = [...new Set(patterns)].map<Rule>((resource) => ({ action, resource, effect: "allow", source }));
-    if (kind === "project") saveProjectApprovals(this.agentDir, ctx.cwd, rules);
-    else if (this.node) rootOf(this.node).sessionApprovals.push(...rules);
+  private remember(action: string, patterns: string[]): void {
+    if (!this.node) return;
+    const rules = [...new Set(patterns)].map<Rule>((resource) => ({ action, resource, effect: "allow", source: "session approval" }));
+    rootOf(this.node).sessionApprovals.push(...rules);
   }
 }
 

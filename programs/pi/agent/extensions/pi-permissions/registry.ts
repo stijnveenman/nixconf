@@ -20,7 +20,7 @@ export type AskRequest = {
 };
 
 export type AskAnswer =
-  | { kind: "once" | "session" | "project" }
+  | { kind: "once" | "session" }
   | { kind: "deny"; feedback?: string; reason?: string };
 
 export type PermissionNode = {
