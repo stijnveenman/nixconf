@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { checksFor } from "../checks.ts";
-import { alwaysPattern, DEFAULT_RULES, decide, isFullyDenied, parseRules, type Rule, wildcardMatch } from "../rules.ts";
+import { alwaysPattern } from "../arity.ts";
+import { DEFAULT_RULES, decide, isFullyDenied, parseRules, type Rule, wildcardMatch } from "../rules.ts";
 
 const r = (action: string, resource: string, effect: Rule["effect"]): Rule => ({ action, resource, effect });
 

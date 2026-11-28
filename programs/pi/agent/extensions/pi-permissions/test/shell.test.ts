@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { scan } from "../shell.ts";
+import { scan } from "../shell/scan.ts";
 
 const texts = (src: string) => scan(src).commands.map((c) => c.text);
 const opaque = (src: string) => scan(src).commands.filter((c) => c.opaque).map((c) => c.text);
@@ -28,6 +28,7 @@ test("control flow and functions", () => {
   assert.deepEqual(texts("for f in a b; do rm $f; done"), ["rm $f"]);
   assert.deepEqual(texts("while read l; do echo $l; done < file"), ["read l", "echo $l"]);
   assert.deepEqual(texts('case "$x" in a|b) rm a ;; *) ls ;; esac'), ["rm a", "ls"]);
+  assert.deepEqual(texts("case $x in a) ls ;; esac; echo hi"), ["ls", "echo hi"]);
   assert.deepEqual(texts("[[ -f x ]] && cat x"), ["cat x"]);
   assert.deepEqual(texts("! grep -q x f"), ["grep -q x f"]);
 });

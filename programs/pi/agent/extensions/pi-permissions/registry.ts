@@ -1,11 +1,8 @@
 /**
- * Process-global state shared by every pi-permissions instance.
- *
- * pi loads a separate copy of each extension per session, and pi-subagents runs
- * children in the same process with their own copy and their own event bus. The
- * parent's copy hears `subagents:child:session-created` and records the child
- * here; the child's copy looks itself up to find the parent that answers its
- * asks. `globalThis` + `Symbol.for` survive pi's per-extension module isolation.
+ * State shared by every session's copy of this extension. pi-subagents runs
+ * children in-process, each with its own copy and event bus, so the parent
+ * records children here and a child looks up the parent that answers its asks.
+ * `globalThis` + `Symbol.for` survive pi's per-extension module isolation.
  */
 
 import type { Rule } from "./rules.ts";
@@ -18,7 +15,7 @@ export type AskRequest = {
   lines: string[];
   /** Patterns "always allow" would save, one per asking resource. */
   patterns: string[];
-  /** Re-run the decision just before prompting; true when no longer needed. */
+  /** Re-checked just before prompting, since an earlier answer may cover it. */
   stillNeeded: () => boolean;
 };
 
