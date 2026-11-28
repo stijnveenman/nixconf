@@ -29,6 +29,8 @@ in {
       ".pi/agent/keybindings.json".source = pi.source "keybindings.json";
       ".pi/agent/AGENTS.md".source = pi.source "AGENTS.md";
       ".pi/agent/watch-pr.json".source = pi.source "watch-pr.json";
+      # Rules for the pi-permissions extension (programs/pi/agent/extensions/pi-permissions).
+      ".pi/agent/permissions.json".source = pi.source "permissions.json";
       ".pi/agent/extensions".source = pi.directory "extensions" [] [
         (pi.package {src = inputs.pi-web-access;})
         (pi.package {
