@@ -7,10 +7,14 @@ in {
     programs.opencode = {
       enable = true;
       settings = {
-        autoupdate = false;
-        permission = {
-          bash."git *" = "allow";
-        };
+        update = "disable";
+        permissions = [
+          {
+            action = "shell";
+            resource = "git *";
+            effect = "allow";
+          }
+        ];
       };
       cli = {
         theme.name = "catppuccin";
@@ -19,7 +23,10 @@ in {
           sound = false;
         };
       };
-      validateFiles.cli = true;
+      validateFiles = {
+        config = true;
+        cli = true;
+      };
     };
 
     home.file.".config/opencode/skill".source = config.lib.nixconf.source "programs/opencode/skill";
